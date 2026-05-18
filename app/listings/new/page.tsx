@@ -10,7 +10,9 @@ import {
   Upload, 
   X, 
   Loader2,
-  ImageIcon
+  ImageIcon,
+  MapPin,
+  Navigation
 } from "lucide-react"
 
 const conditions = [
@@ -37,6 +39,9 @@ export default function NewListingPage() {
   const [deposit, setDeposit] = useState("")
   const [images, setImages] = useState<File[]>([])
   const [imagePreviews, setImagePreviews] = useState<string[]>([])
+  const [location, setLocation] = useState<{ lat: number; lng: number; name: string } | null>(null)
+  const [isLocating, setIsLocating] = useState(false)
+  const [locationError, setLocationError] = useState<string | null>(null)
 
   useEffect(() => {
     async function loadCategories() {
@@ -71,6 +76,51 @@ export default function NewListingPage() {
   const removeImage = (index: number) => {
     setImages((prev) => prev.filter((_, i) => i !== index))
     setImagePreviews((prev) => prev.filter((_, i) => i !== index))
+  }
+
+  const detectLocation = async () => {
+    setIsLocating(true)
+    setLocationError(null)
+
+    if (!navigator.geolocation) {
+      setLocationError("La geolocalizzazione non e supportata dal tuo browser")
+      setIsLocating(false)
+      return
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const { latitude, longitude } = position.coords
+        
+        try {
+          const response = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=10`
+          )
+          const data = await response.json()
+          const locationName = data.address?.city || data.address?.town || data.address?.village || data.display_name?.split(",")[0] || "Posizione rilevata"
+          
+          setLocation({ lat: latitude, lng: longitude, name: locationName })
+        } catch {
+          setLocation({ lat: latitude, lng: longitude, name: "Posizione rilevata" })
+        }
+        
+        setIsLocating(false)
+      },
+      (error) => {
+        switch (error.code) {
+          case error.PERMISSION_DENIED:
+            setLocationError("Accesso alla posizione negato")
+            break
+          case error.POSITION_UNAVAILABLE:
+            setLocationError("Posizione non disponibile")
+            break
+          default:
+            setLocationError("Errore nella geolocalizzazione")
+        }
+        setIsLocating(false)
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 300000 }
+    )
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -115,6 +165,8 @@ export default function NewListingPage() {
           price_per_week_cents: pricePerWeekCents,
           deposit_cents: depositCents,
           currency_code: "EUR",
+          item_coords: location ? `POINT(${location.lng} ${location.lat})` : null,
+          item_location_name: location?.name || null,
         })
         .select()
         .single()
@@ -359,6 +411,66 @@ export default function NewListingPage() {
               <p className="mt-2 text-xs text-muted-foreground">
                 Formati supportati: JPG, PNG, WebP. Max 5MB per immagine.
               </p>
+            </div>
+
+            {/* Location */}
+            <div>
+              <label className="mb-3 block text-sm font-medium text-foreground">
+                Posizione dell&apos;attrezzo
+              </label>
+              
+              {location ? (
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2 rounded-lg bg-primary/10 px-4 py-3">
+                    <MapPin className="h-5 w-5 text-primary" />
+                    <span className="flex-1 font-medium text-foreground">
+                      {location.name}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setLocation(null)}
+                      className="text-muted-foreground hover:text-foreground"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={detectLocation}
+                    disabled={isLocating}
+                    className="flex items-center justify-center gap-2 text-sm text-muted-foreground hover:text-foreground"
+                  >
+                    {isLocating ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Navigation className="h-4 w-4" />
+                    )}
+                    Aggiorna posizione
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  <button
+                    type="button"
+                    onClick={detectLocation}
+                    disabled={isLocating}
+                    className="flex w-full items-center justify-center gap-2 rounded-lg border-2 border-dashed border-border py-4 text-sm font-medium text-muted-foreground transition-colors hover:border-primary hover:bg-muted/50 hover:text-foreground disabled:opacity-50"
+                  >
+                    {isLocating ? (
+                      <Loader2 className="h-5 w-5 animate-spin" />
+                    ) : (
+                      <Navigation className="h-5 w-5" />
+                    )}
+                    Usa la mia posizione attuale
+                  </button>
+                  {locationError && (
+                    <p className="text-xs text-destructive">{locationError}</p>
+                  )}
+                  <p className="text-xs text-muted-foreground">
+                    La posizione aiuta gli utenti a trovare attrezzi vicino a loro
+                  </p>
+                </div>
+              )}
             </div>
 
             {/* Submit */}
