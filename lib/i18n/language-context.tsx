@@ -271,7 +271,6 @@ const translations: Record<Language, Record<string, string>> = {
     "nav.categories": "Categories",
     "nav.publish_listing": "Publish listing",
     "nav.my_rentals": "My rentals",
-    "nav.my_listings": "My listings",
     "nav.settings": "Settings",
     "nav.open_menu": "Open menu",
     "nav.close_menu": "Close menu",
