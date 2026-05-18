@@ -20,6 +20,7 @@ export default async function DashboardPage() {
     .single()
 
   const { count: listingsCount } = await supabase
+    .schema('inventory_domain')
     .from("listings")
     .select("*", { count: "exact", head: true })
     .eq("owner_id", user.id)
