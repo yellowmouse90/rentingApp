@@ -95,11 +95,17 @@ export function ListingsGridWithLocation({
     } else {
       // Fallback to regular query without location
       let query = supabase
+        .schema('inventory_domain')
         .from("listings")
         .select(`
           *,
-          owner:profiles!listings_owner_id_fkey(id, display_name, avatar_url, average_rating_as_owner),
-          category:categories(id, name, slug, icon_name),
+          category:categories(
+            id,
+            slug,
+            translated:category_translations(
+              name
+            )
+          ),
           images:listing_images(id, image_url, display_order)
         `, { count: "exact" })
         .eq("is_active", true)
