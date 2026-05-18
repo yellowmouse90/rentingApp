@@ -5,6 +5,7 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
 import { Mail, Lock, User, Loader2, Eye, EyeOff } from "lucide-react"
+import { GoogleButton } from "@/components/auth/google-button"
 
 export default function SignUpPage() {
   const [displayName, setDisplayName] = useState("")
@@ -62,6 +63,17 @@ export default function SignUpPage() {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
+            <GoogleButton />
+
+            <div className="relative my-6">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-border" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-card px-2 text-muted-foreground">oppure</span>
+              </div>
+            </div>
+
             {error && (
               <div className="rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
                 {error}
