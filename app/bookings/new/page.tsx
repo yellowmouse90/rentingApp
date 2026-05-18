@@ -33,6 +33,7 @@ export default async function NewBookingPage({ searchParams }: NewBookingPagePro
 
   // Fetch listing
   const { data: listing, error } = await supabase
+    .schema('inventory_domain')
     .from("listings")
     .select(`
       *,
