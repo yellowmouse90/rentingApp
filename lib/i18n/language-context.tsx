@@ -101,6 +101,8 @@ const translations: Record<Language, Record<string, string>> = {
     "auth.have_account": "Hai gia un account?",
     "auth.or": "oppure",
     "auth.continue_google": "Continua con Google",
+    "auth.password_min_length": "La password deve essere di almeno 6 caratteri",
+    "auth.terms_agreement": "Registrandoti accetti i nostri",
     
     // Footer
     "footer.about": "Chi Siamo",
@@ -119,6 +121,41 @@ const translations: Record<Language, Record<string, string>> = {
     "common.view": "Visualizza",
     "common.search": "Cerca",
     "common.close": "Chiudi",
+    "common.user": "Utente",
+    
+    // Navigation
+    "nav.explore": "Esplora",
+    "nav.categories": "Categorie",
+    "nav.publish_listing": "Pubblica annuncio",
+    "nav.my_rentals": "I miei noleggi",
+    "nav.my_listings": "I miei annunci",
+    "nav.settings": "Impostazioni",
+    "nav.open_menu": "Apri menu",
+    "nav.close_menu": "Chiudi menu",
+    
+    // Homepage extra
+    "home.hero.search_example": "Cerca un attrezzo... (es. trapano, tagliaerba)",
+    "home.hero.secure_payments": "Pagamenti sicuri",
+    "home.hero.immediate_availability": "Disponibilita immediata",
+    "home.hero.guaranteed_savings": "Risparmio garantito",
+    "home.categories.subtitle": "Trova l'attrezzo giusto per ogni lavoro",
+    "home.categories.all": "Tutte le categorie",
+    "home.featured.subtitle": "Gli ultimi attrezzi aggiunti dalla community",
+    "home.featured.view_all": "Vedi tutti",
+    "home.featured.view_all_listings": "Vedi tutti gli annunci",
+    "home.how.subtitle": "Noleggiare e semplice, sicuro e veloce",
+    "home.how.step2.desc_full": "Scegli le date, contatta il proprietario e conferma il noleggio",
+    "home.how.step3.title_full": "Usa e restituisci",
+    "home.how.step3.desc_full": "Ritira l'attrezzo, usalo per il tuo progetto e restituiscilo",
+    "home.how.start_renting": "Inizia a noleggiare",
+    "home.cta.subtitle_full": "Mettili a reddito! Guadagna condividendo i tuoi attrezzi con chi ne ha bisogno.",
+    "home.cta.publish_first": "Pubblica il tuo primo annuncio",
+    
+    // Footer extra
+    "footer.description": "La piattaforma italiana per il noleggio di attrezzi tra privati. Risparmia denaro e riduci gli sprechi.",
+    "footer.all_tools": "Tutti gli attrezzi",
+    "footer.account": "Account",
+    "footer.support": "Supporto",
   },
   en: {
     // Header
@@ -208,6 +245,8 @@ const translations: Record<Language, Record<string, string>> = {
     "auth.have_account": "Already have an account?",
     "auth.or": "or",
     "auth.continue_google": "Continue with Google",
+    "auth.password_min_length": "Password must be at least 6 characters",
+    "auth.terms_agreement": "By signing up, you agree to our",
     
     // Footer
     "footer.about": "About Us",
@@ -226,6 +265,41 @@ const translations: Record<Language, Record<string, string>> = {
     "common.view": "View",
     "common.search": "Search",
     "common.close": "Close",
+    "common.user": "User",
+    
+    // Navigation
+    "nav.explore": "Explore",
+    "nav.categories": "Categories",
+    "nav.publish_listing": "Publish listing",
+    "nav.my_rentals": "My rentals",
+    "nav.my_listings": "My listings",
+    "nav.settings": "Settings",
+    "nav.open_menu": "Open menu",
+    "nav.close_menu": "Close menu",
+    
+    // Homepage extra
+    "home.hero.search_example": "Search for a tool... (e.g. drill, lawnmower)",
+    "home.hero.secure_payments": "Secure payments",
+    "home.hero.immediate_availability": "Immediate availability",
+    "home.hero.guaranteed_savings": "Guaranteed savings",
+    "home.categories.subtitle": "Find the right tool for every job",
+    "home.categories.all": "All categories",
+    "home.featured.subtitle": "The latest tools added by the community",
+    "home.featured.view_all": "View all",
+    "home.featured.view_all_listings": "View all listings",
+    "home.how.subtitle": "Renting is simple, safe and fast",
+    "home.how.step2.desc_full": "Choose the dates, contact the owner and confirm the rental",
+    "home.how.step3.title_full": "Use and return",
+    "home.how.step3.desc_full": "Pick up the tool, use it for your project and return it",
+    "home.how.start_renting": "Start renting",
+    "home.cta.subtitle_full": "Put them to work! Earn money by sharing your tools with those who need them.",
+    "home.cta.publish_first": "Publish your first listing",
+    
+    // Footer extra
+    "footer.description": "The Italian platform for peer-to-peer tool rental. Save money and reduce waste.",
+    "footer.all_tools": "All tools",
+    "footer.account": "Account",
+    "footer.support": "Support",
   },
 }
 

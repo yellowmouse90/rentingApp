@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
 import { Mail, Lock, User, Loader2, Eye, EyeOff } from "lucide-react"
 import { GoogleButton } from "@/components/auth/google-button"
+import { useLanguage } from "@/lib/i18n/language-context"
 
 export default function SignUpPage() {
   const [displayName, setDisplayName] = useState("")
@@ -15,6 +16,7 @@ export default function SignUpPage() {
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
+  const { t } = useLanguage()
 
   const supabase = createClient()
 
@@ -24,7 +26,7 @@ export default function SignUpPage() {
     setIsLoading(true)
 
     if (password.length < 6) {
-      setError("La password deve essere di almeno 6 caratteri")
+      setError(t("auth.password_min_length"))
       setIsLoading(false)
       return
     }
@@ -56,9 +58,9 @@ export default function SignUpPage() {
       <div className="w-full max-w-md">
         <div className="rounded-xl border border-border bg-card p-8 shadow-sm">
           <div className="mb-8 text-center">
-            <h1 className="text-2xl font-bold text-foreground">Crea il tuo account</h1>
+            <h1 className="text-2xl font-bold text-foreground">{t("auth.signup")}</h1>
             <p className="mt-2 text-sm text-muted-foreground">
-              Inizia a noleggiare e condividere attrezzi
+              {t("home.hero.subtitle")}
             </p>
           </div>
 
@@ -70,7 +72,7 @@ export default function SignUpPage() {
                 <div className="w-full border-t border-border" />
               </div>
               <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-card px-2 text-muted-foreground">oppure</span>
+                <span className="bg-card px-2 text-muted-foreground">{t("auth.or")}</span>
               </div>
             </div>
 
@@ -82,7 +84,7 @@ export default function SignUpPage() {
 
             <div>
               <label htmlFor="displayName" className="mb-1.5 block text-sm font-medium text-foreground">
-                Nome visualizzato
+                {t("auth.display_name")}
               </label>
               <div className="relative">
                 <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -93,14 +95,14 @@ export default function SignUpPage() {
                   onChange={(e) => setDisplayName(e.target.value)}
                   required
                   className="w-full rounded-lg border border-input bg-background py-2.5 pl-10 pr-4 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
-                  placeholder="Come vuoi essere chiamato"
+                  placeholder={t("auth.display_name")}
                 />
               </div>
             </div>
 
             <div>
               <label htmlFor="email" className="mb-1.5 block text-sm font-medium text-foreground">
-                Email
+                {t("auth.email")}
               </label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -111,14 +113,14 @@ export default function SignUpPage() {
                   onChange={(e) => setEmail(e.target.value)}
                   required
                   className="w-full rounded-lg border border-input bg-background py-2.5 pl-10 pr-4 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
-                  placeholder="nome@esempio.it"
+                  placeholder="name@example.com"
                 />
               </div>
             </div>
 
             <div>
               <label htmlFor="password" className="mb-1.5 block text-sm font-medium text-foreground">
-                Password
+                {t("auth.password")}
               </label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -130,7 +132,7 @@ export default function SignUpPage() {
                   required
                   minLength={6}
                   className="w-full rounded-lg border border-input bg-background py-2.5 pl-10 pr-10 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
-                  placeholder="Almeno 6 caratteri"
+                  placeholder={t("auth.password")}
                 />
                 <button
                   type="button"
@@ -150,29 +152,29 @@ export default function SignUpPage() {
               {isLoading ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin" />
-                  Registrazione in corso...
+                  {t("common.loading")}
                 </>
               ) : (
-                "Registrati"
+                t("auth.signup")
               )}
             </button>
           </form>
 
           <p className="mt-6 text-center text-sm text-muted-foreground">
-            Hai gia un account?{" "}
+            {t("auth.have_account")}{" "}
             <Link href="/auth/login" className="font-medium text-primary hover:underline">
-              Accedi
+              {t("auth.login")}
             </Link>
           </p>
 
           <p className="mt-4 text-center text-xs text-muted-foreground">
-            Registrandoti accetti i nostri{" "}
+            {t("auth.terms_agreement")}{" "}
             <Link href="/terms" className="underline hover:text-foreground">
-              Termini di servizio
+              {t("footer.terms")}
             </Link>{" "}
-            e la{" "}
+            &amp;{" "}
             <Link href="/privacy" className="underline hover:text-foreground">
-              Privacy Policy
+              {t("footer.privacy")}
             </Link>
           </p>
         </div>

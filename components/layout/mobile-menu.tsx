@@ -7,6 +7,8 @@ import { Menu, X, Plus, MessageSquare, User as UserIcon, Settings, LogOut, Wrenc
 import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
 import type { Profile } from "@/lib/types"
+import { useLanguage } from "@/lib/i18n/language-context"
+import { LanguageSwitcher } from "./language-switcher"
 
 interface MobileMenuProps {
   user: User | null
@@ -17,6 +19,7 @@ export function MobileMenu({ user, profile }: MobileMenuProps) {
   const [isOpen, setIsOpen] = useState(false)
   const router = useRouter()
   const supabase = createClient()
+  const { t } = useLanguage()
 
   const handleSignOut = async () => {
     await supabase.auth.signOut()
@@ -29,7 +32,7 @@ export function MobileMenu({ user, profile }: MobileMenuProps) {
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="rounded-lg p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-        aria-label={isOpen ? "Chiudi menu" : "Apri menu"}
+        aria-label={isOpen ? t("nav.close_menu") : t("nav.open_menu")}
       >
         {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
       </button>
@@ -37,13 +40,17 @@ export function MobileMenu({ user, profile }: MobileMenuProps) {
       {isOpen && (
         <div className="absolute left-0 right-0 top-16 border-b border-border bg-background p-4 shadow-lg">
           <nav className="flex flex-col gap-2">
+            <div className="flex items-center justify-between px-3 py-2">
+              <span className="text-xs font-medium text-muted-foreground uppercase">{t("nav.home")}</span>
+              <LanguageSwitcher />
+            </div>
             <Link
               href="/listings"
               onClick={() => setIsOpen(false)}
               className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted"
             >
               <Wrench className="h-4 w-4" />
-              Esplora
+              {t("nav.explore")}
             </Link>
             <Link
               href="/categories"
@@ -51,7 +58,7 @@ export function MobileMenu({ user, profile }: MobileMenuProps) {
               className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted"
             >
               <Package className="h-4 w-4" />
-              Categorie
+              {t("nav.categories")}
             </Link>
             <Link
               href="/how-it-works"
@@ -59,7 +66,7 @@ export function MobileMenu({ user, profile }: MobileMenuProps) {
               className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted"
             >
               <Settings className="h-4 w-4" />
-              Come funziona
+              {t("nav.how_it_works")}
             </Link>
 
             <div className="my-2 border-t border-border" />
@@ -72,7 +79,7 @@ export function MobileMenu({ user, profile }: MobileMenuProps) {
                   className="flex items-center gap-3 rounded-lg bg-accent px-3 py-2 text-sm font-medium text-accent-foreground transition-colors hover:bg-accent/90"
                 >
                   <Plus className="h-4 w-4" />
-                  Pubblica annuncio
+                  {t("nav.publish_listing")}
                 </Link>
                 <Link
                   href="/dashboard"
@@ -80,7 +87,7 @@ export function MobileMenu({ user, profile }: MobileMenuProps) {
                   className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted"
                 >
                   <UserIcon className="h-4 w-4" />
-                  Dashboard
+                  {t("nav.dashboard")}
                 </Link>
                 <Link
                   href="/messages"
@@ -88,7 +95,7 @@ export function MobileMenu({ user, profile }: MobileMenuProps) {
                   className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted"
                 >
                   <MessageSquare className="h-4 w-4" />
-                  Messaggi
+                  {t("nav.messages")}
                 </Link>
                 <Link
                   href="/bookings"
@@ -96,14 +103,14 @@ export function MobileMenu({ user, profile }: MobileMenuProps) {
                   className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted"
                 >
                   <Package className="h-4 w-4" />
-                  I miei noleggi
+                  {t("nav.my_rentals")}
                 </Link>
                 <button
                   onClick={handleSignOut}
                   className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-destructive transition-colors hover:bg-destructive/10"
                 >
                   <LogOut className="h-4 w-4" />
-                  Esci
+                  {t("nav.logout")}
                 </button>
               </>
             ) : (
@@ -113,14 +120,14 @@ export function MobileMenu({ user, profile }: MobileMenuProps) {
                   onClick={() => setIsOpen(false)}
                   className="flex items-center justify-center rounded-lg border border-border px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted"
                 >
-                  Accedi
+                  {t("nav.login")}
                 </Link>
                 <Link
                   href="/auth/sign-up"
                   onClick={() => setIsOpen(false)}
                   className="flex items-center justify-center rounded-lg bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
                 >
-                  Registrati
+                  {t("nav.signup")}
                 </Link>
               </>
             )}

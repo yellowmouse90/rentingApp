@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
 import { Mail, Lock, Loader2, Eye, EyeOff } from "lucide-react"
 import { GoogleButton } from "@/components/auth/google-button"
+import { useLanguage } from "@/lib/i18n/language-context"
 
 function LoginForm() {
   const [email, setEmail] = useState("")
@@ -16,6 +17,7 @@ function LoginForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const redirectTo = searchParams.get("redirect") || "/"
+  const { t } = useLanguage()
 
   const supabase = createClient()
 
@@ -47,9 +49,9 @@ function LoginForm() {
     <div className="w-full max-w-md">
       <div className="rounded-xl border border-border bg-card p-8 shadow-sm">
         <div className="mb-8 text-center">
-          <h1 className="text-2xl font-bold text-foreground">Bentornato</h1>
+          <h1 className="text-2xl font-bold text-foreground">{t("auth.login")}</h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            Accedi al tuo account ToolShare
+            {t("home.hero.subtitle")}
           </p>
         </div>
 
@@ -61,7 +63,7 @@ function LoginForm() {
               <div className="w-full border-t border-border" />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-card px-2 text-muted-foreground">oppure</span>
+              <span className="bg-card px-2 text-muted-foreground">{t("auth.or")}</span>
             </div>
           </div>
 
@@ -73,7 +75,7 @@ function LoginForm() {
 
           <div>
             <label htmlFor="email" className="mb-1.5 block text-sm font-medium text-foreground">
-              Email
+              {t("auth.email")}
             </label>
             <div className="relative">
               <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -91,7 +93,7 @@ function LoginForm() {
 
           <div>
             <label htmlFor="password" className="mb-1.5 block text-sm font-medium text-foreground">
-              Password
+              {t("auth.password")}
             </label>
             <div className="relative">
               <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -102,7 +104,7 @@ function LoginForm() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 className="w-full rounded-lg border border-input bg-background py-2.5 pl-10 pr-10 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
-                placeholder="La tua password"
+                placeholder={t("auth.password")}
               />
               <button
                 type="button"
@@ -122,18 +124,18 @@ function LoginForm() {
             {isLoading ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin" />
-                Accesso in corso...
+                {t("common.loading")}
               </>
             ) : (
-              "Accedi"
+              t("auth.login")
             )}
           </button>
         </form>
 
         <p className="mt-6 text-center text-sm text-muted-foreground">
-          Non hai un account?{" "}
+          {t("auth.no_account")}{" "}
           <Link href="/auth/sign-up" className="font-medium text-primary hover:underline">
-            Registrati
+            {t("auth.signup")}
           </Link>
         </p>
       </div>

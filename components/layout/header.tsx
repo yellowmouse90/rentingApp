@@ -1,9 +1,9 @@
 import Link from "next/link"
 import { createClient } from "@/lib/supabase/server"
-import { Wrench, Plus, MessageSquare } from "lucide-react"
+import { Wrench } from "lucide-react"
 import { MobileMenu } from "./mobile-menu"
-import { UserMenu } from "./user-menu"
-import { LanguageSwitcher } from "./language-switcher"
+import { HeaderNav } from "./header-nav"
+import { HeaderActions } from "./header-actions"
 
 export async function Header() {
   const supabase = await createClient()
@@ -33,63 +33,11 @@ export async function Header() {
         </Link>
 
         {/* Desktop Navigation */}
-        <nav className="hidden items-center gap-6 md:flex">
-          <Link
-            href="/listings"
-            className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-          >
-            Esplora
-          </Link>
-          <Link
-            href="/categories"
-            className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-          >
-            Categorie
-          </Link>
-          <Link
-            href="/how-it-works"
-            className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-          >
-            Come funziona
-          </Link>
-        </nav>
+        <HeaderNav />
 
         {/* Desktop Actions */}
         <div className="hidden items-center gap-3 md:flex">
-          <LanguageSwitcher />
-          {user ? (
-            <>
-              <Link
-                href="/listings/new"
-                className="inline-flex items-center gap-2 rounded-lg bg-accent px-4 py-2 text-sm font-medium text-accent-foreground transition-colors hover:bg-accent/90"
-              >
-                <Plus className="h-4 w-4" />
-                Pubblica annuncio
-              </Link>
-              <Link
-                href="/messages"
-                className="relative rounded-lg p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-              >
-                <MessageSquare className="h-5 w-5" />
-              </Link>
-              <UserMenu user={user} profile={profile} />
-            </>
-          ) : (
-            <>
-              <Link
-                href="/auth/login"
-                className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-              >
-                Accedi
-              </Link>
-              <Link
-                href="/auth/sign-up"
-                className="inline-flex items-center rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
-              >
-                Registrati
-              </Link>
-            </>
-          )}
+          <HeaderActions user={user} profile={profile} />
         </div>
 
         {/* Mobile Menu */}

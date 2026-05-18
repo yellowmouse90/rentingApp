@@ -7,6 +7,7 @@ import { User as UserIcon, Settings, Package, LogOut, ChevronDown } from "lucide
 import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
 import type { Profile } from "@/lib/types"
+import { useLanguage } from "@/lib/i18n/language-context"
 
 interface UserMenuProps {
   user: User
@@ -18,6 +19,7 @@ export function UserMenu({ user, profile }: UserMenuProps) {
   const menuRef = useRef<HTMLDivElement>(null)
   const router = useRouter()
   const supabase = createClient()
+  const { t } = useLanguage()
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -36,7 +38,7 @@ export function UserMenu({ user, profile }: UserMenuProps) {
     router.refresh()
   }
 
-  const displayName = profile?.display_name || user.email?.split("@")[0] || "Utente"
+  const displayName = profile?.display_name || user.email?.split("@")[0] || t("common.user")
   const initials = displayName.slice(0, 2).toUpperCase()
 
   return (
@@ -73,7 +75,7 @@ export function UserMenu({ user, profile }: UserMenuProps) {
               className="flex items-center gap-2 rounded-md px-3 py-2 text-sm text-foreground transition-colors hover:bg-muted"
             >
               <UserIcon className="h-4 w-4" />
-              Dashboard
+              {t("nav.dashboard")}
             </Link>
             <Link
               href="/dashboard/listings"
@@ -81,7 +83,7 @@ export function UserMenu({ user, profile }: UserMenuProps) {
               className="flex items-center gap-2 rounded-md px-3 py-2 text-sm text-foreground transition-colors hover:bg-muted"
             >
               <Package className="h-4 w-4" />
-              I miei annunci
+              {t("nav.my_listings")}
             </Link>
             <Link
               href="/bookings"
@@ -89,7 +91,7 @@ export function UserMenu({ user, profile }: UserMenuProps) {
               className="flex items-center gap-2 rounded-md px-3 py-2 text-sm text-foreground transition-colors hover:bg-muted"
             >
               <Package className="h-4 w-4" />
-              I miei noleggi
+              {t("nav.my_rentals")}
             </Link>
             <Link
               href="/profile/edit"
@@ -97,7 +99,7 @@ export function UserMenu({ user, profile }: UserMenuProps) {
               className="flex items-center gap-2 rounded-md px-3 py-2 text-sm text-foreground transition-colors hover:bg-muted"
             >
               <Settings className="h-4 w-4" />
-              Impostazioni
+              {t("nav.settings")}
             </Link>
           </div>
 
@@ -107,7 +109,7 @@ export function UserMenu({ user, profile }: UserMenuProps) {
               className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-destructive transition-colors hover:bg-destructive/10"
             >
               <LogOut className="h-4 w-4" />
-              Esci
+              {t("nav.logout")}
             </button>
           </div>
         </div>
