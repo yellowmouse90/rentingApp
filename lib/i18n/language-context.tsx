@@ -128,7 +128,6 @@ const translations: Record<Language, Record<string, string>> = {
     "nav.categories": "Categorie",
     "nav.publish_listing": "Pubblica annuncio",
     "nav.my_rentals": "I miei noleggi",
-    "nav.my_listings": "I miei annunci",
     "nav.settings": "Impostazioni",
     "nav.open_menu": "Apri menu",
     "nav.close_menu": "Chiudi menu",
