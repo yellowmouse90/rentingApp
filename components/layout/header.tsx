@@ -1,8 +1,9 @@
 import Link from "next/link"
 import { createClient } from "@/lib/supabase/server"
-import { Wrench, Menu, X, Plus, MessageSquare, User, LogOut } from "lucide-react"
+import { Wrench, Plus, MessageSquare } from "lucide-react"
 import { MobileMenu } from "./mobile-menu"
 import { UserMenu } from "./user-menu"
+import { LanguageSwitcher } from "./language-switcher"
 
 export async function Header() {
   const supabase = await createClient()
@@ -54,7 +55,8 @@ export async function Header() {
         </nav>
 
         {/* Desktop Actions */}
-        <div className="hidden items-center gap-4 md:flex">
+        <div className="hidden items-center gap-3 md:flex">
+          <LanguageSwitcher />
           {user ? (
             <>
               <Link

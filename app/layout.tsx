@@ -3,6 +3,7 @@ import { Inter } from "next/font/google"
 import "./globals.css"
 import { Header } from "@/components/layout/header"
 import { Footer } from "@/components/layout/footer"
+import { LanguageProvider } from "@/lib/i18n/language-context"
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" })
 
@@ -33,11 +34,13 @@ export default function RootLayout({
   return (
     <html lang="it" className="bg-background">
       <body className={`${inter.variable} font-sans antialiased`}>
-        <div className="flex min-h-screen flex-col">
-          <Header />
-          <main className="flex-1">{children}</main>
-          <Footer />
-        </div>
+        <LanguageProvider>
+          <div className="flex min-h-screen flex-col">
+            <Header />
+            <main className="flex-1">{children}</main>
+            <Footer />
+          </div>
+        </LanguageProvider>
       </body>
     </html>
   )
