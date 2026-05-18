@@ -6,8 +6,8 @@ export async function middleware(request: NextRequest) {
     request,
   })
 
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
   // If Supabase is not configured, just pass through
   if (!supabaseUrl || !supabaseAnonKey) {
@@ -34,12 +34,9 @@ export async function middleware(request: NextRequest) {
       },
     })
 
-    // Use getSession for middleware (getUser makes an API call)
     const {
-      data: { session },
-    } = await supabase.auth.getSession()
-
-    const user = session?.user
+      data: { user },
+    } = await supabase.auth.getUser()
 
     // Protected routes - redirect to login if not authenticated
     const protectedPaths = [
