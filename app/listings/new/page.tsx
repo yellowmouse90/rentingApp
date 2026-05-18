@@ -155,6 +155,7 @@ export default function NewListingPage() {
 
       // Create listing
       const { data: listing, error: listingError } = await supabase
+        .schema('inventory_domain')
         .from("listings")
         .insert({
           owner_id: user.id,
@@ -194,7 +195,10 @@ export default function NewListingPage() {
             .from("listing-images")
             .getPublicUrl(fileName)
 
-          await supabase.from("listing_images").insert({
+          await supabase
+            .schema('inventory_domain')
+            .from("listing_images")
+            .insert({
             listing_id: listing.id,
             image_url: publicUrl,
             display_order: i,

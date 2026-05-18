@@ -71,17 +71,19 @@ export function ListingsGridWithLocation({
 
     if (location && location.lat !== 0 && location.lng !== 0) {
       // Use geographic search function
-      const { data, error } = await supabase.rpc("search_listings_nearby", {
-        user_lat: location.lat,
-        user_lng: location.lng,
-        radius_km: radius,
-        category_slug: initialParams.category || null,
-        search_query: initialParams.q || null,
-        min_price: initialParams.minPrice ? parseInt(initialParams.minPrice) * 100 : null,
-        max_price: initialParams.maxPrice ? parseInt(initialParams.maxPrice) * 100 : null,
-        item_condition: initialParams.condition || null,
-        page_limit: 50,
-        page_offset: 0,
+      const { data, error } = await supabase
+        .schema('inventory_domain')
+        .rpc("search_listings_nearby", {
+          user_lat: location.lat,
+          user_lng: location.lng,
+          radius_km: radius,
+          category_slug: initialParams.category || null,
+          search_query: initialParams.q || null,
+          min_price: initialParams.minPrice ? parseInt(initialParams.minPrice) * 100 : null,
+          max_price: initialParams.maxPrice ? parseInt(initialParams.maxPrice) * 100 : null,
+          item_condition: initialParams.condition || null,
+          page_limit: 50,
+          page_offset: 0,
       })
 
       if (!error && data) {
