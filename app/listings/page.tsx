@@ -23,6 +23,7 @@ export default async function ListingsPage({ searchParams }: ListingsPageProps) 
 
   // Fetch categories for filter
   const { data: categories } = await supabase
+    .schema('inventory_domain')
     .from("categories")
     .select("*")
     .order("name")
