@@ -28,6 +28,7 @@ export default async function ListingDetailPage({ params }: ListingDetailPagePro
 
   // Fetch listing with related data
   const { data: listing, error } = await supabase
+    .schema('inventory_domain')
     .from("listings")
     .select(`
       *,
