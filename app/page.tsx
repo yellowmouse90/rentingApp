@@ -10,12 +10,14 @@ export default async function HomePage() {
 
   // Fetch categories
   const { data: categories } = await supabase
+    .schema('inventory_domain')
     .from("categories")
     .select("*")
     .order("name")
 
   // Fetch featured listings
   const { data: listings } = await supabase
+    .schema('inventory_domain')
     .from("listings")
     .select(`
       *,
