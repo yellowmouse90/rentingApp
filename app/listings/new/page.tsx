@@ -46,6 +46,7 @@ export default function NewListingPage() {
   useEffect(() => {
     async function loadCategories() {
       const { data } = await supabase
+        .schema('inventory_domain')
         .from("categories")
         .select("*")
         .order("name")
