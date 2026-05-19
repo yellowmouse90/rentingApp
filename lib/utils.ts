@@ -36,12 +36,18 @@ export function getRentalStatusLabel(status: string): string {
   const labels: Record<string, string> = {
     pending: "In attesa",
     approved: "Approvato",
+    accepted: "Accettato",
+    paid: "Pagato",
+    in_progress: "In noleggio",
     ongoing: "In corso",
     completed: "Completato",
     cancelled: "Annullato",
     disputed: "Contestato",
     requested: "Richiesto",
     unavailable: "Non disponibile",
+    collected: "Consegnato",
+    returned_ok: "Restituito integro",
+    damaged: "Danneggiato",
   }
   return labels[status] || status
 }
@@ -53,12 +59,18 @@ export function getRentalStatusColor(status: string): string {
   const colors: Record<string, string> = {
     pending: "bg-amber-100 text-amber-800",
     approved: "bg-emerald-100 text-emerald-800",
+    accepted: "bg-emerald-100 text-emerald-800",
+    paid: "bg-indigo-100 text-indigo-800",
+    in_progress: "bg-blue-100 text-blue-800",
     ongoing: "bg-blue-100 text-blue-800",
     completed: "bg-slate-100 text-slate-800",
     cancelled: "bg-red-100 text-red-800",
     disputed: "bg-orange-100 text-orange-800",
     requested: "bg-amber-100 text-amber-800",
     unavailable: "bg-slate-100 text-slate-800",
+    collected: "bg-cyan-100 text-cyan-800",
+    returned_ok: "bg-emerald-100 text-emerald-800",
+    damaged: "bg-red-100 text-red-800",
   }
   return colors[status] || "bg-slate-100 text-slate-800"
 }

@@ -43,8 +43,6 @@ export function BookingForm({
   const [error, setError] = useState<string | null>(null)
   const [notes, setNotes] = useState("")
 
-  const canProcessPayment = owner.stripe_account_id && owner.stripe_onboarding_complete
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
@@ -97,37 +95,8 @@ export function BookingForm({
         throw itemError
       }
 
-      // If owner has Stripe connected, redirect to payment
-      if (canProcessPayment) {
-        // Create Stripe checkout session
-        const response = await fetch("/api/stripe/create-checkout", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            orderId: order.id,
-            listingId: listing.id,
-            amount: grandTotal,
-            currency: listing.currency_code.toLowerCase(),
-            ownerStripeAccountId: owner.stripe_account_id,
-          }),
-        })
-
-        const { url, error: stripeError } = await response.json()
-        
-        if (stripeError) {
-          setError(stripeError)
-          setIsLoading(false)
-          return
-        }
-
-        if (url) {
-          router.push(url)
-          return
-        }
-      }
-
-      // If no Stripe, just redirect to success
-      router.push(`/bookings/${order.id}/success`)
+      // Phase 1: request created, payment starts only after owner acceptance.
+      router.push(`/bookings/${order.id}`)
     } catch (err) {
       console.error("Booking error:", err)
       setError("Errore durante la prenotazione. Riprova.")
@@ -138,7 +107,7 @@ export function BookingForm({
   return (
     <div className="space-y-6">
       {/* Owner payment status warning */}
-      {!canProcessPayment && (
+      {!(owner.stripe_account_id && owner.stripe_onboarding_complete) && (
         <div className="flex items-start gap-3 rounded-lg bg-amber-50 p-4 text-amber-800">
           <AlertCircle className="mt-0.5 h-5 w-5 shrink-0" />
           <div>
@@ -194,8 +163,6 @@ export function BookingForm({
               <Loader2 className="h-4 w-4 animate-spin" />
               Elaborazione...
             </>
-          ) : canProcessPayment ? (
-            `Paga ${formatPrice(grandTotal, listing.currency_code)}`
           ) : (
             "Invia richiesta di noleggio"
           )}

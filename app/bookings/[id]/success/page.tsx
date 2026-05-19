@@ -1,12 +1,15 @@
 import Link from "next/link"
 import { CheckCircle } from "lucide-react"
+import { BookingSuccessHandler } from "@/components/bookings/booking-success-handler"
 
 interface BookingSuccessPageProps {
   params: Promise<{ id: string }>
+  searchParams: Promise<{ session_id?: string }>
 }
 
-export default async function BookingSuccessPage({ params }: BookingSuccessPageProps) {
+export default async function BookingSuccessPage({ params, searchParams }: BookingSuccessPageProps) {
   const { id } = await params
+  const { session_id } = await searchParams
 
   return (
     <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center px-4 py-12">
@@ -21,6 +24,8 @@ export default async function BookingSuccessPage({ params }: BookingSuccessPageP
           <p className="mt-4 text-muted-foreground">
             La tua richiesta di noleggio e stata inviata con successo. Il proprietario ricevera una notifica e potra confermare la disponibilita.
           </p>
+
+          <BookingSuccessHandler orderId={id} sessionId={session_id || null} />
 
           <div className="mt-8 flex flex-col gap-3">
             <Link

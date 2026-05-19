@@ -78,7 +78,16 @@ export interface UserAddress {
 export interface RentalOrder {
   id: string
   renter_id: string
-  status: "pending" | "approved" | "ongoing" | "completed" | "cancelled" | "disputed"
+  status:
+    | "pending"
+    | "approved"
+    | "ongoing"
+    | "completed"
+    | "cancelled"
+    | "disputed"
+    | "accepted"
+    | "paid"
+    | "in_progress"
   subtotal_cents: number
   service_fee_cents: number
   total_deposit_cents: number
@@ -103,7 +112,19 @@ export interface RentalItem {
   total_days: number
   item_subtotal_cents: number
   deposit_cents: number
-  status: "requested" | "approved" | "ongoing" | "completed" | "cancelled" | "disputed" | "unavailable"
+  status:
+    | "requested"
+    | "approved"
+    | "ongoing"
+    | "completed"
+    | "cancelled"
+    | "disputed"
+    | "unavailable"
+    | "accepted"
+    | "paid"
+    | "collected"
+    | "returned_ok"
+    | "damaged"
   created_at: string
   updated_at: string
   // Joined fields

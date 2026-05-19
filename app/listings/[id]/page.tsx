@@ -8,12 +8,14 @@ import { BookingCard } from "@/components/listings/booking-card"
 import { 
   Star, 
   Shield, 
-  MapPin, 
   Calendar, 
   ChevronLeft,
   MessageSquare,
   Share2,
-  Heart
+  Heart,
+  Settings,
+  Package,
+  ShoppingBag
 } from "lucide-react"
 
 interface ListingDetailPageProps {
@@ -34,15 +36,6 @@ export default async function ListingDetailPage({ params }: ListingDetailPagePro
     .from("listings")
     .select(`
       *,
-      owner:profiles!listings_owner_id_fkey(
-        id, 
-        display_name, 
-        avatar_url, 
-        bio,
-        average_rating_as_owner,
-        total_reviews_as_owner,
-        created_at
-      ),
       category:categories(id, name, slug),
       images:listing_images(id, image_url, display_order)
     `)
@@ -59,8 +52,17 @@ export default async function ListingDetailPage({ params }: ListingDetailPagePro
     notFound()
   }
 
+  // Fetch owner separately to avoid cross-schema embed issues.
+  const { data: ownerProfile } = await supabase
+    .schema("users_domain")
+    .from("profiles")
+    .select("id, display_name, avatar_url, bio, average_rating_as_owner, total_reviews_as_owner, created_at")
+    .eq("id", listing.owner_id)
+    .single()
+
   // Fetch existing bookings to show unavailable dates
   const { data: bookings } = await supabase
+    .schema("rentals_domain")
     .from("rental_items")
     .select("start_date, end_date, status")
     .eq("listing_id", id)
@@ -68,11 +70,20 @@ export default async function ListingDetailPage({ params }: ListingDetailPagePro
 
   // Fetch availability exceptions
   const { data: exceptions } = await supabase
+    .schema("inventory_domain")
     .from("listing_availability_exceptions")
     .select("unavailable_date")
     .eq("listing_id", id)
 
-  const owner = listing.owner as {
+  const owner = (ownerProfile || {
+    id: listing.owner_id,
+    display_name: "Utente",
+    avatar_url: null,
+    bio: null,
+    average_rating_as_owner: 0,
+    total_reviews_as_owner: 0,
+    created_at: new Date().toISOString(),
+  }) as {
     id: string
     display_name: string
     avatar_url: string | null
@@ -160,6 +171,36 @@ export default async function ListingDetailPage({ params }: ListingDetailPagePro
                   {t("listing_detail.or")} {formatPrice(listing.price_per_week_cents, listing.currency_code)}{t("listing_detail.per_week")}
                 </p>
               )}
+
+              {/* Primary actions */}
+              <div className="mt-5 flex flex-wrap gap-3">
+                {isOwner ? (
+                  <>
+                    <Link
+                      href={`/listings/${listing.id}/edit`}
+                      className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+                    >
+                      <Settings className="h-4 w-4" />
+                      Modifica annuncio
+                    </Link>
+                    <Link
+                      href="/dashboard/listings"
+                      className="inline-flex items-center gap-2 rounded-lg border border-border px-4 py-2.5 text-sm font-medium text-foreground hover:bg-muted"
+                    >
+                      <Package className="h-4 w-4" />
+                      I tuoi annunci
+                    </Link>
+                  </>
+                ) : (
+                  <a
+                    href="#booking-widget"
+                    className="inline-flex items-center gap-2 rounded-lg bg-accent px-4 py-2.5 text-sm font-medium text-accent-foreground hover:bg-accent/90"
+                  >
+                    <ShoppingBag className="h-4 w-4" />
+                    Noleggia ora
+                  </a>
+                )}
+              </div>
             </div>
 
             {/* Description */}
@@ -233,7 +274,7 @@ export default async function ListingDetailPage({ params }: ListingDetailPagePro
 
           {/* Booking Sidebar */}
           <div className="lg:col-span-1">
-            <div className="sticky top-24">
+            <div id="booking-widget" className="sticky top-24">
               <BookingCard
                 listing={listing}
                 bookings={bookings || []}

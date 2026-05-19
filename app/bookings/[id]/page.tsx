@@ -18,6 +18,40 @@ interface BookingDetailPageProps {
   params: Promise<{ id: string }>
 }
 
+function getBookingPhase(orderStatus: string, itemStatus: string) {
+  if (orderStatus === "pending" && itemStatus === "requested") {
+    return { label: "Fase 1 - Richiesta inviata", color: "bg-amber-100 text-amber-800" }
+  }
+  if (orderStatus === "accepted" && itemStatus === "accepted") {
+    return { label: "Fase 1 - Accettata, in attesa pagamento", color: "bg-emerald-100 text-emerald-800" }
+  }
+  if (orderStatus === "paid" && itemStatus === "paid") {
+    return { label: "Fase 2 - Fondi autorizzati", color: "bg-indigo-100 text-indigo-800" }
+  }
+  if (orderStatus === "in_progress" && itemStatus === "collected") {
+    return { label: "Fase 2 - Noleggio attivo", color: "bg-blue-100 text-blue-800" }
+  }
+  if (orderStatus === "completed" && itemStatus === "returned_ok") {
+    return { label: "Fase 3 - Completato", color: "bg-emerald-100 text-emerald-800" }
+  }
+  if (orderStatus === "disputed" && itemStatus === "damaged") {
+    return { label: "Fase 3 - Disputa aperta", color: "bg-orange-100 text-orange-800" }
+  }
+  if (orderStatus === "cancelled" && itemStatus === "cancelled") {
+    return { label: "Prenotazione annullata", color: "bg-red-100 text-red-800" }
+  }
+  return { label: "Stato da verificare", color: "bg-slate-100 text-slate-800" }
+}
+
+function canRenderActions(orderStatus: string, itemStatus: string) {
+  return (
+    (orderStatus === "pending" && itemStatus === "requested") ||
+    (orderStatus === "accepted" && itemStatus === "accepted") ||
+    (orderStatus === "paid" && itemStatus === "paid") ||
+    (orderStatus === "in_progress" && itemStatus === "collected")
+  )
+}
+
 export default async function BookingDetailPage({ params }: BookingDetailPageProps) {
   const { id } = await params
   const supabase = await createClient()
@@ -66,6 +100,8 @@ export default async function BookingDetailPage({ params }: BookingDetailPagePro
   const mainImage = listing?.images?.sort((a, b) => a.display_order - b.display_order)[0]
 
   const otherParty = isRenter ? owner : renter
+  const phase = getBookingPhase(order.status, item?.status || "")
+  const showActions = canRenderActions(order.status, item?.status || "")
 
   return (
     <div className="min-h-screen bg-muted/30 py-8">
@@ -80,7 +116,7 @@ export default async function BookingDetailPage({ params }: BookingDetailPagePro
 
         {/* Status Banner */}
         <div className={`rounded-xl p-4 ${getRentalStatusColor(order.status)} mb-6`}>
-          <div className="flex items-center justify-between">
+          <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <p className="font-semibold">
                 Stato: {getRentalStatusLabel(order.status)}
@@ -88,6 +124,17 @@ export default async function BookingDetailPage({ params }: BookingDetailPagePro
               <p className="mt-1 text-sm opacity-80">
                 Ordine #{order.id.slice(0, 8)}
               </p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <span className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${phase.color}`}>
+                {phase.label}
+              </span>
+              <span className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${getRentalStatusColor(order.status)}`}>
+                Ordine: {getRentalStatusLabel(order.status)}
+              </span>
+              <span className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${getRentalStatusColor(item?.status || "")}`}>
+                Item: {getRentalStatusLabel(item?.status || "-")}
+              </span>
             </div>
           </div>
         </div>
@@ -220,14 +267,23 @@ export default async function BookingDetailPage({ params }: BookingDetailPagePro
           )}
 
           {/* Actions */}
-          <BookingActions
-            orderId={order.id}
-            itemId={item?.id}
-            currentStatus={order.status}
-            itemStatus={item?.status}
-            isOwner={isOwner}
-            isRenter={isRenter}
-          />
+          {showActions ? (
+            <BookingActions
+              orderId={order.id}
+              itemId={item?.id}
+              currentStatus={order.status}
+              itemStatus={item?.status}
+              isOwner={isOwner}
+              isRenter={isRenter}
+            />
+          ) : (
+            <div className="rounded-xl border border-border bg-card p-6">
+              <h2 className="text-lg font-semibold text-foreground">Azioni</h2>
+              <p className="mt-2 text-sm text-muted-foreground">
+                Nessuna azione disponibile in questa fase. Se lo stato sembra incoerente, aggiorna la pagina o contatta il supporto.
+              </p>
+            </div>
+          )}
         </div>
       </div>
     </div>

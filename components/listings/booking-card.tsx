@@ -8,7 +8,7 @@ import { format, addDays, eachDayOfInterval, isSameDay, isAfter, isBefore, start
 import { it } from "date-fns/locale"
 import type { Listing } from "@/lib/types"
 import { formatPrice, calculateDays, calculateRentalPrice, calculateServiceFee } from "@/lib/utils"
-import { Calendar, ChevronLeft, ChevronRight, Info } from "lucide-react"
+import { Calendar, ChevronLeft, ChevronRight, Info, Settings, Package } from "lucide-react"
 
 interface BookingCardProps {
   listing: Listing
@@ -136,15 +136,26 @@ export function BookingCard({ listing, bookings, exceptions, isOwner, isLoggedIn
   if (isOwner) {
     return (
       <div className="rounded-xl border border-border bg-card p-6">
+        <h3 className="text-base font-semibold text-foreground">Gestione annuncio</h3>
         <p className="text-sm text-muted-foreground">
           {t("booking.card.owner_notice")}
         </p>
-        <Link
-          href={`/listings/${listing.id}/edit`}
-          className="mt-4 block w-full rounded-lg bg-primary py-2.5 text-center text-sm font-medium text-primary-foreground hover:bg-primary/90"
-        >
-          {t("booking.card.edit_listing")}
-        </Link>
+        <div className="mt-4 space-y-2">
+          <Link
+            href={`/listings/${listing.id}/edit`}
+            className="flex w-full items-center justify-center gap-2 rounded-lg bg-primary py-2.5 text-center text-sm font-medium text-primary-foreground hover:bg-primary/90"
+          >
+            <Settings className="h-4 w-4" />
+            {t("booking.card.edit_listing")}
+          </Link>
+          <Link
+            href="/dashboard/listings"
+            className="flex w-full items-center justify-center gap-2 rounded-lg border border-border py-2.5 text-center text-sm font-medium text-foreground hover:bg-muted"
+          >
+            <Package className="h-4 w-4" />
+            Vai ai tuoi annunci
+          </Link>
+        </div>
       </div>
     )
   }
