@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: renting-app
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      # Add your environment variables here
+      # - DATABASE_URL=your_database_url
+      # - STRIPE_KEY=your_stripe_key
+      # - SUPABASE_URL=your_supabase_url
+      # - SUPABASE_ANON_KEY=your_supabase_key
+    restart: unless-stopped
+    networks:
+      - renting-network
+
+  # Optional: Supabase PostgreSQL database
+  # postgres:
+  #   image: postgres:15-alpine
+  #   container_name: renting-db
+  #   environment:
+  #     - POSTGRES_USER=postgres
+  #     - POSTGRES_PASSWORD=your_password
+  #     - POSTGRES_DB=renting_db
+  #   volumes:
+  #     - postgres_data:/var/lib/postgresql/data
+  #   networks:
+  #     - renting-network
+
+networks:
+  renting-network:
+    driver: bridge
+
+# volumes:
+#   postgres_data:
