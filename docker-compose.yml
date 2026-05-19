@@ -5,16 +5,22 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      target: builder # 1. <--- Forziamo Docker a fermarsi prima del "pnpm run build"
     container_name: renting-app
     ports:
       - "3000:3000"
+    volumes:        # 2. <--- Sincronizziamo i file per l'Hot Reloading delle tue modifiche
+      - .:/app
+      - /app/node_modules
+      - /app/.next
     environment:
-      - NODE_ENV=production
+      - NODE_ENV=development # 3. <--- Cambiamo da production a development
       # Add your environment variables here
       # - DATABASE_URL=your_database_url
       # - STRIPE_KEY=your_stripe_key
       # - SUPABASE_URL=your_supabase_url
       # - SUPABASE_ANON_KEY=your_supabase_key
+    command: pnpm run dev   # 4. <--- Avviamo il server di sviluppo anziché quello di produzione
     restart: unless-stopped
     networks:
       - renting-network
@@ -23,18 +29,8 @@ services:
   # postgres:
   #   image: postgres:15-alpine
   #   container_name: renting-db
-  #   environment:
-  #     - POSTGRES_USER=postgres
-  #     - POSTGRES_PASSWORD=your_password
-  #     - POSTGRES_DB=renting_db
-  #   volumes:
-  #     - postgres_data:/var/lib/postgresql/data
-  #   networks:
-  #     - renting-network
+  #   ...
 
 networks:
   renting-network:
     driver: bridge
-
-# volumes:
-#   postgres_data:

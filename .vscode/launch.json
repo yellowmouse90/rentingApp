@@ -21,6 +21,7 @@
       "request": "launch",
       "command": "pnpm dev",
       "cwd": "${workspaceFolder}",
+      "sourceMaps": true,
       "serverReadyAction": {
         "action": "debugWithChrome",
         "killOnServerStop": true,

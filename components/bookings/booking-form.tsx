@@ -65,7 +65,7 @@ export function BookingForm({
         .lte("start_date", format(endDate, "yyyy-MM-dd"))
         .gte("end_date", format(startDate, "yyyy-MM-dd"))
 
-      if (overlapError) {
+      if (overlappingCount != null && overlappingCount > 0 && overlapError != '') {
         throw overlapError
       }
 

@@ -15,6 +15,5 @@ dist
 build
 coverage
 .turbo
-pnpm-lock.yaml
 yarn.lock
 package-lock.json
