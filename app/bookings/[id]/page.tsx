@@ -61,42 +61,84 @@ export default async function BookingDetailPage({ params }: BookingDetailPagePro
     redirect(`/auth/login?redirect=/bookings/${id}`)
   }
 
-  // Fetch order with items
-  const { data: order, error } = await supabase
+  // Fetch order and item separately to avoid fragile cross-schema embeds.
+  const { data: order, error: orderError } = await supabase
+    .schema("rentals_domain")
     .from("rental_orders")
-    .select(`
-      *,
-      renter:profiles!rental_orders_renter_id_fkey(id, display_name, avatar_url, email),
-      items:rental_items(
-        *,
-        listing:listings(
-          id,
-          title,
-          description,
-          images:listing_images(image_url, display_order)
-        ),
-        owner:profiles!rental_items_owner_id_fkey(id, display_name, avatar_url, email)
-      )
-    `)
+    .select("*")
     .eq("id", id)
     .single()
 
-  if (error || !order) {
+  if (orderError || !order) {
     notFound()
   }
 
-  const item = order.items?.[0]
+  const { data: item, error: itemError } = await supabase
+    .schema("rentals_domain")
+    .from("rental_items")
+    .select("*")
+    .eq("order_id", id)
+    .single()
+
+  if (itemError || !item) {
+    notFound()
+  }
+
   const isRenter = order.renter_id === user.id
-  const isOwner = item?.owner_id === user.id
+  const isOwner = item.owner_id === user.id
 
   // Only allow access if user is renter or owner
   if (!isRenter && !isOwner) {
     notFound()
   }
 
-  const renter = order.renter as { id: string; display_name: string; avatar_url: string | null; email: string }
-  const owner = item?.owner as { id: string; display_name: string; avatar_url: string | null; email: string }
-  const listing = item?.listing as { id: string; title: string; description: string; images: { image_url: string; display_order: number }[] }
+  const { data: listingData } = await supabase
+    .schema("inventory_domain")
+    .from("listings")
+    .select(`
+      id,
+      title,
+      description,
+      images:listing_images(image_url, display_order)
+    `)
+    .eq("id", item.listing_id)
+    .single()
+
+  const { data: renterProfile } = await supabase
+    .schema("users_domain")
+    .from("profiles")
+    .select("id, display_name, avatar_url, email")
+    .eq("id", order.renter_id)
+    .maybeSingle()
+
+  const { data: ownerProfile } = await supabase
+    .schema("users_domain")
+    .from("profiles")
+    .select("id, display_name, avatar_url, email")
+    .eq("id", item.owner_id)
+    .maybeSingle()
+
+  const renter = (renterProfile || {
+    id: order.renter_id,
+    display_name: "Utente",
+    avatar_url: null,
+    email: "",
+  }) as { id: string; display_name: string; avatar_url: string | null; email: string }
+
+  const owner = (ownerProfile || {
+    id: item.owner_id,
+    display_name: "Utente",
+    avatar_url: null,
+    email: "",
+  }) as { id: string; display_name: string; avatar_url: string | null; email: string }
+
+  const listing = (listingData || {
+    id: item.listing_id,
+    title: "Annuncio rimosso",
+    description: null,
+    images: [],
+  }) as { id: string; title: string; description: string | null; images: { image_url: string; display_order: number }[] }
+
   const mainImage = listing?.images?.sort((a, b) => a.display_order - b.display_order)[0]
 
   const otherParty = isRenter ? owner : renter
@@ -132,8 +174,8 @@ export default async function BookingDetailPage({ params }: BookingDetailPagePro
               <span className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${getRentalStatusColor(order.status)}`}>
                 Ordine: {getRentalStatusLabel(order.status)}
               </span>
-              <span className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${getRentalStatusColor(item?.status || "")}`}>
-                Item: {getRentalStatusLabel(item?.status || "-")}
+              <span className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${getRentalStatusColor(item.status || "")}`}>
+                Item: {getRentalStatusLabel(item.status || "-")}
               </span>
             </div>
           </div>
@@ -157,12 +199,12 @@ export default async function BookingDetailPage({ params }: BookingDetailPagePro
               )}
               <div className="flex-1">
                 <Link
-                  href={`/listings/${listing?.id}`}
+                  href={`/listings/${listing.id}`}
                   className="font-semibold text-foreground hover:text-primary"
                 >
-                  {listing?.title || "Annuncio rimosso"}
+                  {listing.title || "Annuncio rimosso"}
                 </Link>
-                {listing?.description && (
+                {listing.description && (
                   <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">
                     {listing.description}
                   </p>
@@ -187,12 +229,12 @@ export default async function BookingDetailPage({ params }: BookingDetailPagePro
               <div>
                 <p className="text-sm text-muted-foreground">Data fine</p>
                 <p className="mt-1 font-medium text-foreground">
-                  {format(new Date(item?.end_date), "EEEE d MMMM yyyy", { locale: it })}
+                  {format(new Date(item.end_date), "EEEE d MMMM yyyy", { locale: it })}
                 </p>
               </div>
             </div>
             <p className="mt-4 text-sm text-muted-foreground">
-              Durata: {item?.total_days} {item?.total_days === 1 ? "giorno" : "giorni"}
+              Durata: {item.total_days} {item.total_days === 1 ? "giorno" : "giorni"}
             </p>
           </div>
 
@@ -250,7 +292,7 @@ export default async function BookingDetailPage({ params }: BookingDetailPagePro
               </div>
             </div>
             <Link
-              href={`/messages?user=${otherParty?.id}&listing=${listing?.id}`}
+              href={`/messages?user=${otherParty?.id}&listing=${listing.id}`}
               className="mt-4 flex w-full items-center justify-center gap-2 rounded-lg border border-border py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-muted"
             >
               <MessageSquare className="h-4 w-4" />
@@ -270,9 +312,9 @@ export default async function BookingDetailPage({ params }: BookingDetailPagePro
           {showActions ? (
             <BookingActions
               orderId={order.id}
-              itemId={item?.id}
+              itemId={item.id}
               currentStatus={order.status}
-              itemStatus={item?.status}
+              itemStatus={item.status}
               isOwner={isOwner}
               isRenter={isRenter}
             />

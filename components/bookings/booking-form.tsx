@@ -55,8 +55,29 @@ export function BookingForm({
         return
       }
 
+      // Fast availability pre-check to avoid creating an order when dates are already taken.
+      const { count: overlappingCount, error: overlapError } = await supabase
+        .schema("rentals_domain")
+        .from("rental_items")
+        .select("id", { count: "exact", head: true })
+        .eq("listing_id", listing.id)
+        .not("status", "in", '("cancelled","unavailable")')
+        .lte("start_date", format(endDate, "yyyy-MM-dd"))
+        .gte("end_date", format(startDate, "yyyy-MM-dd"))
+
+      if (overlapError) {
+        throw overlapError
+      }
+
+      if ((overlappingCount || 0) > 0) {
+        setError("Le date selezionate non sono piu disponibili. Scegli un altro periodo.")
+        setIsLoading(false)
+        return
+      }
+
       // Create rental order
       const { data: order, error: orderError } = await supabase
+        .schema("rentals_domain")
         .from("rental_orders")
         .insert({
           renter_id: user.id,
@@ -75,6 +96,7 @@ export function BookingForm({
 
       // Create rental item
       const { error: itemError } = await supabase
+        .schema("rentals_domain")
         .from("rental_items")
         .insert({
           order_id: order.id,
@@ -90,8 +112,19 @@ export function BookingForm({
         })
 
       if (itemError) {
-        // Rollback order
-        await supabase.from("rental_orders").delete().eq("id", order.id)
+        // Fallback rollback: renter has UPDATE policy, but not DELETE policy.
+        await supabase
+          .schema("rentals_domain")
+          .from("rental_orders")
+          .update({ status: "cancelled", updated_at: new Date().toISOString() })
+          .eq("id", order.id)
+
+        if ((itemError as { code?: string }).code === "23P01") {
+          setError("Le date selezionate non sono piu disponibili. Scegli un altro periodo.")
+          setIsLoading(false)
+          return
+        }
+
         throw itemError
       }
 

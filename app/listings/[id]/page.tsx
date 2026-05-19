@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation"
 import Link from "next/link"
 import { createClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/admin"
 import { getServerI18n } from "@/lib/i18n/server"
 import { formatPrice, getConditionLabel } from "@/lib/utils"
 import { ListingGallery } from "@/components/listings/listing-gallery"
@@ -56,9 +57,24 @@ export default async function ListingDetailPage({ params }: ListingDetailPagePro
   const { data: ownerProfile } = await supabase
     .schema("users_domain")
     .from("profiles")
-    .select("id, display_name, avatar_url, bio, average_rating_as_owner, total_reviews_as_owner, created_at")
+    .select("id, email, display_name, avatar_url, bio, average_rating_as_owner, total_reviews_as_owner, created_at")
     .eq("id", listing.owner_id)
-    .single()
+    .maybeSingle()
+
+  let effectiveOwnerProfile = ownerProfile
+
+  // If RLS blocks profile visibility, use a server-side admin fallback for public fields only.
+  if (!effectiveOwnerProfile) {
+    const admin = createAdminClient()
+    const { data: ownerProfileAdmin } = await admin
+      .schema("users_domain")
+      .from("profiles")
+      .select("id, email, display_name, avatar_url, bio, average_rating_as_owner, total_reviews_as_owner, created_at")
+      .eq("id", listing.owner_id)
+      .maybeSingle()
+
+    effectiveOwnerProfile = ownerProfileAdmin || null
+  }
 
   // Fetch existing bookings to show unavailable dates
   const { data: bookings } = await supabase
@@ -75,8 +91,9 @@ export default async function ListingDetailPage({ params }: ListingDetailPagePro
     .select("unavailable_date")
     .eq("listing_id", id)
 
-  const owner = (ownerProfile || {
+  const owner = (effectiveOwnerProfile || {
     id: listing.owner_id,
+    email: "",
     display_name: "Utente",
     avatar_url: null,
     bio: null,
@@ -85,6 +102,7 @@ export default async function ListingDetailPage({ params }: ListingDetailPagePro
     created_at: new Date().toISOString(),
   }) as {
     id: string
+    email: string
     display_name: string
     avatar_url: string | null
     bio: string | null
@@ -92,6 +110,11 @@ export default async function ListingDetailPage({ params }: ListingDetailPagePro
     total_reviews_as_owner: number
     created_at: string
   }
+
+  const ownerDisplayName =
+    owner.display_name?.trim() ||
+    owner.email?.split("@")[0]?.trim() ||
+    "Utente"
 
   const images = (listing.images as { id: string; image_url: string; display_order: number }[])?.sort(
     (a, b) => a.display_order - b.display_order
@@ -218,17 +241,17 @@ export default async function ListingDetailPage({ params }: ListingDetailPagePro
                 {owner.avatar_url ? (
                   <img
                     src={owner.avatar_url}
-                    alt={owner.display_name || "Utente"}
+                    alt={ownerDisplayName}
                     className="h-14 w-14 rounded-full object-cover"
                   />
                 ) : (
                   <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary text-lg font-medium text-primary-foreground">
-                    {(owner.display_name || "U").slice(0, 2).toUpperCase()}
+                    {ownerDisplayName.slice(0, 2).toUpperCase()}
                   </div>
                 )}
                 <div className="flex-1">
                   <h3 className="font-semibold text-foreground">
-                    {owner.display_name || "Utente"}
+                    {ownerDisplayName}
                   </h3>
                   <div className="mt-1 flex items-center gap-3 text-sm text-muted-foreground">
                     {owner.average_rating_as_owner > 0 && (
@@ -253,7 +276,7 @@ export default async function ListingDetailPage({ params }: ListingDetailPagePro
                   className="mt-4 flex w-full items-center justify-center gap-2 rounded-lg border border-border py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-muted"
                 >
                   <MessageSquare className="h-4 w-4" />
-                  {t("listing_detail.contact_owner")} {owner.display_name?.split(" ")[0] || t("listing_detail.contact_owner_fallback")}
+                  {t("listing_detail.contact_owner")} {ownerDisplayName.split(" ")[0] || t("listing_detail.contact_owner_fallback")}
                 </Link>
               )}
             </div>

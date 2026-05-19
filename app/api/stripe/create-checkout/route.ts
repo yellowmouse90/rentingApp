@@ -17,6 +17,7 @@ export async function POST(request: NextRequest) {
     }
 
     const { data: order, error: orderError } = await supabase
+      .schema("rentals_domain")
       .from("rental_orders")
       .select("id, renter_id, status, grand_total_cents, currency_code")
       .eq("id", orderId)
@@ -35,6 +36,7 @@ export async function POST(request: NextRequest) {
     }
 
     const { data: item, error: itemError } = await supabase
+      .schema("rentals_domain")
       .from("rental_items")
       .select("listing_id, owner_id")
       .eq("order_id", orderId)

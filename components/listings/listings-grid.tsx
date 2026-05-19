@@ -1,7 +1,7 @@
 import Link from "next/link"
 import type { Listing } from "@/lib/types"
 import { formatPrice, getConditionLabel } from "@/lib/utils"
-import { Star, ImageIcon, Package } from "lucide-react"
+import { ImageIcon, Package } from "lucide-react"
 
 interface ListingsGridProps {
   listings: Listing[]
@@ -37,7 +37,6 @@ export function ListingsGrid({ listings }: ListingsGridProps) {
 
 function ListingCard({ listing }: { listing: Listing }) {
   const mainImage = listing.images?.sort((a, b) => a.display_order - b.display_order)[0]
-  const owner = listing.owner as { id: string; display_name: string; avatar_url: string | null; average_rating_as_owner: number } | undefined
 
   return (
     <Link
@@ -94,31 +93,6 @@ function ListingCard({ listing }: { listing: Listing }) {
           <p className="mt-1 text-xs text-muted-foreground">
             {formatPrice(listing.price_per_week_cents, listing.currency_code)}/settimana
           </p>
-        )}
-
-        {owner && (
-          <div className="mt-3 flex items-center gap-2 border-t border-border pt-3">
-            {owner.avatar_url ? (
-              <img
-                src={owner.avatar_url}
-                alt={owner.display_name || "Utente"}
-                className="h-6 w-6 rounded-full object-cover"
-              />
-            ) : (
-              <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-[10px] font-medium text-primary-foreground">
-                {(owner.display_name || "U").slice(0, 2).toUpperCase()}
-              </div>
-            )}
-            <span className="flex-1 truncate text-xs text-muted-foreground">
-              {owner.display_name || "Utente"}
-            </span>
-            {owner.average_rating_as_owner > 0 && (
-              <div className="flex items-center gap-0.5 text-xs text-muted-foreground">
-                <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
-                {owner.average_rating_as_owner.toFixed(1)}
-              </div>
-            )}
-          </div>
         )}
       </div>
     </Link>

@@ -8,7 +8,7 @@ import type { Category } from "@/lib/types"
 import { formatPrice, getConditionLabel } from "@/lib/utils"
 import { LocationSearch } from "./location-search"
 import { ListingsFilters } from "./listings-filters"
-import { Star, ImageIcon, Package, MapPin, Loader2 } from "lucide-react"
+import { ImageIcon, Package, MapPin, Loader2 } from "lucide-react"
 
 interface ListingsGridWithLocationProps {
   categories: Category[]
@@ -69,33 +69,7 @@ export function ListingsGridWithLocation({
   const fetchListings = useCallback(async () => {
     setIsLoading(true)
 
-    if (location && location.lat !== 0 && location.lng !== 0) {
-      // Use geographic search function
-      const { data, error } = await supabase
-        .schema('inventory_domain')
-        .rpc("search_listings_nearby", {
-          user_lat: location.lat,
-          user_lng: location.lng,
-          radius_km: radius,
-          category_slug: initialParams.category || null,
-          search_query: initialParams.q || null,
-          min_price: initialParams.minPrice ? parseInt(initialParams.minPrice) * 100 : null,
-          max_price: initialParams.maxPrice ? parseInt(initialParams.maxPrice) * 100 : null,
-          item_condition: initialParams.condition || null,
-          page_limit: 50,
-          page_offset: 0,
-      })
-
-      if (!error && data) {
-        setListings(data)
-        setTotalCount(data.length)
-      } else {
-        console.error("[v0] Error fetching listings:", error)
-        setListings([])
-        setTotalCount(0)
-      }
-    } else {
-      // Fallback to regular query without location
+    const runRegularQuery = async () => {
       let query = supabase
         .schema('inventory_domain')
         .from("listings")
@@ -141,7 +115,6 @@ export function ListingsGridWithLocation({
       const { data, count, error } = await query
 
       if (!error && data) {
-        // Transform to match ListingWithDistance structure
         const transformed = data.map((listing: any) => ({
           id: listing.id,
           owner_id: listing.owner_id,
@@ -157,20 +130,50 @@ export function ListingsGridWithLocation({
           is_available: listing.is_available,
           views_count: listing.views_count,
           created_at: listing.created_at,
-          distance_km: -1, // No distance without location
-          owner_display_name: listing.owner?.display_name || "Utente",
-          owner_avatar_url: listing.owner?.avatar_url || null,
-          owner_rating: listing.owner?.average_rating_as_owner || 0,
+          distance_km: -1,
+          owner_display_name: "",
+          owner_avatar_url: null,
+          owner_rating: 0,
           category_name: listing.category?.name || "",
           category_icon: listing.category?.icon_name || "",
           first_image_url: listing.images?.sort((a: any, b: any) => a.display_order - b.display_order)[0]?.image_url || null,
         }))
+
         setListings(transformed)
         setTotalCount(count || transformed.length)
       } else {
+        console.error("[listings] Regular query failed:", error)
         setListings([])
         setTotalCount(0)
       }
+    }
+
+    if (location && location.lat !== 0 && location.lng !== 0) {
+      // Use geographic search function
+      const { data, error } = await supabase
+        .schema('inventory_domain')
+        .rpc("search_listings_nearby", {
+          user_lat: location.lat,
+          user_lng: location.lng,
+          radius_km: radius,
+          category_slug: initialParams.category || null,
+          search_query: initialParams.q || null,
+          min_price: initialParams.minPrice ? parseInt(initialParams.minPrice) * 100 : null,
+          max_price: initialParams.maxPrice ? parseInt(initialParams.maxPrice) * 100 : null,
+          item_condition: initialParams.condition || null,
+          page_limit: 50,
+          page_offset: 0,
+      })
+
+      if (!error && data) {
+        setListings(data)
+        setTotalCount(data.length)
+      } else {
+        console.error("[listings] Nearby search failed, fallback to regular query:", error)
+        await runRegularQuery()
+      }
+    } else {
+      await runRegularQuery()
     }
 
     setIsLoading(false)
@@ -358,29 +361,6 @@ function ListingCard({ listing, showDistance }: { listing: ListingWithDistance; 
             {formatPrice(listing.price_per_week_cents, listing.currency_code)}/settimana
           </p>
         )}
-
-        <div className="mt-3 flex items-center gap-2 border-t border-border pt-3">
-          {listing.owner_avatar_url ? (
-            <img
-              src={listing.owner_avatar_url}
-              alt={listing.owner_display_name || "Utente"}
-              className="h-6 w-6 rounded-full object-cover"
-            />
-          ) : (
-            <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-[10px] font-medium text-primary-foreground">
-              {(listing.owner_display_name || "U").slice(0, 2).toUpperCase()}
-            </div>
-          )}
-          <span className="flex-1 truncate text-xs text-muted-foreground">
-            {listing.owner_display_name || "Utente"}
-          </span>
-          {listing.owner_rating > 0 && (
-            <div className="flex items-center gap-0.5 text-xs text-muted-foreground">
-              <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
-              {listing.owner_rating.toFixed(1)}
-            </div>
-          )}
-        </div>
       </div>
     </Link>
   )

@@ -10,6 +10,7 @@ async function upsertAuthorizedTransaction(orderId: string, paymentIntentId: str
   const supabase = createAdminClient()
 
   const { data: order } = await supabase
+    .schema("rentals_domain")
     .from("rental_orders")
     .select("id, status, grand_total_cents, currency_code")
     .eq("id", orderId)
@@ -20,6 +21,7 @@ async function upsertAuthorizedTransaction(orderId: string, paymentIntentId: str
   }
 
   const { data: existingTx } = await supabase
+    .schema("rentals_domain")
     .from("transactions")
     .select("id, status")
     .eq("order_id", orderId)
@@ -29,6 +31,7 @@ async function upsertAuthorizedTransaction(orderId: string, paymentIntentId: str
 
   if (existingTx?.id) {
     await supabase
+      .schema("rentals_domain")
       .from("transactions")
       .update({
         stripe_payment_intent_id: paymentIntentId,
@@ -39,7 +42,7 @@ async function upsertAuthorizedTransaction(orderId: string, paymentIntentId: str
       })
       .eq("id", existingTx.id)
   } else {
-    await supabase.from("transactions").insert({
+    await supabase.schema("rentals_domain").from("transactions").insert({
       order_id: orderId,
       stripe_payment_intent_id: paymentIntentId,
       amount_cents: order.grand_total_cents,
@@ -49,8 +52,8 @@ async function upsertAuthorizedTransaction(orderId: string, paymentIntentId: str
   }
 
   if (order.status === "accepted" || order.status === "pending") {
-    await supabase.from("rental_orders").update({ status: "paid", updated_at: now }).eq("id", orderId)
-    await supabase.from("rental_items").update({ status: "paid", updated_at: now }).eq("order_id", orderId)
+    await supabase.schema("rentals_domain").from("rental_orders").update({ status: "paid", updated_at: now }).eq("id", orderId)
+    await supabase.schema("rentals_domain").from("rental_items").update({ status: "paid", updated_at: now }).eq("order_id", orderId)
   }
 }
 
@@ -76,6 +79,7 @@ async function setTransactionStatusFromPaymentIntent(paymentIntent: Stripe.Payme
     }
 
     await supabase
+      .schema("rentals_domain")
       .from("transactions")
       .update({
         status: "captured",
@@ -88,6 +92,7 @@ async function setTransactionStatusFromPaymentIntent(paymentIntent: Stripe.Payme
 
   if (paymentIntent.status === "canceled") {
     await supabase
+      .schema("rentals_domain")
       .from("transactions")
       .update({
         status: "failed",
@@ -99,6 +104,7 @@ async function setTransactionStatusFromPaymentIntent(paymentIntent: Stripe.Payme
 
   if (paymentIntent.status === "requires_payment_method") {
     await supabase
+      .schema("rentals_domain")
       .from("transactions")
       .update({
         status: "requires_payment_method",

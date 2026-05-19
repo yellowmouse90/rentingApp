@@ -17,6 +17,7 @@ export async function POST(request: NextRequest) {
     }
 
     const { data: order, error: orderError } = await supabase
+      .schema("rentals_domain")
       .from("rental_orders")
       .select("id, renter_id, status, grand_total_cents, currency_code")
       .eq("id", orderId)
@@ -51,6 +52,7 @@ export async function POST(request: NextRequest) {
     const paymentIntentId = paymentIntent.id
 
     const { data: existingTx } = await supabase
+      .schema("rentals_domain")
       .from("transactions")
       .select("id")
       .eq("order_id", orderId)
@@ -58,6 +60,7 @@ export async function POST(request: NextRequest) {
 
     if (existingTx?.id) {
       await supabase
+        .schema("rentals_domain")
         .from("transactions")
         .update({
           stripe_payment_intent_id: paymentIntentId,
@@ -68,7 +71,7 @@ export async function POST(request: NextRequest) {
         })
         .eq("id", existingTx.id)
     } else {
-      await supabase.from("transactions").insert({
+      await supabase.schema("rentals_domain").from("transactions").insert({
         order_id: orderId,
         stripe_payment_intent_id: paymentIntentId,
         amount_cents: order.grand_total_cents,
@@ -79,11 +82,13 @@ export async function POST(request: NextRequest) {
 
     if (order.status === "accepted" || order.status === "pending") {
       await supabase
+        .schema("rentals_domain")
         .from("rental_orders")
         .update({ status: "paid", updated_at: new Date().toISOString() })
         .eq("id", orderId)
 
       await supabase
+        .schema("rentals_domain")
         .from("rental_items")
         .update({ status: "paid", updated_at: new Date().toISOString() })
         .eq("order_id", orderId)

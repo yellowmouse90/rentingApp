@@ -12,35 +12,98 @@ export default async function BookingsPage() {
 
   // Fetch user's rental orders (as renter)
   const { data: orders } = await supabase
+    .schema("rentals_domain")
     .from("rental_orders")
-    .select(`
-      *,
-      items:rental_items(
-        *,
-        listing:listings(
-          id,
-          title,
-          images:listing_images(image_url, display_order)
-        ),
-        owner:profiles!rental_items_owner_id_fkey(display_name, avatar_url)
-      )
-    `)
+    .select("*")
     .eq("renter_id", user.id)
     .order("created_at", { ascending: false })
 
+  const orderIds = (orders || []).map((order) => order.id)
+
+  const { data: orderItems } = orderIds.length
+    ? await supabase
+        .schema("rentals_domain")
+        .from("rental_items")
+        .select("id, order_id, listing_id, start_date, end_date, status")
+        .in("order_id", orderIds)
+    : { data: [] as any[] }
+
+  const listingIdsFromOrders = Array.from(new Set((orderItems || []).map((item) => item.listing_id)))
+
+  const { data: listingsFromOrders } = listingIdsFromOrders.length
+    ? await supabase
+        .schema("inventory_domain")
+        .from("listings")
+        .select("id, title, images:listing_images(image_url, display_order)")
+        .in("id", listingIdsFromOrders)
+    : { data: [] as any[] }
+
+  const itemsByOrderId = new Map((orderItems || []).map((item) => [item.order_id, item]))
+  const listingsById = new Map((listingsFromOrders || []).map((listing) => [listing.id, listing]))
+
+  const renterOrders = (orders || []).map((order) => {
+    const item = itemsByOrderId.get(order.id)
+    const listing = item ? listingsById.get(item.listing_id) : null
+
+    return {
+      ...order,
+      item,
+      listing,
+    }
+  })
+
   // Fetch rental items where user is owner
   const { data: ownerItems } = await supabase
+    .schema("rentals_domain")
     .from("rental_items")
-    .select(`
-      *,
-      listing:listings(id, title, images:listing_images(image_url, display_order)),
-      order:rental_orders(
-        id,
-        renter:profiles!rental_orders_renter_id_fkey(display_name, avatar_url)
-      )
-    `)
+    .select("id, order_id, listing_id, owner_id, start_date, end_date, status")
     .eq("owner_id", user.id)
     .order("created_at", { ascending: false })
+
+  const ownerOrderIds = Array.from(new Set((ownerItems || []).map((item) => item.order_id)))
+  const ownerListingIds = Array.from(new Set((ownerItems || []).map((item) => item.listing_id)))
+
+  const { data: ownerOrders } = ownerOrderIds.length
+    ? await supabase
+        .schema("rentals_domain")
+        .from("rental_orders")
+        .select("id, renter_id")
+        .in("id", ownerOrderIds)
+    : { data: [] as any[] }
+
+  const renterIds = Array.from(new Set((ownerOrders || []).map((order) => order.renter_id)))
+
+  const { data: renterProfiles } = renterIds.length
+    ? await supabase
+        .schema("users_domain")
+        .from("profiles")
+        .select("id, display_name, avatar_url")
+        .in("id", renterIds)
+    : { data: [] as any[] }
+
+  const { data: ownerListings } = ownerListingIds.length
+    ? await supabase
+        .schema("inventory_domain")
+        .from("listings")
+        .select("id, title, images:listing_images(image_url, display_order)")
+        .in("id", ownerListingIds)
+    : { data: [] as any[] }
+
+  const ownerOrdersById = new Map((ownerOrders || []).map((order) => [order.id, order]))
+  const profilesById = new Map((renterProfiles || []).map((profile) => [profile.id, profile]))
+  const ownerListingsById = new Map((ownerListings || []).map((listing) => [listing.id, listing]))
+
+  const ownerItemsView = (ownerItems || []).map((item) => {
+    const order = ownerOrdersById.get(item.order_id)
+    const renter = order ? profilesById.get(order.renter_id) : null
+    const listing = ownerListingsById.get(item.listing_id)
+
+    return {
+      ...item,
+      listing,
+      renter,
+    }
+  })
 
   return (
     <div className="min-h-screen bg-muted/30 py-8">
@@ -54,9 +117,9 @@ export default async function BookingsPage() {
             {t("bookings.made")}
           </h2>
 
-          {orders && orders.length > 0 ? (
+          {renterOrders.length > 0 ? (
             <div className="mt-4 space-y-4">
-              {orders.map((order) => (
+              {renterOrders.map((order) => (
                 <OrderCard key={order.id} order={order} t={t} dateLocale={dateLocale} />
               ))}
             </div>
@@ -81,9 +144,9 @@ export default async function BookingsPage() {
             {t("bookings.received")}
           </h2>
 
-          {ownerItems && ownerItems.length > 0 ? (
+          {ownerItemsView.length > 0 ? (
             <div className="mt-4 space-y-4">
-              {ownerItems.map((item) => (
+              {ownerItemsView.map((item) => (
                 <OwnerItemCard key={item.id} item={item} t={t} dateLocale={dateLocale} />
               ))}
             </div>
@@ -114,8 +177,8 @@ function OrderCard({
   t: (key: string) => string
   dateLocale: Locale
 }) {
-  const item = order.items?.[0]
-  const listing = item?.listing
+  const item = order.item
+  const listing = order.listing
   const mainImage = listing?.images?.sort((a: any, b: any) => a.display_order - b.display_order)[0]
 
   return (
@@ -141,8 +204,8 @@ function OrderCard({
         </h3>
         <div className="mt-1 flex items-center gap-2 text-sm text-muted-foreground">
           <Calendar className="h-4 w-4" />
-          {format(new Date(item?.start_date), "d MMM", { locale: dateLocale })} -{" "}
-          {format(new Date(item?.end_date), "d MMM yyyy", { locale: dateLocale })}
+          {item?.start_date ? format(new Date(item.start_date), "d MMM", { locale: dateLocale }) : "-"} -{" "}
+          {item?.end_date ? format(new Date(item.end_date), "d MMM yyyy", { locale: dateLocale }) : "-"}
         </div>
         <div className="mt-2 flex items-center gap-3">
           <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${getRentalStatusColor(order.status)}`}>
@@ -169,7 +232,7 @@ function OwnerItemCard({
   dateLocale: Locale
 }) {
   const listing = item.listing
-  const renter = item.order?.renter
+  const renter = item.renter
   const mainImage = listing?.images?.sort((a: any, b: any) => a.display_order - b.display_order)[0]
 
   return (

@@ -22,11 +22,13 @@ export default async function DashboardPage() {
     .eq("owner_id", user.id)
 
   const { count: ordersAsRenter } = await supabase
+    .schema("rentals_domain")
     .from("rental_orders")
     .select("*", { count: "exact", head: true })
     .eq("renter_id", user.id)
 
   const { count: ordersAsOwner } = await supabase
+    .schema("rentals_domain")
     .from("rental_items")
     .select("*", { count: "exact", head: true })
     .eq("owner_id", user.id)

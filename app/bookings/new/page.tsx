@@ -34,7 +34,6 @@ export default async function NewBookingPage({ searchParams }: NewBookingPagePro
     .from("listings")
     .select(`
       *,
-      owner:profiles!listings_owner_id_fkey(id, display_name, avatar_url, stripe_account_id, stripe_onboarding_complete),
       images:listing_images(id, image_url, display_order)
     `)
     .eq("id", params.listing)
@@ -59,9 +58,23 @@ export default async function NewBookingPage({ searchParams }: NewBookingPagePro
   const subtotal = calculateRentalPrice(listing.price_per_day_cents, listing.price_per_week_cents, totalDays)
   const serviceFee = calculateServiceFee(subtotal)
   const deposit = listing.deposit_cents
+  const totalToPayNow = subtotal + serviceFee
   const grandTotal = subtotal + serviceFee + deposit
 
-  const owner = listing.owner as { 
+  const { data: ownerProfile } = await supabase
+    .schema("users_domain")
+    .from("profiles")
+    .select("id, display_name, avatar_url, stripe_account_id, stripe_onboarding_complete")
+    .eq("id", listing.owner_id)
+    .single()
+
+  const owner = (ownerProfile || {
+    id: listing.owner_id,
+    display_name: "Utente",
+    avatar_url: null,
+    stripe_account_id: null,
+    stripe_onboarding_complete: false,
+  }) as {
     id: string
     display_name: string
     avatar_url: string | null
@@ -160,9 +173,20 @@ export default async function NewBookingPage({ searchParams }: NewBookingPagePro
                   </div>
                 )}
                 <div className="flex justify-between border-t border-border pt-3 font-semibold">
-                  <span className="text-foreground">{t("booking_new.total")}</span>
-                  <span className="text-foreground">{formatPrice(grandTotal, listing.currency_code)}</span>
+                  <span className="text-foreground">Totale noleggio da pagare</span>
+                  <span className="text-foreground">{formatPrice(totalToPayNow, listing.currency_code)}</span>
                 </div>
+                {deposit > 0 && (
+                  <div className="rounded-lg bg-muted p-3 text-xs text-muted-foreground">
+                    <p>
+                      Caparra separata: <span className="font-medium text-foreground">{formatPrice(deposit, listing.currency_code)}</span>
+                    </p>
+                    <p className="mt-1">
+                      Importo totale autorizzato sulla carta (noleggio + caparra):
+                      <span className="ml-1 font-semibold text-foreground">{formatPrice(grandTotal, listing.currency_code)}</span>
+                    </p>
+                  </div>
+                )}
               </div>
 
               {/* Trust badges */}

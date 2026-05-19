@@ -33,6 +33,7 @@ export async function POST(request: NextRequest, { params }: PageParams) {
     }
 
     const { data: order, error: orderError } = await supabase
+      .schema("rentals_domain")
       .from("rental_orders")
       .select("id, renter_id, status, subtotal_cents, service_fee_cents")
       .eq("id", orderId)
@@ -43,6 +44,7 @@ export async function POST(request: NextRequest, { params }: PageParams) {
     }
 
     const { data: item, error: itemError } = await supabase
+      .schema("rentals_domain")
       .from("rental_items")
       .select("id, owner_id, status")
       .eq("order_id", orderId)
@@ -62,8 +64,8 @@ export async function POST(request: NextRequest, { params }: PageParams) {
         return NextResponse.json({ error: "Stato non valido per accettare" }, { status: 400 })
       }
 
-      await supabase.from("rental_orders").update({ status: "accepted", updated_at: now }).eq("id", orderId)
-      await supabase.from("rental_items").update({ status: "accepted", updated_at: now }).eq("id", item.id)
+      await supabase.schema("rentals_domain").from("rental_orders").update({ status: "accepted", updated_at: now }).eq("id", orderId)
+      await supabase.schema("rentals_domain").from("rental_items").update({ status: "accepted", updated_at: now }).eq("id", item.id)
       return NextResponse.json({ ok: true })
     }
 
@@ -73,8 +75,8 @@ export async function POST(request: NextRequest, { params }: PageParams) {
         return NextResponse.json({ error: "Stato non valido per rifiutare" }, { status: 400 })
       }
 
-      await supabase.from("rental_orders").update({ status: "cancelled", updated_at: now }).eq("id", orderId)
-      await supabase.from("rental_items").update({ status: "cancelled", updated_at: now }).eq("id", item.id)
+      await supabase.schema("rentals_domain").from("rental_orders").update({ status: "cancelled", updated_at: now }).eq("id", orderId)
+      await supabase.schema("rentals_domain").from("rental_items").update({ status: "cancelled", updated_at: now }).eq("id", item.id)
       return NextResponse.json({ ok: true })
     }
 
@@ -84,8 +86,8 @@ export async function POST(request: NextRequest, { params }: PageParams) {
         return NextResponse.json({ error: "Stato non valido per annullare" }, { status: 400 })
       }
 
-      await supabase.from("rental_orders").update({ status: "cancelled", updated_at: now }).eq("id", orderId)
-      await supabase.from("rental_items").update({ status: "cancelled", updated_at: now }).eq("id", item.id)
+      await supabase.schema("rentals_domain").from("rental_orders").update({ status: "cancelled", updated_at: now }).eq("id", orderId)
+      await supabase.schema("rentals_domain").from("rental_items").update({ status: "cancelled", updated_at: now }).eq("id", item.id)
       return NextResponse.json({ ok: true })
     }
 
@@ -95,8 +97,9 @@ export async function POST(request: NextRequest, { params }: PageParams) {
         return NextResponse.json({ error: "Stato non valido per la consegna" }, { status: 400 })
       }
 
-      await supabase.from("rental_orders").update({ status: "in_progress", updated_at: now }).eq("id", orderId)
+      await supabase.schema("rentals_domain").from("rental_orders").update({ status: "in_progress", updated_at: now }).eq("id", orderId)
       await supabase
+        .schema("rentals_domain")
         .from("rental_items")
         .update({ status: "collected", handed_over_at: now, updated_at: now })
         .eq("id", item.id)
@@ -111,6 +114,7 @@ export async function POST(request: NextRequest, { params }: PageParams) {
       }
 
       const { data: tx, error: txError } = await supabase
+        .schema("rentals_domain")
         .from("transactions")
         .select("id, stripe_payment_intent_id")
         .eq("order_id", orderId)
@@ -139,9 +143,10 @@ export async function POST(request: NextRequest, { params }: PageParams) {
         transferId = typeof charge.transfer === "string" ? charge.transfer : null
       }
 
-      await supabase.from("rental_items").update({ status: "returned_ok", returned_at: now, updated_at: now }).eq("id", item.id)
-      await supabase.from("rental_orders").update({ status: "completed", updated_at: now }).eq("id", orderId)
+      await supabase.schema("rentals_domain").from("rental_items").update({ status: "returned_ok", returned_at: now, updated_at: now }).eq("id", item.id)
+      await supabase.schema("rentals_domain").from("rental_orders").update({ status: "completed", updated_at: now }).eq("id", orderId)
       await supabase
+        .schema("rentals_domain")
         .from("transactions")
         .update({
           status: "captured",
@@ -161,6 +166,7 @@ export async function POST(request: NextRequest, { params }: PageParams) {
       }
 
       await supabase
+        .schema("rentals_domain")
         .from("rental_items")
         .update({
           status: "damaged",
@@ -171,7 +177,7 @@ export async function POST(request: NextRequest, { params }: PageParams) {
         })
         .eq("id", item.id)
 
-      await supabase.from("rental_orders").update({ status: "disputed", updated_at: now }).eq("id", orderId)
+      await supabase.schema("rentals_domain").from("rental_orders").update({ status: "disputed", updated_at: now }).eq("id", orderId)
 
       return NextResponse.json({ ok: true })
     }

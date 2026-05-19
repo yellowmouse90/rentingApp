@@ -94,7 +94,8 @@ export function BookingCard({ listing, bookings, exceptions, isOwner, isLoggedIn
     : 0
   const serviceFee = calculateServiceFee(subtotal)
   const deposit = listing.deposit_cents
-  const total = subtotal + serviceFee + deposit
+  const totalToPayNow = subtotal + serviceFee
+  const totalAuthorization = totalToPayNow + deposit
 
   // Generate calendar days
   const generateCalendarDays = () => {
@@ -289,9 +290,17 @@ export function BookingCard({ listing, bookings, exceptions, isOwner, isLoggedIn
             </div>
           )}
           <div className="flex justify-between border-t border-border pt-2 font-semibold">
-            <span className="text-foreground">{t("booking.total")}</span>
-            <span className="text-foreground">{formatPrice(total, listing.currency_code)}</span>
+            <span className="text-foreground">Totale noleggio da pagare</span>
+            <span className="text-foreground">{formatPrice(totalToPayNow, listing.currency_code)}</span>
           </div>
+          {deposit > 0 && (
+            <div className="rounded-lg bg-muted p-2 text-xs text-muted-foreground">
+              Caparra separata: {formatPrice(deposit, listing.currency_code)}. Importo totale autorizzato sulla carta:
+              <span className="ml-1 font-semibold text-foreground">
+                {formatPrice(totalAuthorization, listing.currency_code)}
+              </span>
+            </div>
+          )}
         </div>
       )}
 
