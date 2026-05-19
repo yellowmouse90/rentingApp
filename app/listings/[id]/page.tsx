@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation"
 import Link from "next/link"
 import { createClient } from "@/lib/supabase/server"
+import { getServerI18n } from "@/lib/i18n/server"
 import { formatPrice, getConditionLabel } from "@/lib/utils"
 import { ListingGallery } from "@/components/listings/listing-gallery"
 import { BookingCard } from "@/components/listings/booking-card"
@@ -21,6 +22,7 @@ interface ListingDetailPageProps {
 
 export default async function ListingDetailPage({ params }: ListingDetailPageProps) {
   const { id } = await params
+  const { t, intlLocale } = await getServerI18n()
   const supabase = await createClient()
 
   // Get current user
@@ -51,6 +53,12 @@ export default async function ListingDetailPage({ params }: ListingDetailPagePro
     notFound()
   }
 
+  const isOwner = user?.id === listing.owner_id
+
+  if (!listing.is_active && !isOwner) {
+    notFound()
+  }
+
   // Fetch existing bookings to show unavailable dates
   const { data: bookings } = await supabase
     .from("rental_items")
@@ -78,8 +86,6 @@ export default async function ListingDetailPage({ params }: ListingDetailPagePro
     (a, b) => a.display_order - b.display_order
   ) || []
 
-  const isOwner = user?.id === listing.owner_id
-
   return (
     <div className="min-h-screen bg-background">
       <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
@@ -89,12 +95,18 @@ export default async function ListingDetailPage({ params }: ListingDetailPagePro
           className="mb-6 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
         >
           <ChevronLeft className="h-4 w-4" />
-          Torna agli annunci
+          {t("listing_detail.back")}
         </Link>
 
         <div className="grid gap-8 lg:grid-cols-3">
           {/* Main Content */}
           <div className="lg:col-span-2">
+            {!listing.is_active && isOwner && (
+              <div className="mb-4 rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-800">
+                {t("listing_detail.archived_notice")}
+              </div>
+            )}
+
             {/* Gallery */}
             <ListingGallery images={images} title={listing.title} />
 
@@ -131,7 +143,7 @@ export default async function ListingDetailPage({ params }: ListingDetailPagePro
                 </span>
                 {listing.deposit_cents > 0 && (
                   <span className="inline-flex items-center rounded-full bg-amber-100 px-3 py-1 text-sm font-medium text-amber-800">
-                    Cauzione: {formatPrice(listing.deposit_cents, listing.currency_code)}
+                    {t("listing_detail.deposit")}: {formatPrice(listing.deposit_cents, listing.currency_code)}
                   </span>
                 )}
               </div>
@@ -141,26 +153,26 @@ export default async function ListingDetailPage({ params }: ListingDetailPagePro
                 <span className="text-3xl font-bold text-primary">
                   {formatPrice(listing.price_per_day_cents, listing.currency_code)}
                 </span>
-                <span className="text-muted-foreground">/giorno</span>
+                <span className="text-muted-foreground">{t("listing_detail.per_day")}</span>
               </div>
               {listing.price_per_week_cents && (
                 <p className="mt-1 text-sm text-muted-foreground">
-                  oppure {formatPrice(listing.price_per_week_cents, listing.currency_code)}/settimana
+                  {t("listing_detail.or")} {formatPrice(listing.price_per_week_cents, listing.currency_code)}{t("listing_detail.per_week")}
                 </p>
               )}
             </div>
 
             {/* Description */}
             <div className="mt-8">
-              <h2 className="text-lg font-semibold text-foreground">Descrizione</h2>
+              <h2 className="text-lg font-semibold text-foreground">{t("listing_detail.description")}</h2>
               <p className="mt-3 whitespace-pre-wrap text-muted-foreground">
-                {listing.description || "Nessuna descrizione disponibile."}
+                {listing.description || t("listing_detail.no_description")}
               </p>
             </div>
 
             {/* Owner Info */}
             <div className="mt-8 rounded-xl border border-border bg-card p-6">
-              <h2 className="text-lg font-semibold text-foreground">Proprietario</h2>
+              <h2 className="text-lg font-semibold text-foreground">{t("listing_detail.owner")}</h2>
               <div className="mt-4 flex items-start gap-4">
                 {owner.avatar_url ? (
                   <img
@@ -181,12 +193,12 @@ export default async function ListingDetailPage({ params }: ListingDetailPagePro
                     {owner.average_rating_as_owner > 0 && (
                       <span className="flex items-center gap-1">
                         <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
-                        {owner.average_rating_as_owner.toFixed(1)} ({owner.total_reviews_as_owner} recensioni)
+                        {owner.average_rating_as_owner.toFixed(1)} ({owner.total_reviews_as_owner} {t("listing_detail.reviews")})
                       </span>
                     )}
                     <span className="flex items-center gap-1">
                       <Calendar className="h-4 w-4" />
-                      Membro dal {new Date(owner.created_at).toLocaleDateString("it-IT", { month: "long", year: "numeric" })}
+                      {t("listing_detail.member_since")} {new Date(owner.created_at).toLocaleDateString(intlLocale, { month: "long", year: "numeric" })}
                     </span>
                   </div>
                   {owner.bio && (
@@ -200,7 +212,7 @@ export default async function ListingDetailPage({ params }: ListingDetailPagePro
                   className="mt-4 flex w-full items-center justify-center gap-2 rounded-lg border border-border py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-muted"
                 >
                   <MessageSquare className="h-4 w-4" />
-                  Contatta {owner.display_name?.split(" ")[0] || "il proprietario"}
+                  {t("listing_detail.contact_owner")} {owner.display_name?.split(" ")[0] || t("listing_detail.contact_owner_fallback")}
                 </Link>
               )}
             </div>
@@ -210,9 +222,9 @@ export default async function ListingDetailPage({ params }: ListingDetailPagePro
               <div className="flex items-start gap-3">
                 <Shield className="mt-0.5 h-5 w-5 text-accent" />
                 <div>
-                  <h3 className="font-semibold text-foreground">Noleggio sicuro</h3>
+                  <h3 className="font-semibold text-foreground">{t("listing_detail.safe_rental")}</h3>
                   <p className="mt-1 text-sm text-muted-foreground">
-                    Tutti i pagamenti sono protetti. La cauzione viene trattenuta e rilasciata dopo il ritorno dell&apos;attrezzo.
+                    {t("listing_detail.safe_rental_desc")}
                   </p>
                 </div>
               </div>

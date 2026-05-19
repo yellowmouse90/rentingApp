@@ -1,14 +1,13 @@
 import { NextRequest, NextResponse } from "next/server"
-import { createClient } from "@/lib/supabase/server"
+import { requireApiUser } from "@/lib/auth/api"
 import { stripe } from "@/lib/stripe"
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
+    const { supabase, user, unauthorizedResponse } = await requireApiUser()
 
     if (!user) {
-      return NextResponse.json({ error: "Non autorizzato" }, { status: 401 })
+      return unauthorizedResponse as NextResponse
     }
 
     // Get user profile

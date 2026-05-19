@@ -56,6 +56,13 @@ const translations: Record<Language, Record<string, string>> = {
     "listings.filters.max_price": "Max",
     "listings.filters.apply": "Applica Filtri",
     "listings.filters.reset": "Reset",
+    "listings.filters.title": "Filtri",
+    "listings.filters.sort": "Ordina per",
+    "listings.filters.sort.newest": "Piu recenti",
+    "listings.filters.sort.oldest": "Meno recenti",
+    "listings.filters.sort.price_asc": "Prezzo crescente",
+    "listings.filters.sort.price_desc": "Prezzo decrescente",
+    "listings.filters.clear": "Rimuovi filtri",
     "listings.no_results": "Nessun annuncio trovato",
     "listings.per_day": "/giorno",
     "listings.distance": "km di distanza",
@@ -88,6 +95,13 @@ const translations: Record<Language, Record<string, string>> = {
     "booking.total": "Totale",
     "booking.confirm": "Conferma Prenotazione",
     "booking.request_sent": "Richiesta Inviata",
+    "booking.card.owner_notice": "Questo e il tuo annuncio. Non puoi prenotarlo.",
+    "booking.card.edit_listing": "Modifica annuncio",
+    "booking.card.selected": "Selezionato",
+    "booking.card.unavailable": "Non disponibile",
+    "booking.card.day": "giorno",
+    "booking.card.deposit_refundable": "Cauzione (rimborsabile)",
+    "booking.card.login_to_book": "Accedi per prenotare",
     
     // Auth
     "auth.login": "Accedi",
@@ -122,6 +136,11 @@ const translations: Record<Language, Record<string, string>> = {
     "common.search": "Cerca",
     "common.close": "Chiudi",
     "common.user": "Utente",
+    "listing.actions.confirm_archive": "Vuoi archiviare questo prodotto? Verra rimosso dagli annunci pubblici.",
+    "listing.actions.archive_error": "Errore durante l'archiviazione",
+    "listing.actions.details": "Dettagli",
+    "listing.actions.archive": "Archivia",
+    "listing.actions.already_archived": "Gia archiviato",
     
     // Navigation
     "nav.explore": "Esplora",
@@ -149,6 +168,41 @@ const translations: Record<Language, Record<string, string>> = {
     "home.how.start_renting": "Inizia a noleggiare",
     "home.cta.subtitle_full": "Mettili a reddito! Guadagna condividendo i tuoi attrezzi con chi ne ha bisogno.",
     "home.cta.publish_first": "Pubblica il tuo primo annuncio",
+
+    // New listing page
+    "listing.new.back": "Torna agli annunci",
+    "listing.new.title": "Pubblica un annuncio",
+    "listing.new.subtitle": "Compila i dettagli del tuo attrezzo per metterlo a noleggio",
+    "listing.new.fields.title": "Titolo",
+    "listing.new.fields.title_placeholder": "es. Trapano Bosch Professional GSB 18V",
+    "listing.new.fields.category_placeholder": "Seleziona una categoria",
+    "listing.new.category.no_options": "Nessuna categoria trovata",
+    "listing.new.fields.description": "Descrizione",
+    "listing.new.fields.description_placeholder": "Descrivi il tuo attrezzo, le sue caratteristiche e condizioni...",
+    "listing.new.fields.price_day": "Prezzo/giorno",
+    "listing.new.fields.price_week": "Prezzo/settimana",
+    "listing.new.fields.deposit": "Cauzione",
+    "listing.new.condition.new.desc": "Mai usato, ancora imballato",
+    "listing.new.condition.like_new.desc": "Usato pochissimo, perfette condizioni",
+    "listing.new.condition.good.desc": "Usato con cura, funziona perfettamente",
+    "listing.new.condition.fair.desc": "Segni di usura ma funzionante",
+    "listing.new.images.title": "Immagini (max 5)",
+    "listing.new.images.upload": "Carica",
+    "listing.new.images.hint": "Formati supportati: JPG, PNG, WebP. Max 5MB per immagine.",
+    "listing.new.location.title": "Posizione dell'attrezzo",
+    "listing.new.location.update": "Aggiorna posizione",
+    "listing.new.location.use_current": "Usa la mia posizione attuale",
+    "listing.new.location.help": "La posizione aiuta gli utenti a trovare attrezzi vicino a loro",
+    "listing.new.submit.loading": "Pubblicazione...",
+    "listing.new.submit.idle": "Pubblica annuncio",
+    "listing.new.errors.max_images": "Puoi caricare massimo 5 immagini",
+    "listing.new.errors.required": "Compila tutti i campi obbligatori",
+    "listing.new.errors.invalid_daily_price": "Il prezzo giornaliero deve essere maggiore di zero",
+    "listing.new.errors.invalid_weekly_price": "Prezzo settimanale non valido",
+    "listing.new.errors.invalid_deposit": "Cauzione non valida",
+    "listing.new.errors.invalid_prices": "Prezzi non validi",
+    "listing.new.errors.create_failed": "Errore durante la creazione dell'annuncio. Riprova.",
+    "location.geo_denied_short": "Accesso alla posizione negato",
     
     // Footer extra
     "footer.description": "La piattaforma italiana per il noleggio di attrezzi tra privati. Risparmia denaro e riduci gli sprechi.",
@@ -199,6 +253,13 @@ const translations: Record<Language, Record<string, string>> = {
     "listings.filters.max_price": "Max",
     "listings.filters.apply": "Apply Filters",
     "listings.filters.reset": "Reset",
+    "listings.filters.title": "Filters",
+    "listings.filters.sort": "Sort by",
+    "listings.filters.sort.newest": "Newest first",
+    "listings.filters.sort.oldest": "Oldest first",
+    "listings.filters.sort.price_asc": "Price low to high",
+    "listings.filters.sort.price_desc": "Price high to low",
+    "listings.filters.clear": "Clear filters",
     "listings.no_results": "No listings found",
     "listings.per_day": "/day",
     "listings.distance": "km away",
@@ -231,6 +292,13 @@ const translations: Record<Language, Record<string, string>> = {
     "booking.total": "Total",
     "booking.confirm": "Confirm Booking",
     "booking.request_sent": "Request Sent",
+    "booking.card.owner_notice": "This is your listing. You cannot book it.",
+    "booking.card.edit_listing": "Edit listing",
+    "booking.card.selected": "Selected",
+    "booking.card.unavailable": "Unavailable",
+    "booking.card.day": "day",
+    "booking.card.deposit_refundable": "Deposit (refundable)",
+    "booking.card.login_to_book": "Log in to book",
     
     // Auth
     "auth.login": "Login",
@@ -265,6 +333,11 @@ const translations: Record<Language, Record<string, string>> = {
     "common.search": "Search",
     "common.close": "Close",
     "common.user": "User",
+    "listing.actions.confirm_archive": "Do you want to archive this product? It will be removed from public listings.",
+    "listing.actions.archive_error": "Error while archiving",
+    "listing.actions.details": "Details",
+    "listing.actions.archive": "Archive",
+    "listing.actions.already_archived": "Already archived",
     
     // Navigation
     "nav.explore": "Explore",
@@ -292,6 +365,41 @@ const translations: Record<Language, Record<string, string>> = {
     "home.how.start_renting": "Start renting",
     "home.cta.subtitle_full": "Put them to work! Earn money by sharing your tools with those who need them.",
     "home.cta.publish_first": "Publish your first listing",
+
+    // New listing page
+    "listing.new.back": "Back to listings",
+    "listing.new.title": "Publish a listing",
+    "listing.new.subtitle": "Fill in your tool details to make it available for rent",
+    "listing.new.fields.title": "Title",
+    "listing.new.fields.title_placeholder": "e.g. Bosch Professional GSB 18V Drill",
+    "listing.new.fields.category_placeholder": "Select a category",
+    "listing.new.category.no_options": "No categories found",
+    "listing.new.fields.description": "Description",
+    "listing.new.fields.description_placeholder": "Describe your tool, its features and condition...",
+    "listing.new.fields.price_day": "Price/day",
+    "listing.new.fields.price_week": "Price/week",
+    "listing.new.fields.deposit": "Deposit",
+    "listing.new.condition.new.desc": "Never used, still boxed",
+    "listing.new.condition.like_new.desc": "Used very little, excellent condition",
+    "listing.new.condition.good.desc": "Used with care, works perfectly",
+    "listing.new.condition.fair.desc": "Visible wear but fully working",
+    "listing.new.images.title": "Images (max 5)",
+    "listing.new.images.upload": "Upload",
+    "listing.new.images.hint": "Supported formats: JPG, PNG, WebP. Max 5MB per image.",
+    "listing.new.location.title": "Tool location",
+    "listing.new.location.update": "Update location",
+    "listing.new.location.use_current": "Use my current location",
+    "listing.new.location.help": "Location helps users find tools near them",
+    "listing.new.submit.loading": "Publishing...",
+    "listing.new.submit.idle": "Publish listing",
+    "listing.new.errors.max_images": "You can upload up to 5 images",
+    "listing.new.errors.required": "Fill in all required fields",
+    "listing.new.errors.invalid_daily_price": "Daily price must be greater than zero",
+    "listing.new.errors.invalid_weekly_price": "Invalid weekly price",
+    "listing.new.errors.invalid_deposit": "Invalid deposit",
+    "listing.new.errors.invalid_prices": "Invalid prices",
+    "listing.new.errors.create_failed": "Error while creating listing. Please try again.",
+    "location.geo_denied_short": "Location access denied",
     
     // Footer extra
     "footer.description": "The Italian platform for peer-to-peer tool rental. Save money and reduce waste.",
@@ -327,8 +435,10 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   const loadCategoryTranslations = async () => {
     const supabase = createClient()
     const { data } = await supabase
+      .schema("inventory_domain")
       .from("category_translations")
       .select("category_id, language_code, name")
+      .in("language_code", ["it", "en"])
     
     if (data) {
       const translations: Record<string, Record<Language, string>> = {}
@@ -345,6 +455,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   const setLanguage = (lang: Language) => {
     setLanguageState(lang)
     localStorage.setItem("toolshare_language", lang)
+    document.cookie = `toolshare_language=${lang}; path=/; max-age=31536000; samesite=lax`
   }
 
   const t = (key: string): string => {

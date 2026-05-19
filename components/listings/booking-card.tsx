@@ -3,6 +3,7 @@
 import { useState, useMemo } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
+import { useLanguage } from "@/lib/i18n/language-context"
 import { format, addDays, eachDayOfInterval, isSameDay, isAfter, isBefore, startOfDay } from "date-fns"
 import { it } from "date-fns/locale"
 import type { Listing } from "@/lib/types"
@@ -18,6 +19,7 @@ interface BookingCardProps {
 }
 
 export function BookingCard({ listing, bookings, exceptions, isOwner, isLoggedIn }: BookingCardProps) {
+  const { t } = useLanguage()
   const router = useRouter()
   const [startDate, setStartDate] = useState<Date | null>(null)
   const [endDate, setEndDate] = useState<Date | null>(null)
@@ -135,13 +137,13 @@ export function BookingCard({ listing, bookings, exceptions, isOwner, isLoggedIn
     return (
       <div className="rounded-xl border border-border bg-card p-6">
         <p className="text-sm text-muted-foreground">
-          Questo e il tuo annuncio. Non puoi prenotarlo.
+          {t("booking.card.owner_notice")}
         </p>
         <Link
           href={`/listings/${listing.id}/edit`}
           className="mt-4 block w-full rounded-lg bg-primary py-2.5 text-center text-sm font-medium text-primary-foreground hover:bg-primary/90"
         >
-          Modifica annuncio
+          {t("booking.card.edit_listing")}
         </Link>
       </div>
     )
@@ -154,7 +156,7 @@ export function BookingCard({ listing, bookings, exceptions, isOwner, isLoggedIn
         <span className="text-3xl font-bold text-primary">
           {formatPrice(listing.price_per_day_cents, listing.currency_code)}
         </span>
-        <span className="text-muted-foreground"> /giorno</span>
+        <span className="text-muted-foreground"> {t("listings.per_day")}</span>
       </div>
 
       {/* Calendar */}
@@ -226,11 +228,11 @@ export function BookingCard({ listing, bookings, exceptions, isOwner, isLoggedIn
         <div className="mt-3 flex items-center justify-center gap-4 text-xs text-muted-foreground">
           <div className="flex items-center gap-1">
             <div className="h-3 w-3 rounded bg-primary" />
-            <span>Selezionato</span>
+            <span>{t("booking.card.selected")}</span>
           </div>
           <div className="flex items-center gap-1">
             <div className="h-3 w-3 rounded bg-muted-foreground/30 line-through" />
-            <span>Non disponibile</span>
+            <span>{t("booking.card.unavailable")}</span>
           </div>
         </div>
       </div>
@@ -246,7 +248,7 @@ export function BookingCard({ listing, bookings, exceptions, isOwner, isLoggedIn
             </span>
             {totalDays > 0 && (
               <span className="text-muted-foreground">
-                ({totalDays} {totalDays === 1 ? "giorno" : "giorni"})
+                ({totalDays} {totalDays === 1 ? t("booking.card.day") : t("booking.days")})
               </span>
             )}
           </div>
@@ -258,25 +260,25 @@ export function BookingCard({ listing, bookings, exceptions, isOwner, isLoggedIn
         <div className="mb-4 space-y-2 border-t border-border pt-4 text-sm">
           <div className="flex justify-between">
             <span className="text-muted-foreground">
-              {formatPrice(listing.price_per_day_cents, listing.currency_code)} x {totalDays} giorni
+              {formatPrice(listing.price_per_day_cents, listing.currency_code)} x {totalDays} {t("booking.days")}
             </span>
             <span className="text-foreground">{formatPrice(subtotal, listing.currency_code)}</span>
           </div>
           <div className="flex justify-between">
             <span className="flex items-center gap-1 text-muted-foreground">
-              Commissione servizio
+              {t("booking.service_fee")}
               <Info className="h-3 w-3" />
             </span>
             <span className="text-foreground">{formatPrice(serviceFee, listing.currency_code)}</span>
           </div>
           {deposit > 0 && (
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Cauzione (rimborsabile)</span>
+              <span className="text-muted-foreground">{t("booking.card.deposit_refundable")}</span>
               <span className="text-foreground">{formatPrice(deposit, listing.currency_code)}</span>
             </div>
           )}
           <div className="flex justify-between border-t border-border pt-2 font-semibold">
-            <span className="text-foreground">Totale</span>
+            <span className="text-foreground">{t("booking.total")}</span>
             <span className="text-foreground">{formatPrice(total, listing.currency_code)}</span>
           </div>
         </div>
@@ -289,14 +291,14 @@ export function BookingCard({ listing, bookings, exceptions, isOwner, isLoggedIn
           disabled={!startDate || !endDate}
           className="w-full rounded-lg bg-accent py-3 font-medium text-accent-foreground transition-colors hover:bg-accent/90 disabled:cursor-not-allowed disabled:opacity-50"
         >
-          {startDate && endDate ? "Prenota ora" : "Seleziona le date"}
+          {startDate && endDate ? t("listing.book_now") : t("booking.select_dates")}
         </button>
       ) : (
         <Link
           href={`/auth/login?redirect=/listings/${listing.id}`}
           className="block w-full rounded-lg bg-primary py-3 text-center font-medium text-primary-foreground transition-colors hover:bg-primary/90"
         >
-          Accedi per prenotare
+          {t("booking.card.login_to_book")}
         </Link>
       )}
     </div>

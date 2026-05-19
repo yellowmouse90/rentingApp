@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react"
 import { MapPin, Navigation, Loader2, X } from "lucide-react"
+import { detectCurrentLocation } from "@/lib/location/client"
 
 interface LocationSearchProps {
   onLocationChange: (lat: number, lng: number, name: string) => void
@@ -33,50 +34,16 @@ export function LocationSearch({
     setIsLocating(true)
     setLocationError(null)
 
-    if (!navigator.geolocation) {
-      setLocationError("La geolocalizzazione non e supportata dal tuo browser")
+    try {
+      const detected = await detectCurrentLocation()
+      onLocationChange(detected.lat, detected.lng, detected.name)
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Errore nella geolocalizzazione"
+      setLocationError(message)
+      setShowManualInput(true)
+    } finally {
       setIsLocating(false)
-      return
     }
-
-    navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        const { latitude, longitude } = position.coords
-        
-        // Reverse geocoding to get location name
-        try {
-          const response = await fetch(
-            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=10`
-          )
-          const data = await response.json()
-          const locationName = data.address?.city || data.address?.town || data.address?.village || data.display_name?.split(",")[0] || "Posizione rilevata"
-          
-          onLocationChange(latitude, longitude, locationName)
-        } catch {
-          onLocationChange(latitude, longitude, "Posizione rilevata")
-        }
-        
-        setIsLocating(false)
-      },
-      (error) => {
-        switch (error.code) {
-          case error.PERMISSION_DENIED:
-            setLocationError("Accesso alla posizione negato. Abilita la geolocalizzazione nelle impostazioni del browser.")
-            break
-          case error.POSITION_UNAVAILABLE:
-            setLocationError("Informazioni sulla posizione non disponibili")
-            break
-          case error.TIMEOUT:
-            setLocationError("Timeout nella richiesta della posizione")
-            break
-          default:
-            setLocationError("Errore sconosciuto nella geolocalizzazione")
-        }
-        setIsLocating(false)
-        setShowManualInput(true)
-      },
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 300000 }
-    )
   }, [onLocationChange])
 
   const searchAddress = async () => {

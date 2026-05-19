@@ -4,6 +4,10 @@ import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { createClient } from "@/lib/supabase/client"
+import { detectCurrentLocation, type ClientLocation } from "@/lib/location/client"
+import { locationToPointWkt, parseListingPrices } from "@/lib/listings/form"
+import { CategoryHierarchySelect } from "@/components/listings/category-hierarchy-select"
+import { useLanguage } from "@/lib/i18n/language-context"
 import type { Category } from "@/lib/types"
 import { 
   ChevronLeft, 
@@ -16,13 +20,14 @@ import {
 } from "lucide-react"
 
 const conditions = [
-  { value: "new", label: "Nuovo", description: "Mai usato, ancora imballato" },
-  { value: "like_new", label: "Come nuovo", description: "Usato pochissimo, perfette condizioni" },
-  { value: "good", label: "Buono", description: "Usato con cura, funziona perfettamente" },
-  { value: "fair", label: "Discreto", description: "Segni di usura ma funzionante" },
+  { value: "new", labelKey: "condition.new", descriptionKey: "listing.new.condition.new.desc" },
+  { value: "like_new", labelKey: "condition.like_new", descriptionKey: "listing.new.condition.like_new.desc" },
+  { value: "good", labelKey: "condition.good", descriptionKey: "listing.new.condition.good.desc" },
+  { value: "fair", labelKey: "condition.fair", descriptionKey: "listing.new.condition.fair.desc" },
 ]
 
 export default function NewListingPage() {
+  const { t } = useLanguage()
   const router = useRouter()
   const supabase = createClient()
   
@@ -39,7 +44,7 @@ export default function NewListingPage() {
   const [deposit, setDeposit] = useState("")
   const [images, setImages] = useState<File[]>([])
   const [imagePreviews, setImagePreviews] = useState<string[]>([])
-  const [location, setLocation] = useState<{ lat: number; lng: number; name: string } | null>(null)
+  const [location, setLocation] = useState<ClientLocation | null>(null)
   const [isLocating, setIsLocating] = useState(false)
   const [locationError, setLocationError] = useState<string | null>(null)
 
@@ -58,7 +63,7 @@ export default function NewListingPage() {
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || [])
     if (files.length + images.length > 5) {
-      setError("Puoi caricare massimo 5 immagini")
+      setError(t("listing.new.errors.max_images"))
       return
     }
     
@@ -83,45 +88,21 @@ export default function NewListingPage() {
     setIsLocating(true)
     setLocationError(null)
 
-    if (!navigator.geolocation) {
-      setLocationError("La geolocalizzazione non e supportata dal tuo browser")
+    try {
+      const detected = await detectCurrentLocation()
+      setLocation(detected)
+    } catch (error) {
+      const message = error instanceof Error ? error.message : ""
+      const map: Record<string, string> = {
+        "La geolocalizzazione non e supportata dal tuo browser": "location.geo_unsupported",
+        "Accesso alla posizione negato": "location.geo_denied_short",
+        "Posizione non disponibile": "location.geo_unavailable",
+        "Timeout nella richiesta della posizione": "location.geo_timeout",
+      }
+      setLocationError(t(map[message] || "location.geo_unknown"))
+    } finally {
       setIsLocating(false)
-      return
     }
-
-    navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        const { latitude, longitude } = position.coords
-        
-        try {
-          const response = await fetch(
-            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=10`
-          )
-          const data = await response.json()
-          const locationName = data.address?.city || data.address?.town || data.address?.village || data.display_name?.split(",")[0] || "Posizione rilevata"
-          
-          setLocation({ lat: latitude, lng: longitude, name: locationName })
-        } catch {
-          setLocation({ lat: latitude, lng: longitude, name: "Posizione rilevata" })
-        }
-        
-        setIsLocating(false)
-      },
-      (error) => {
-        switch (error.code) {
-          case error.PERMISSION_DENIED:
-            setLocationError("Accesso alla posizione negato")
-            break
-          case error.POSITION_UNAVAILABLE:
-            setLocationError("Posizione non disponibile")
-            break
-          default:
-            setLocationError("Errore nella geolocalizzazione")
-        }
-        setIsLocating(false)
-      },
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 300000 }
-    )
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -132,23 +113,43 @@ export default function NewListingPage() {
     try {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) {
+        setIsLoading(false)
         router.push("/auth/login?redirect=/listings/new")
         return
       }
 
       // Validate
       if (!title || !condition || !pricePerDay) {
-        setError("Compila tutti i campi obbligatori")
+        setError(t("listing.new.errors.required"))
         setIsLoading(false)
         return
       }
 
-      const pricePerDayCents = Math.round(parseFloat(pricePerDay) * 100)
-      const pricePerWeekCents = pricePerWeek ? Math.round(parseFloat(pricePerWeek) * 100) : null
-      const depositCents = deposit ? Math.round(parseFloat(deposit) * 100) : 0
+      let pricePerDayCents: number
+      let pricePerWeekCents: number | null
+      let depositCents: number
+
+      try {
+        const parsed = parseListingPrices({ pricePerDay, pricePerWeek, deposit })
+        pricePerDayCents = parsed.pricePerDayCents
+        pricePerWeekCents = parsed.pricePerWeekCents
+        depositCents = parsed.depositCents
+      } catch (validationError) {
+        const message = validationError instanceof Error ? validationError.message : ""
+        const map: Record<string, string> = {
+          "Il prezzo giornaliero deve essere maggiore di zero": "listing.new.errors.invalid_daily_price",
+          "Prezzo settimanale non valido": "listing.new.errors.invalid_weekly_price",
+          "Cauzione non valida": "listing.new.errors.invalid_deposit",
+        }
+        setError(
+          t(map[message] || "listing.new.errors.invalid_prices")
+        )
+        setIsLoading(false)
+        return
+      }
 
       if (pricePerDayCents <= 0) {
-        setError("Il prezzo deve essere maggiore di zero")
+        setError(t("listing.new.errors.invalid_daily_price"))
         setIsLoading(false)
         return
       }
@@ -167,7 +168,7 @@ export default function NewListingPage() {
           price_per_week_cents: pricePerWeekCents,
           deposit_cents: depositCents,
           currency_code: "EUR",
-          item_coords: location ? `POINT(${location.lng} ${location.lat})` : null,
+          item_coords: locationToPointWkt(location),
           item_location_name: location?.name || null,
         })
         .select()
@@ -209,7 +210,7 @@ export default function NewListingPage() {
       router.push(`/listings/${listing.id}`)
     } catch (err) {
       console.error("Error creating listing:", err)
-      setError("Errore durante la creazione dell'annuncio. Riprova.")
+      setError(t("listing.new.errors.create_failed"))
       setIsLoading(false)
     }
   }
@@ -222,13 +223,13 @@ export default function NewListingPage() {
           className="mb-6 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
         >
           <ChevronLeft className="h-4 w-4" />
-          Torna agli annunci
+          {t("listing.new.back")}
         </Link>
 
         <div className="rounded-xl border border-border bg-card p-6 sm:p-8">
-          <h1 className="text-2xl font-bold text-foreground">Pubblica un annuncio</h1>
+          <h1 className="text-2xl font-bold text-foreground">{t("listing.new.title")}</h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            Compila i dettagli del tuo attrezzo per metterlo a noleggio
+            {t("listing.new.subtitle")}
           </p>
 
           <form onSubmit={handleSubmit} className="mt-8 space-y-6">
@@ -241,7 +242,7 @@ export default function NewListingPage() {
             {/* Title */}
             <div>
               <label htmlFor="title" className="mb-1.5 block text-sm font-medium text-foreground">
-                Titolo *
+                {t("listing.new.fields.title")} *
               </label>
               <input
                 id="title"
@@ -251,34 +252,28 @@ export default function NewListingPage() {
                 required
                 maxLength={150}
                 className="w-full rounded-lg border border-input bg-background px-4 py-2.5 text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
-                placeholder="es. Trapano Bosch Professional GSB 18V"
+                placeholder={t("listing.new.fields.title_placeholder")}
               />
             </div>
 
             {/* Category */}
             <div>
               <label htmlFor="category" className="mb-1.5 block text-sm font-medium text-foreground">
-                Categoria
+                {t("listings.filters.category")}
               </label>
-              <select
-                id="category"
+              <CategoryHierarchySelect
+                categories={categories}
                 value={categoryId}
-                onChange={(e) => setCategoryId(e.target.value)}
-                className="w-full rounded-lg border border-input bg-background px-4 py-2.5 text-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
-              >
-                <option value="">Seleziona una categoria</option>
-                {categories.map((cat) => (
-                  <option key={cat.id} value={cat.id}>
-                    {cat.name}
-                  </option>
-                ))}
-              </select>
+                onChange={setCategoryId}
+                id="category"
+                placeholder={t("listing.new.fields.category_placeholder")}
+              />
             </div>
 
             {/* Description */}
             <div>
               <label htmlFor="description" className="mb-1.5 block text-sm font-medium text-foreground">
-                Descrizione
+                {t("listing.new.fields.description")}
               </label>
               <textarea
                 id="description"
@@ -286,14 +281,14 @@ export default function NewListingPage() {
                 onChange={(e) => setDescription(e.target.value)}
                 rows={4}
                 className="w-full rounded-lg border border-input bg-background px-4 py-2.5 text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
-                placeholder="Descrivi il tuo attrezzo, le sue caratteristiche e condizioni..."
+                placeholder={t("listing.new.fields.description_placeholder")}
               />
             </div>
 
             {/* Condition */}
             <div>
               <label className="mb-3 block text-sm font-medium text-foreground">
-                Condizione *
+                {t("listings.filters.condition")} *
               </label>
               <div className="grid gap-3 sm:grid-cols-2">
                 {conditions.map((cond) => (
@@ -313,8 +308,8 @@ export default function NewListingPage() {
                       onChange={(e) => setCondition(e.target.value)}
                       className="sr-only"
                     />
-                    <div className="font-medium text-foreground">{cond.label}</div>
-                    <div className="mt-1 text-xs text-muted-foreground">{cond.description}</div>
+                    <div className="font-medium text-foreground">{t(cond.labelKey)}</div>
+                    <div className="mt-1 text-xs text-muted-foreground">{t(cond.descriptionKey)}</div>
                   </label>
                 ))}
               </div>
@@ -324,7 +319,7 @@ export default function NewListingPage() {
             <div className="grid gap-4 sm:grid-cols-3">
               <div>
                 <label htmlFor="pricePerDay" className="mb-1.5 block text-sm font-medium text-foreground">
-                  Prezzo/giorno *
+                  {t("listing.new.fields.price_day")} *
                 </label>
                 <div className="relative">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">€</span>
@@ -343,7 +338,7 @@ export default function NewListingPage() {
               </div>
               <div>
                 <label htmlFor="pricePerWeek" className="mb-1.5 block text-sm font-medium text-foreground">
-                  Prezzo/settimana
+                  {t("listing.new.fields.price_week")}
                 </label>
                 <div className="relative">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">€</span>
@@ -361,7 +356,7 @@ export default function NewListingPage() {
               </div>
               <div>
                 <label htmlFor="deposit" className="mb-1.5 block text-sm font-medium text-foreground">
-                  Cauzione
+                  {t("listing.new.fields.deposit")}
                 </label>
                 <div className="relative">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">€</span>
@@ -382,7 +377,7 @@ export default function NewListingPage() {
             {/* Images */}
             <div>
               <label className="mb-3 block text-sm font-medium text-foreground">
-                Immagini (max 5)
+                {t("listing.new.images.title")}
               </label>
               
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
@@ -402,7 +397,7 @@ export default function NewListingPage() {
                 {images.length < 5 && (
                   <label className="flex aspect-square cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-border transition-colors hover:border-primary hover:bg-muted/50">
                     <Upload className="h-6 w-6 text-muted-foreground" />
-                    <span className="mt-1 text-xs text-muted-foreground">Carica</span>
+                    <span className="mt-1 text-xs text-muted-foreground">{t("listing.new.images.upload")}</span>
                     <input
                       type="file"
                       accept="image/*"
@@ -414,14 +409,14 @@ export default function NewListingPage() {
                 )}
               </div>
               <p className="mt-2 text-xs text-muted-foreground">
-                Formati supportati: JPG, PNG, WebP. Max 5MB per immagine.
+                {t("listing.new.images.hint")}
               </p>
             </div>
 
             {/* Location */}
             <div>
               <label className="mb-3 block text-sm font-medium text-foreground">
-                Posizione dell&apos;attrezzo
+                {t("listing.new.location.title")}
               </label>
               
               {location ? (
@@ -450,7 +445,7 @@ export default function NewListingPage() {
                     ) : (
                       <Navigation className="h-4 w-4" />
                     )}
-                    Aggiorna posizione
+                    {t("listing.new.location.update")}
                   </button>
                 </div>
               ) : (
@@ -466,13 +461,13 @@ export default function NewListingPage() {
                     ) : (
                       <Navigation className="h-5 w-5" />
                     )}
-                    Usa la mia posizione attuale
+                    {t("listing.new.location.use_current")}
                   </button>
                   {locationError && (
                     <p className="text-xs text-destructive">{locationError}</p>
                   )}
                   <p className="text-xs text-muted-foreground">
-                    La posizione aiuta gli utenti a trovare attrezzi vicino a loro
+                    {t("listing.new.location.help")}
                   </p>
                 </div>
               )}
@@ -484,7 +479,7 @@ export default function NewListingPage() {
                 href="/listings"
                 className="flex-1 rounded-lg border border-border py-2.5 text-center text-sm font-medium text-foreground transition-colors hover:bg-muted"
               >
-                Annulla
+                {t("common.cancel")}
               </Link>
               <button
                 type="submit"
@@ -494,10 +489,10 @@ export default function NewListingPage() {
                 {isLoading ? (
                   <>
                     <Loader2 className="h-4 w-4 animate-spin" />
-                    Pubblicazione...
+                    {t("listing.new.submit.loading")}
                   </>
                 ) : (
-                  "Pubblica annuncio"
+                  t("listing.new.submit.idle")
                 )}
               </button>
             </div>

@@ -1,16 +1,12 @@
-import { redirect } from "next/navigation"
 import Link from "next/link"
-import { createClient } from "@/lib/supabase/server"
+import { requirePageUser } from "@/lib/auth/page"
+import { getServerI18n } from "@/lib/i18n/server"
 import { StripeConnectCard } from "@/components/dashboard/stripe-connect-card"
 import { Package, Plus, CreditCard, BarChart3 } from "lucide-react"
 
 export default async function DashboardPage() {
-  const supabase = await createClient()
-
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) {
-    redirect("/auth/login?redirect=/dashboard")
-  }
+  const { t } = await getServerI18n()
+  const { supabase, user } = await requirePageUser("/dashboard")
 
   // Fetch user stats
   const { data: profile } = await supabase
@@ -42,7 +38,7 @@ export default async function DashboardPage() {
           <div>
             <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
             <p className="mt-1 text-muted-foreground">
-              Benvenuto, {profile?.display_name || user.email?.split("@")[0]}
+              {t("dashboard.welcome")}, {profile?.display_name || user.email?.split("@")[0]}
             </p>
           </div>
           <Link
@@ -50,7 +46,7 @@ export default async function DashboardPage() {
             className="inline-flex items-center gap-2 rounded-lg bg-accent px-4 py-2 text-sm font-medium text-accent-foreground transition-colors hover:bg-accent/90"
           >
             <Plus className="h-4 w-4" />
-            Nuovo annuncio
+            {t("dashboard.new_listing")}
           </Link>
         </div>
 
@@ -63,7 +59,7 @@ export default async function DashboardPage() {
               </div>
               <div>
                 <p className="text-2xl font-bold text-foreground">{listingsCount || 0}</p>
-                <p className="text-sm text-muted-foreground">I miei annunci</p>
+                <p className="text-sm text-muted-foreground">{t("dashboard.my_listings")}</p>
               </div>
             </div>
           </div>
@@ -75,7 +71,7 @@ export default async function DashboardPage() {
               </div>
               <div>
                 <p className="text-2xl font-bold text-foreground">{ordersAsOwner || 0}</p>
-                <p className="text-sm text-muted-foreground">Noleggi ricevuti</p>
+                <p className="text-sm text-muted-foreground">{t("dashboard.received_rentals")}</p>
               </div>
             </div>
           </div>
@@ -87,7 +83,7 @@ export default async function DashboardPage() {
               </div>
               <div>
                 <p className="text-2xl font-bold text-foreground">{ordersAsRenter || 0}</p>
-                <p className="text-sm text-muted-foreground">Noleggi effettuati</p>
+                <p className="text-sm text-muted-foreground">{t("dashboard.made_rentals")}</p>
               </div>
             </div>
           </div>
@@ -108,9 +104,9 @@ export default async function DashboardPage() {
             className="flex items-center justify-between rounded-xl border border-border bg-card p-6 transition-colors hover:border-primary/50"
           >
             <div>
-              <h3 className="font-semibold text-foreground">Gestisci annunci</h3>
+              <h3 className="font-semibold text-foreground">{t("dashboard.manage_listings.title")}</h3>
               <p className="mt-1 text-sm text-muted-foreground">
-                Modifica o rimuovi i tuoi annunci
+                {t("dashboard.manage_listings.desc")}
               </p>
             </div>
             <Package className="h-6 w-6 text-muted-foreground" />
@@ -121,9 +117,9 @@ export default async function DashboardPage() {
             className="flex items-center justify-between rounded-xl border border-border bg-card p-6 transition-colors hover:border-primary/50"
           >
             <div>
-              <h3 className="font-semibold text-foreground">I miei noleggi</h3>
+              <h3 className="font-semibold text-foreground">{t("dashboard.my_rentals.title")}</h3>
               <p className="mt-1 text-sm text-muted-foreground">
-                Visualizza le tue prenotazioni
+                {t("dashboard.my_rentals.desc")}
               </p>
             </div>
             <BarChart3 className="h-6 w-6 text-muted-foreground" />

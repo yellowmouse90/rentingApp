@@ -13,6 +13,7 @@ import {
   Shovel,
   Package,
 } from "lucide-react"
+import { useLanguage } from "@/lib/i18n/language-context"
 
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   Zap,
@@ -32,6 +33,8 @@ interface CategoryGridProps {
 }
 
 export function CategoryGrid({ categories }: CategoryGridProps) {
+  const { tCategory } = useLanguage()
+
   return (
     <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-5">
       {categories.map((category) => {
@@ -46,7 +49,7 @@ export function CategoryGrid({ categories }: CategoryGridProps) {
               {Icon && <Icon className="h-6 w-6" />}
             </div>
             <span className="text-center text-sm font-medium text-foreground">
-              {category.name}
+              {tCategory(category.id, category.name)}
             </span>
           </Link>
         )

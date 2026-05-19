@@ -1,9 +1,9 @@
 import { redirect, notFound } from "next/navigation"
 import Link from "next/link"
-import { createClient } from "@/lib/supabase/server"
+import { requirePageUser } from "@/lib/auth/page"
+import { getServerI18n } from "@/lib/i18n/server"
 import { formatPrice, calculateDays, calculateRentalPrice, calculateServiceFee } from "@/lib/utils"
 import { format } from "date-fns"
-import { it } from "date-fns/locale"
 import { BookingForm } from "@/components/bookings/booking-form"
 import { ChevronLeft, Calendar, Shield, Clock } from "lucide-react"
 
@@ -17,14 +17,11 @@ interface NewBookingPageProps {
 
 export default async function NewBookingPage({ searchParams }: NewBookingPageProps) {
   const params = await searchParams
-  const supabase = await createClient()
+  const { t, dateLocale } = await getServerI18n()
 
   // Check authentication
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) {
-    const redirectUrl = `/bookings/new?listing=${params.listing}&start=${params.start}&end=${params.end}`
-    redirect(`/auth/login?redirect=${encodeURIComponent(redirectUrl)}`)
-  }
+  const redirectUrl = `/bookings/new?listing=${params.listing}&start=${params.start}&end=${params.end}`
+  const { supabase, user } = await requirePageUser(redirectUrl)
 
   // Validate parameters
   if (!params.listing || !params.start || !params.end) {
@@ -84,10 +81,10 @@ export default async function NewBookingPage({ searchParams }: NewBookingPagePro
           className="mb-6 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
         >
           <ChevronLeft className="h-4 w-4" />
-          Torna all&apos;annuncio
+          {t("booking_new.back")}
         </Link>
 
-        <h1 className="text-2xl font-bold text-foreground">Conferma prenotazione</h1>
+        <h1 className="text-2xl font-bold text-foreground">{t("booking_new.title")}</h1>
 
         <div className="mt-8 grid gap-8 lg:grid-cols-5">
           {/* Booking Form */}
@@ -118,7 +115,7 @@ export default async function NewBookingPage({ searchParams }: NewBookingPagePro
                   />
                 ) : (
                   <div className="flex h-20 w-20 items-center justify-center rounded-lg bg-muted">
-                    <span className="text-muted-foreground">No img</span>
+                    <span className="text-muted-foreground">{t("booking_new.no_img")}</span>
                   </div>
                 )}
                 <div className="flex-1">
@@ -126,7 +123,7 @@ export default async function NewBookingPage({ searchParams }: NewBookingPagePro
                     {listing.title}
                   </h3>
                   <p className="mt-1 text-sm text-muted-foreground">
-                    di {owner.display_name || "Utente"}
+                    {t("booking_new.by")} {owner.display_name || "Utente"}
                   </p>
                 </div>
               </div>
@@ -136,10 +133,10 @@ export default async function NewBookingPage({ searchParams }: NewBookingPagePro
                 <Calendar className="h-5 w-5 text-muted-foreground" />
                 <div>
                   <p className="font-medium text-foreground">
-                    {format(startDate, "d MMM", { locale: it })} - {format(endDate, "d MMM yyyy", { locale: it })}
+                    {format(startDate, "d MMM", { locale: dateLocale })} - {format(endDate, "d MMM yyyy", { locale: dateLocale })}
                   </p>
                   <p className="text-sm text-muted-foreground">
-                    {totalDays} {totalDays === 1 ? "giorno" : "giorni"}
+                    {totalDays} {totalDays === 1 ? t("booking_new.day") : t("booking_new.days")}
                   </p>
                 </div>
               </div>
@@ -148,22 +145,22 @@ export default async function NewBookingPage({ searchParams }: NewBookingPagePro
               <div className="mt-6 space-y-3 border-t border-border pt-6">
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">
-                    {formatPrice(listing.price_per_day_cents, listing.currency_code)} x {totalDays} giorni
+                    {formatPrice(listing.price_per_day_cents, listing.currency_code)} x {totalDays} {t("booking_new.days")}
                   </span>
                   <span className="text-foreground">{formatPrice(subtotal, listing.currency_code)}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Commissione servizio</span>
+                  <span className="text-muted-foreground">{t("booking_new.service_fee")}</span>
                   <span className="text-foreground">{formatPrice(serviceFee, listing.currency_code)}</span>
                 </div>
                 {deposit > 0 && (
                   <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Cauzione (rimborsabile)</span>
+                    <span className="text-muted-foreground">{t("booking_new.deposit_refundable")}</span>
                     <span className="text-foreground">{formatPrice(deposit, listing.currency_code)}</span>
                   </div>
                 )}
                 <div className="flex justify-between border-t border-border pt-3 font-semibold">
-                  <span className="text-foreground">Totale</span>
+                  <span className="text-foreground">{t("booking_new.total")}</span>
                   <span className="text-foreground">{formatPrice(grandTotal, listing.currency_code)}</span>
                 </div>
               </div>
@@ -173,15 +170,15 @@ export default async function NewBookingPage({ searchParams }: NewBookingPagePro
                 <div className="flex items-start gap-3 text-sm">
                   <Shield className="mt-0.5 h-4 w-4 text-accent" />
                   <div>
-                    <p className="font-medium text-foreground">Pagamento sicuro</p>
-                    <p className="text-muted-foreground">Protetto da Stripe</p>
+                    <p className="font-medium text-foreground">{t("booking_new.secure_payment")}</p>
+                    <p className="text-muted-foreground">{t("booking_new.protected_by_stripe")}</p>
                   </div>
                 </div>
                 <div className="flex items-start gap-3 text-sm">
                   <Clock className="mt-0.5 h-4 w-4 text-accent" />
                   <div>
-                    <p className="font-medium text-foreground">Cancellazione gratuita</p>
-                    <p className="text-muted-foreground">Fino a 24h prima</p>
+                    <p className="font-medium text-foreground">{t("booking_new.free_cancellation")}</p>
+                    <p className="text-muted-foreground">{t("booking_new.free_cancellation_until")}</p>
                   </div>
                 </div>
               </div>
