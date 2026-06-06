@@ -4,6 +4,7 @@ import "./globals.css"
 import { Header } from "@/components/layout/header"
 import { Footer } from "@/components/layout/footer"
 import { LanguageProvider } from "@/lib/i18n/language-context"
+import { AuthProvider } from "@/lib/auth/context"
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" })
 
@@ -34,13 +35,15 @@ export default function RootLayout({
   return (
     <html lang="it" className="bg-background">
       <body className={`${inter.variable} font-sans antialiased`}>
-        <LanguageProvider>
-          <div className="flex min-h-screen flex-col">
-            <Header />
-            <main className="flex-1">{children}</main>
-            <Footer />
-          </div>
-        </LanguageProvider>
+        <AuthProvider>
+          <LanguageProvider>
+            <div className="flex min-h-screen flex-col">
+              <Header />
+              <main className="flex-1">{children}</main>
+              <Footer />
+            </div>
+          </LanguageProvider>
+        </AuthProvider>
       </body>
     </html>
   )

@@ -147,7 +147,7 @@ export interface Review {
 
 export interface Conversation {
   id: string
-  listing_id: string | null
+  rental_order_id: string
   participant_one: string
   participant_two: string
   last_message_at: string | null
@@ -155,6 +155,8 @@ export interface Conversation {
   // Joined fields
   listing?: Listing
   other_participant?: Profile
+  other_participant_details?: Profile
+  rental_order?: RentalOrder
   last_message?: Message
 }
 

@@ -1,10 +1,11 @@
 "use client"
 
 import Link from "next/link"
-import { Plus, MessageSquare } from "lucide-react"
+import { Plus } from "lucide-react"
 import { useLanguage } from "@/lib/i18n/language-context"
 import { LanguageSwitcher } from "./language-switcher"
 import { UserMenu } from "./user-menu"
+import { ChatNotification } from "@/components/chat/chat-notification"
 import type { User } from "@supabase/supabase-js"
 import type { Profile } from "@/lib/types"
 
@@ -27,12 +28,7 @@ export function HeaderActions({ user, profile }: HeaderActionsProps) {
           <Plus className="h-4 w-4" />
           {t("nav.publish_listing")}
         </Link>
-        <Link
-          href="/messages"
-          className="relative rounded-lg p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-        >
-          <MessageSquare className="h-5 w-5" />
-        </Link>
+        <ChatNotification userId={user.id} />
         <UserMenu user={user} profile={profile} />
       </>
     )

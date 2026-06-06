@@ -5,12 +5,12 @@ import { formatPrice, getRentalStatusLabel, getRentalStatusColor } from "@/lib/u
 import { format } from "date-fns"
 import { it } from "date-fns/locale"
 import { BookingActions } from "@/components/bookings/booking-actions"
+import { InitiateChat } from "@/components/chat/initiate-chat"
 import { 
   ChevronLeft, 
   Calendar, 
   User, 
-  CreditCard, 
-  MessageSquare,
+  CreditCard,
   ImageIcon
 } from "lucide-react"
 
@@ -211,6 +211,16 @@ export default async function BookingDetailPage({ params }: BookingDetailPagePro
                 )}
               </div>
             </div>
+            <div className="mt-4">
+              <InitiateChat
+                rentalOrderId={id}
+                currentUserId={user.id}
+                otherUserId={otherParty.id}
+                otherUserName={otherParty.display_name || "Utente"}
+                variant="link"
+                className="w-full"
+              />
+            </div>
           </div>
 
           {/* Dates */}
@@ -291,13 +301,14 @@ export default async function BookingDetailPage({ params }: BookingDetailPagePro
                 <p className="text-sm text-muted-foreground">{otherParty?.email}</p>
               </div>
             </div>
-            <Link
-              href={`/messages?user=${otherParty?.id}&listing=${listing.id}`}
-              className="mt-4 flex w-full items-center justify-center gap-2 rounded-lg border border-border py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-muted"
-            >
-              <MessageSquare className="h-4 w-4" />
-              Invia messaggio
-            </Link>
+            <InitiateChat
+              rentalOrderId={id}
+              currentUserId={user.id}
+              otherUserId={otherParty.id}
+              otherUserName={otherParty.display_name || "Utente"}
+              variant="link"
+              className="w-full"
+            />
           </div>
 
           {/* Notes */}

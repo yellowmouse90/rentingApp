@@ -23,44 +23,61 @@ export async function POST(request: NextRequest) {
       user.email?.split("@")[0] ||
       null
 
-    const { data: profile, error: profileError } = await supabase
-      .from("user_domain.profiles")
-      .upsert(
-        {
-          id: user.id,
-          email: user.email,
-          display_name: displayName,
-          avatar_url: null,
-          bio: null,
-          phone: null,
-          is_verified: false,
-          preferred_currency: "EUR",
-          stripe_customer_id: null,
-          stripe_account_id: null,
-          stripe_onboarding_complete: false,
-          average_rating_as_owner: 0,
-          average_rating_as_renter: 0,
-          total_reviews_as_owner: 0,
-          total_reviews_as_renter: 0,
-        },
-        { onConflict: "id" }
-      )
-      .select()
+    const { data: profileDB } = await supabase
+      .schema("users_domain")
+      .from("profiles")
+      .select("*")
+      .eq("id", user.id)
       .single()
 
-    if (profileError || !profile) {
-      console.error("Stripe Connect error: could not get/create profile", profileError)
-      return NextResponse.json({ error: "Profilo non trovato" }, { status: 404 })
-    }
+    console.log("User profile from DB:", profileDB);
 
-    let accountId = profile.stripe_account_id
+    let accountId = null;
+    
+    if (!profileDB) {
+      const { data: profile, error: profileError } = await supabase
+        .schema("users_domain")
+        .from("profiles")
+        .upsert(
+          {
+            id: user.id,
+            email: user.email,
+            display_name: displayName,
+            avatar_url: null,
+            bio: null,
+            phone: null,
+            is_verified: false,
+            preferred_currency: "EUR",
+            stripe_customer_id: null,
+            stripe_account_id: null,
+            stripe_onboarding_complete: false,
+            average_rating_as_owner: 0,
+            average_rating_as_renter: 0,
+            total_reviews_as_owner: 0,
+            total_reviews_as_renter: 0,
+          },
+          { onConflict: "id" }
+        )
+        .select()
+        .single()
+
+      if (profileError || !profile) {
+        console.error("Stripe Connect error: could not get/create profile", profileError)
+        return NextResponse.json({ error: "Profilo non trovato" }, { status: 404 })
+      }
+      accountId = profile.stripe_account_id
+      
+    } else {
+      accountId = profileDB.stripe_account_id
+    }
+     
 
     // Create Stripe Connect account if not exists
     if (!accountId) {
       const account = await stripe.accounts.create({
         type: "express",
         country: "IT",
-        email: profile.email,
+        email: user.email,
         capabilities: {
           card_payments: { requested: true },
           transfers: { requested: true },
@@ -75,10 +92,12 @@ export async function POST(request: NextRequest) {
       accountId = account.id
 
       // Save to profile
-      await supabase
-        .from("user_domain.profiles")
+      const savedId = await supabase
+        .schema("users_domain")
+        .from("profiles")
         .update({ stripe_account_id: accountId })
         .eq("id", user.id)
+      console.log("Saved Stripe account ID to profile:", savedId)
     }
 
     // Create onboarding link

@@ -6,6 +6,7 @@ import { User } from "@supabase/supabase-js"
 import { Menu, X, Plus, MessageSquare, User as UserIcon, Settings, LogOut, Wrench, Package } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
+import { useUnreadMessageCount } from "@/lib/chat/use-unread-count"
 import type { Profile } from "@/lib/types"
 import { useLanguage } from "@/lib/i18n/language-context"
 import { LanguageSwitcher } from "./language-switcher"
@@ -20,6 +21,7 @@ export function MobileMenu({ user, profile }: MobileMenuProps) {
   const router = useRouter()
   const supabase = createClient()
   const { t } = useLanguage()
+  const { count } = useUnreadMessageCount(user?.id)
 
   const handleSignOut = async () => {
     await supabase.auth.signOut()
@@ -92,10 +94,15 @@ export function MobileMenu({ user, profile }: MobileMenuProps) {
                 <Link
                   href="/messages"
                   onClick={() => setIsOpen(false)}
-                  className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted"
+                  className="relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted"
                 >
                   <MessageSquare className="h-4 w-4" />
                   {t("nav.messages")}
+                  {count > 0 && (
+                    <span className="absolute right-3 top-2 inline-flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-destructive px-1.5 text-[0.65rem] font-semibold text-destructive-foreground">
+                      {count > 9 ? "9+" : count}
+                    </span>
+                  )}
                 </Link>
                 <Link
                   href="/bookings"
