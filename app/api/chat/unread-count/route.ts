@@ -11,7 +11,7 @@ export async function GET() {
     .schema("interactions_domain")
     .from("conversations")
     .select("id")
-    .or(`participant_one.eq.${user.id},participant_two.eq.${user.id}`)
+    .or(`participant_one.eq.${user?.id},participant_two.eq.${user?.id}`)
 
   if (convError) {
     console.error("Unread count conversation query error:", convError)
@@ -32,7 +32,7 @@ export async function GET() {
     .select("id", { count: "exact", head: true })
     .in("conversation_id", conversationIds)
     .eq("is_read", false)
-    .neq("sender_id", user.id)
+    .neq("sender_id", user?.id)
 
   if (messagesError) {
     console.error("Unread count messages query error:", messagesError)

@@ -7,6 +7,7 @@ import { Conversation, Profile, Message } from "@/lib/types"
 import { MessageList } from "./message-list"
 import { MessageInput } from "./message-input"
 import { ChevronLeft, Loader2 } from "lucide-react"
+import { ChatMessage } from "@/lib/types/chat"
 
 interface ChatThreadProps {
   conversation: Conversation & {
@@ -28,11 +29,11 @@ export function ChatThread({
   const [error, setError] = useState<string | null>(null)
 
   const otherUser =
-    conversation.other_participant_details || {
+    conversation.other_participant_details || ({
       display_name: "Utente",
       avatar_url: null,
       email: null,
-    }
+    } as unknown as Profile)
 
   const fetchMessages = useCallback(
     async (showLoading = false) => {
@@ -190,7 +191,7 @@ export function ChatThread({
 
       {/* Messages */}
       <MessageList
-        messages={messages}
+        messages={(messages as ChatMessage[])}
         currentUserId={user?.id || ""}
         otherUser={otherUser}
         onMessagesVisible={handleMarkAsRead}

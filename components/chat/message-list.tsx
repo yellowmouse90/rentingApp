@@ -46,10 +46,6 @@ export function MessageList({
   useEffect(() => {
     if (!containerRef.current) return
 
-    // if (!hasLoadedRef.current || isAtBottomRef.current) {
-    //   scrollToBottom("auto")
-    // }
-
     hasLoadedRef.current = true
   }, [messages])
 

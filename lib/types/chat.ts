@@ -1,5 +1,5 @@
 // Extended types for chat functionality
-import { Conversation, Message, Profile } from "./types"
+import { Conversation, Message, Profile } from "@/lib/types"
 
 export interface ConversationWithUnread extends Conversation {
   unread_count: number

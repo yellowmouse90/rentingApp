@@ -86,7 +86,7 @@ export function ConversationList({
                 </p>
                 {(conversation.unread_count ?? 0) > 0 && (
                   <span className="mt-1 inline-flex h-5 w-5 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">
-                    {Math.min(conversation.unread_count, 9)}+
+                    {Math.min(conversation.unread_count ?? 0, 9)}+
                   </span>
                 )}
               </div>
