@@ -15,6 +15,27 @@ const serverTranslations: Record<Language, Record<string, string>> = {
     "dashboard.manage_listings.desc": "Modifica o rimuovi i tuoi annunci",
     "dashboard.my_rentals.title": "I miei noleggi",
     "dashboard.my_rentals.desc": "Visualizza le tue prenotazioni",
+    "dashboard.payments.quick_link": "Configura pagamenti",
+    "dashboard.payments.title": "Configura i pagamenti",
+    "dashboard.payments.subtitle": "Collega il tuo account Stripe e inizia a ricevere pagamenti dai noleggi.",
+    "dashboard.payments.benefit1": "Ricevi pagamenti diretti e veloci",
+    "dashboard.payments.benefit2": "Stripe gestisce pagamenti e depositi in modo sicuro",
+    "dashboard.payments.benefit3": "Completa l'onboarding come venditore",
+    "dashboard.payments.card.active_title": "Pagamenti attivi",
+    "dashboard.payments.card.active_description": "Il tuo account Stripe è configurato. Ora puoi ricevere pagamenti per i tuoi noleggi.",
+    "dashboard.payments.card.stripe_dashboard": "Apri Stripe Dashboard",
+    "dashboard.payments.card.complete_title": "Completa la configurazione",
+    "dashboard.payments.card.complete_description": "Hai iniziato il collegamento ma non hai ancora terminato l'onboarding Stripe.",
+    "dashboard.payments.card.complete_button": "Completa configurazione",
+    "dashboard.payments.card.setup_title": "Configura i pagamenti",
+    "dashboard.payments.card.setup_description": "Per ricevere pagamenti dai tuoi noleggi, collega il tuo account Stripe in modo rapido e sicuro.",
+    "dashboard.payments.card.setup_button": "Configura Stripe",
+    "dashboard.payments.how_it_works_title": "Come funziona",
+    "dashboard.payments.how_it_works_description": "Collega Stripe, completa l'onboarding e inizia a ricevere pagamenti dai tuoi affitti.",
+    "dashboard.payments.how_it_works_step1": "Crea o collega il tuo account Stripe.",
+    "dashboard.payments.how_it_works_step2": "Completa l'onboarding con i tuoi dati e il conto bancario.",
+    "dashboard.payments.how_it_works_step3": "Inizia a ricevere pagamenti per i noleggi effettuati.",
+    "dashboard.payments.back_to_dashboard": "Torna alla dashboard",
 
     "dashboard_listings.back": "Torna alla dashboard",
     "dashboard_listings.title": "I tuoi prodotti",
@@ -171,3 +192,4 @@ export async function getServerI18n() {
     intlLocale: language === "en" ? "en-US" : "it-IT",
   }
 }
+

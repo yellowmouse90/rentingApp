@@ -57,3 +57,4 @@ export function CategoryGrid({ categories }: CategoryGridProps) {
     </div>
   )
 }
+

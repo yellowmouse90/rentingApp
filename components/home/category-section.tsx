@@ -63,3 +63,4 @@ export function CategorySection({ categories }: CategorySectionProps) {
     </section>
   )
 }
+

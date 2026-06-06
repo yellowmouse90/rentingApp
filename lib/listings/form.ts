@@ -70,3 +70,4 @@ export function pointWktToLocation(
     name: fallbackName || "Posizione salvata",
   }
 }
+

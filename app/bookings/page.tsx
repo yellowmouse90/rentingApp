@@ -76,7 +76,7 @@ export default async function BookingsPage() {
   const { data: renterProfiles } = renterIds.length
     ? await supabase
         .schema("users_domain")
-        .from("profiles")
+        .from("user_domain.profiles")
         .select("id, display_name, avatar_url")
         .in("id", renterIds)
     : { data: [] as any[] }
@@ -275,3 +275,4 @@ function OwnerItemCard({
     </Link>
   )
 }
+

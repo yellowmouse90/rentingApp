@@ -56,7 +56,7 @@ export default async function ListingDetailPage({ params }: ListingDetailPagePro
   // Fetch owner separately to avoid cross-schema embed issues.
   const { data: ownerProfile } = await supabase
     .schema("users_domain")
-    .from("profiles")
+    .from("user_domain.profiles")
     .select("id, email, display_name, avatar_url, bio, average_rating_as_owner, total_reviews_as_owner, created_at")
     .eq("id", listing.owner_id)
     .maybeSingle()
@@ -68,7 +68,7 @@ export default async function ListingDetailPage({ params }: ListingDetailPagePro
     const admin = createAdminClient()
     const { data: ownerProfileAdmin } = await admin
       .schema("users_domain")
-      .from("profiles")
+      .from("user_domain.profiles")
       .select("id, email, display_name, avatar_url, bio, average_rating_as_owner, total_reviews_as_owner, created_at")
       .eq("id", listing.owner_id)
       .maybeSingle()

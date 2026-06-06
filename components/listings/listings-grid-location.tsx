@@ -365,3 +365,4 @@ function ListingCard({ listing, showDistance }: { listing: ListingWithDistance; 
     </Link>
   )
 }
+

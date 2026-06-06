@@ -91,3 +91,4 @@ export function FeaturedSection({ listings }: FeaturedSectionProps) {
     </section>
   )
 }
+

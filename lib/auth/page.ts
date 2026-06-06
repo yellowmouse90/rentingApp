@@ -24,3 +24,4 @@ export async function requirePageUser(redirectTo: string): Promise<PageAuthResul
     user,
   }
 }
+

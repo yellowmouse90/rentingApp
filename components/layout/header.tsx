@@ -14,7 +14,7 @@ export async function Header() {
   let profile = null
   if (user) {
     const { data } = await supabase
-      .from("profiles")
+      .from("user_domain.profiles")
       .select("*")
       .eq("id", user.id)
       .single()
@@ -46,3 +46,4 @@ export async function Header() {
     </header>
   )
 }
+

@@ -14,12 +14,12 @@ export function HeaderNav() {
       >
         {t("nav.explore")}
       </Link>
-      <Link
+      {/* <Link
         href="/categories"
         className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
       >
         {t("nav.categories")}
-      </Link>
+      </Link> */}
       <Link
         href="/how-it-works"
         className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
@@ -29,3 +29,4 @@ export function HeaderNav() {
     </nav>
   )
 }
+

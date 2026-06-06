@@ -63,7 +63,7 @@ export default async function NewBookingPage({ searchParams }: NewBookingPagePro
 
   const { data: ownerProfile } = await supabase
     .schema("users_domain")
-    .from("profiles")
+    .from("user_domain.profiles")
     .select("id, display_name, avatar_url, stripe_account_id, stripe_onboarding_complete")
     .eq("id", listing.owner_id)
     .single()
@@ -213,3 +213,4 @@ export default async function NewBookingPage({ searchParams }: NewBookingPagePro
     </div>
   )
 }
+

@@ -137,3 +137,4 @@ export function MobileMenu({ user, profile }: MobileMenuProps) {
     </div>
   )
 }
+

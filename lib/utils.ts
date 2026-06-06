@@ -111,3 +111,4 @@ export const SERVICE_FEE_PERCENTAGE = 0.1
 export function calculateServiceFee(subtotalCents: number): number {
   return Math.round(subtotalCents * SERVICE_FEE_PERCENTAGE)
 }
+

@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from "react"
 import Link from "next/link"
 import { User } from "@supabase/supabase-js"
-import { User as UserIcon, Settings, Package, LogOut, ChevronDown } from "lucide-react"
+import { User as UserIcon, Settings, Package, LogOut, ChevronDown, CreditCard } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
 import type { Profile } from "@/lib/types"
@@ -94,6 +94,14 @@ export function UserMenu({ user, profile }: UserMenuProps) {
               {t("nav.my_rentals")}
             </Link>
             <Link
+              href="/dashboard/payments"
+              onClick={() => setIsOpen(false)}
+              className="flex items-center gap-2 rounded-md px-3 py-2 text-sm text-foreground transition-colors hover:bg-muted"
+            >
+              <CreditCard className="h-4 w-4" />
+              {t("dashboard.payments.quick_link")}
+            </Link>
+            <Link
               href="/profile/edit"
               onClick={() => setIsOpen(false)}
               className="flex items-center gap-2 rounded-md px-3 py-2 text-sm text-foreground transition-colors hover:bg-muted"
@@ -117,3 +125,4 @@ export function UserMenu({ user, profile }: UserMenuProps) {
     </div>
   )
 }
+

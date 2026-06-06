@@ -165,3 +165,4 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Errore durante elaborazione webhook" }, { status: 500 })
   }
 }
+

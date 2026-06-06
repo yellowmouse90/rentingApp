@@ -35,3 +35,4 @@ export default function AuthErrorPage() {
     </div>
   )
 }
+

@@ -2,7 +2,7 @@ import Link from "next/link"
 import { requirePageUser } from "@/lib/auth/page"
 import { getServerI18n } from "@/lib/i18n/server"
 import { StripeConnectCard } from "@/components/dashboard/stripe-connect-card"
-import { Package, Plus, CreditCard, BarChart3 } from "lucide-react"
+import { Package, Plus, CreditCard, BarChart3, ArrowRight } from "lucide-react"
 
 export default async function DashboardPage() {
   const { t } = await getServerI18n()
@@ -10,7 +10,7 @@ export default async function DashboardPage() {
 
   // Fetch user stats
   const { data: profile } = await supabase
-    .from("profiles")
+    .from("user_domain.profiles")
     .select("*, stripe_account_id, stripe_onboarding_complete")
     .eq("id", user.id)
     .single()
@@ -99,6 +99,17 @@ export default async function DashboardPage() {
           />
         </div>
 
+        {/* Payments page link */}
+        <div className="mt-4">
+          <Link
+            href="/dashboard/payments"
+            className="inline-flex items-center gap-2 rounded-xl border border-primary/20 bg-primary/5 px-4 py-3 text-sm font-medium text-primary transition-colors hover:bg-primary/10"
+          >
+            {t("dashboard.payments.quick_link")}
+            <ArrowRight className="h-4 w-4" />
+          </Link>
+        </div>
+
         {/* Quick Links */}
         <div className="mt-8 grid gap-4 sm:grid-cols-2">
           <Link
@@ -131,3 +142,4 @@ export default async function DashboardPage() {
     </div>
   )
 }
+

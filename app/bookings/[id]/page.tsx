@@ -106,14 +106,14 @@ export default async function BookingDetailPage({ params }: BookingDetailPagePro
 
   const { data: renterProfile } = await supabase
     .schema("users_domain")
-    .from("profiles")
+    .from("user_domain.profiles")
     .select("id, display_name, avatar_url, email")
     .eq("id", order.renter_id)
     .maybeSingle()
 
   const { data: ownerProfile } = await supabase
     .schema("users_domain")
-    .from("profiles")
+    .from("user_domain.profiles")
     .select("id, display_name, avatar_url, email")
     .eq("id", item.owner_id)
     .maybeSingle()

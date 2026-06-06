@@ -204,11 +204,98 @@ const translations: Record<Language, Record<string, string>> = {
     "listing.new.errors.create_failed": "Errore durante la creazione dell'annuncio. Riprova.",
     "location.geo_denied_short": "Accesso alla posizione negato",
     
+    // Dashboard payments
+    "dashboard.payments.quick_link": "Configura pagamenti",
+    "dashboard.payments.title": "Configura i pagamenti",
+    "dashboard.payments.subtitle": "Collega il tuo account Stripe e inizia a ricevere pagamenti dai noleggi.",
+    "dashboard.payments.benefit1": "Ricevi pagamenti diretti e veloci",
+    "dashboard.payments.benefit2": "Stripe gestisce pagamenti e depositi in modo sicuro",
+    "dashboard.payments.benefit3": "Completa l'onboarding come venditore",
+    "dashboard.payments.card.active_title": "Pagamenti attivi",
+    "dashboard.payments.card.active_description": "Il tuo account Stripe è configurato. Ora puoi ricevere pagamenti per i tuoi noleggi.",
+    "dashboard.payments.card.stripe_dashboard": "Apri Stripe Dashboard",
+    "dashboard.payments.card.complete_title": "Completa la configurazione",
+    "dashboard.payments.card.complete_description": "Hai iniziato il collegamento ma non hai ancora terminato l'onboarding Stripe.",
+    "dashboard.payments.card.complete_button": "Completa configurazione",
+    "dashboard.payments.card.setup_title": "Configura i pagamenti",
+    "dashboard.payments.card.setup_description": "Per ricevere pagamenti dai tuoi noleggi, collega il tuo account Stripe in modo rapido e sicuro.",
+    "dashboard.payments.card.setup_button": "Configura Stripe",
+    "dashboard.payments.how_it_works_title": "Come funziona",
+    "dashboard.payments.how_it_works_description": "Collega Stripe, completa l'onboarding e inizia a ricevere pagamenti dai tuoi affitti.",
+    "dashboard.payments.how_it_works_step1": "Crea o collega il tuo account Stripe.",
+    "dashboard.payments.how_it_works_step2": "Completa l'onboarding con i tuoi dati e il conto bancario.",
+    "dashboard.payments.how_it_works_step3": "Inizia a ricevere pagamenti per i noleggi effettuati.",
+    "dashboard.payments.back_to_dashboard": "Torna alla dashboard",
+    
     // Footer extra
     "footer.description": "La piattaforma italiana per il noleggio di attrezzi tra privati. Risparmia denaro e riduci gli sprechi.",
     "footer.all_tools": "Tutti gli attrezzi",
     "footer.account": "Account",
     "footer.support": "Supporto",
+    
+    // How It Works page
+    "how_it_works.title": "Come Funziona",
+    "how_it_works.subtitle": "Scopri come noleggiare e mettere a reddito i tuoi attrezzi in pochi semplici step",
+    "how_it_works.main_steps.title": "3 Semplici Step",
+    
+    // Search step
+    "how_it_works.steps.search.title": "Cerca",
+    "how_it_works.steps.search.description": "Trova l'attrezzo di cui hai bisogno tra migliaia di annunci vicino a te.",
+    "how_it_works.steps.search.detail1": "Utilizza la barra di ricerca per trovare attrezzi specifici",
+    "how_it_works.steps.search.detail2": "Filtra per categoria, prezzo e distanza",
+    "how_it_works.steps.search.detail3": "Visualizza le immagini e le recensioni del proprietario",
+    
+    // Book step
+    "how_it_works.steps.book.title": "Prenota",
+    "how_it_works.steps.book.description": "Scegli le date e invia una richiesta di noleggio al proprietario.",
+    "how_it_works.steps.book.detail1": "Seleziona le date di inizio e fine noleggio",
+    "how_it_works.steps.book.detail2": "Visualizza il prezzo totale con cauzione inclusa",
+    "how_it_works.steps.book.detail3": "Conferma la prenotazione con pagamento sicuro",
+    
+    // Rent step
+    "how_it_works.steps.rent.title": "Usa e Restituisci",
+    "how_it_works.steps.rent.description": "Ritira l'attrezzo, usalo per il tuo progetto e restituiscilo.",
+    "how_it_works.steps.rent.detail1": "Ritira l'attrezzo direttamente dal proprietario",
+    "how_it_works.steps.rent.detail2": "Usalo per tutto il periodo di noleggio",
+    "how_it_works.steps.rent.detail3": "Restituiscilo in perfette condizioni e ricevi il rimborso della cauzione",
+    
+    // Benefits
+    "how_it_works.benefits.title": "Perché Scegliere Toolshare",
+    "how_it_works.benefits.subtitle": "I vantaggi di noleggiare e prestare attrezzi",
+    "how_it_works.benefits.save_money.title": "Risparmia Denaro",
+    "how_it_works.benefits.save_money.description": "Noleggia attrezzi costosi a frazione del prezzo di acquisto. Perfetto per progetti occasionali.",
+    "how_it_works.benefits.secure.title": "Transazioni Sicure",
+    "how_it_works.benefits.secure.description": "Pagamenti protetti da Stripe e depositi cauzionali rimborsabili per proteggere entrambe le parti.",
+    "how_it_works.benefits.sustainable.title": "Sostenibile",
+    "how_it_works.benefits.sustainable.description": "Riduci gli sprechi condividendo risorse con la tua community locale.",
+    
+    // Safety
+    "how_it_works.safety.title": "Noleggio Sicuro e Affidabile",
+    "how_it_works.safety.secure_payments.title": "Pagamenti Protetti",
+    "how_it_works.safety.secure_payments.description": "Tutti i pagamenti sono processati da Stripe, la piattaforma leader per le transazioni online.",
+    "how_it_works.safety.verified_users.title": "Utenti Verificati",
+    "how_it_works.safety.verified_users.description": "I proprietari vengono verificati per garantire transazioni affidabili e sicure.",
+    "how_it_works.safety.deposit_protection.title": "Protezione Cauzione",
+    "how_it_works.safety.deposit_protection.description": "Le cauzioni vengono trattenute durante il noleggio e restituite dopo il ritorno dell'attrezzo.",
+    "how_it_works.safety.reviews.title": "Recensioni Trasparenti",
+    "how_it_works.safety.reviews.description": "Leggi le recensioni di altri utenti per fare scelte consapevoli.",
+    
+    // FAQ
+    "how_it_works.faq.title": "Domande Frequenti",
+    "how_it_works.faq.question1": "Quanto costa noleggiare un attrezzo?",
+    "how_it_works.faq.answer1": "I prezzi variano a seconda dell'attrezzo e del proprietario. Puoi trovare i prezzi specifici consultando la pagina di dettaglio di ogni annuncio. Generalmente, noleggiare è molto più conveniente che comprare.",
+    "how_it_works.faq.question2": "Cosa succede se l'attrezzo si rompe durante il noleggio?",
+    "how_it_works.faq.answer2": "La cauzione è progettata per coprire eventuali danni. Se l'attrezzo viene danneggiato, la cauzione potrà essere utilizzata per le riparazioni. Contatta il proprietario immediatamente per segnalare il problema.",
+    "how_it_works.faq.question3": "Come posso pubblicare i miei attrezzi?",
+    "how_it_works.faq.answer3": "Accedi al tuo account, vai a Dashboard e clicca su 'Pubblica annuncio'. Compila i dettagli dell'attrezzo (titolo, descrizione, prezzo, foto) e pubblica. Il tuo annuncio sarà visibile subito.",
+    "how_it_works.faq.question4": "E' sicuro incontrare uno sconosciuto?",
+    "how_it_works.faq.answer4": "Si, tutti gli utenti sono verificati e puoi vedere le loro recensioni prima di accordarsi. Consigliamo sempre di incontrare in luoghi pubblici durante il giorno.",
+    
+    // CTA
+    "how_it_works.cta.title": "Pronto a Iniziare?",
+    "how_it_works.cta.subtitle": "Unisciti a migliaia di utenti che stanno già risparmiando denaro e guadagnando con Toolshare.",
+    "how_it_works.cta.browse_button": "Sfoglia Annunci",
+    "how_it_works.cta.publish_button": "Pubblica un Annuncio",
   },
   en: {
     // Header
@@ -401,11 +488,98 @@ const translations: Record<Language, Record<string, string>> = {
     "listing.new.errors.create_failed": "Error while creating listing. Please try again.",
     "location.geo_denied_short": "Location access denied",
     
+    // Dashboard payments
+    "dashboard.payments.quick_link": "Configure payments",
+    "dashboard.payments.title": "Configure payments",
+    "dashboard.payments.subtitle": "Connect your Stripe account and start receiving rental payments.",
+    "dashboard.payments.benefit1": "Receive fast direct payouts",
+    "dashboard.payments.benefit2": "Stripe handles payments and deposits securely",
+    "dashboard.payments.benefit3": "Complete onboarding as a seller",
+    "dashboard.payments.card.active_title": "Payments Active",
+    "dashboard.payments.card.active_description": "Your Stripe account is configured. You can now receive payments for rentals.",
+    "dashboard.payments.card.stripe_dashboard": "Open Stripe Dashboard",
+    "dashboard.payments.card.complete_title": "Complete setup",
+    "dashboard.payments.card.complete_description": "You started connecting but haven’t finished Stripe onboarding yet.",
+    "dashboard.payments.card.complete_button": "Complete setup",
+    "dashboard.payments.card.setup_title": "Set up payments",
+    "dashboard.payments.card.setup_description": "To receive rental payments, connect your Stripe account quickly and securely.",
+    "dashboard.payments.card.setup_button": "Connect Stripe",
+    "dashboard.payments.how_it_works_title": "How it works",
+    "dashboard.payments.how_it_works_description": "Connect Stripe, complete onboarding, and start receiving payments for your rentals.",
+    "dashboard.payments.how_it_works_step1": "Create or connect your Stripe account.",
+    "dashboard.payments.how_it_works_step2": "Complete onboarding with your details and bank account.",
+    "dashboard.payments.how_it_works_step3": "Start receiving payments for completed rentals.",
+    "dashboard.payments.back_to_dashboard": "Back to dashboard",
+    
     // Footer extra
     "footer.description": "The Italian platform for peer-to-peer tool rental. Save money and reduce waste.",
     "footer.all_tools": "All tools",
     "footer.account": "Account",
     "footer.support": "Support",
+    
+    // How It Works page
+    "how_it_works.title": "How It Works",
+    "how_it_works.subtitle": "Discover how to rent and earn money from your tools in a few simple steps",
+    "how_it_works.main_steps.title": "3 Simple Steps",
+    
+    // Search step
+    "how_it_works.steps.search.title": "Search",
+    "how_it_works.steps.search.description": "Find the tool you need among thousands of listings near you.",
+    "how_it_works.steps.search.detail1": "Use the search bar to find specific tools",
+    "how_it_works.steps.search.detail2": "Filter by category, price and distance",
+    "how_it_works.steps.search.detail3": "View images and the owner's reviews",
+    
+    // Book step
+    "how_it_works.steps.book.title": "Book",
+    "how_it_works.steps.book.description": "Choose the dates and send a rental request to the owner.",
+    "how_it_works.steps.book.detail1": "Select the start and end dates for your rental",
+    "how_it_works.steps.book.detail2": "View the total price with deposit included",
+    "how_it_works.steps.book.detail3": "Confirm the booking with secure payment",
+    
+    // Rent step
+    "how_it_works.steps.rent.title": "Use and Return",
+    "how_it_works.steps.rent.description": "Pick up the tool, use it for your project and return it.",
+    "how_it_works.steps.rent.detail1": "Pick up the tool directly from the owner",
+    "how_it_works.steps.rent.detail2": "Use it throughout the rental period",
+    "how_it_works.steps.rent.detail3": "Return it in perfect condition and receive your deposit refund",
+    
+    // Benefits
+    "how_it_works.benefits.title": "Why Choose Toolshare",
+    "how_it_works.benefits.subtitle": "The benefits of renting and lending tools",
+    "how_it_works.benefits.save_money.title": "Save Money",
+    "how_it_works.benefits.save_money.description": "Rent expensive tools at a fraction of the purchase price. Perfect for occasional projects.",
+    "how_it_works.benefits.secure.title": "Secure Transactions",
+    "how_it_works.benefits.secure.description": "Payments protected by Stripe and refundable security deposits to protect both parties.",
+    "how_it_works.benefits.sustainable.title": "Sustainable",
+    "how_it_works.benefits.sustainable.description": "Reduce waste by sharing resources with your local community.",
+    
+    // Safety
+    "how_it_works.safety.title": "Safe and Reliable Rental",
+    "how_it_works.safety.secure_payments.title": "Protected Payments",
+    "how_it_works.safety.secure_payments.description": "All payments are processed by Stripe, the leading platform for online transactions.",
+    "how_it_works.safety.verified_users.title": "Verified Users",
+    "how_it_works.safety.verified_users.description": "Owners are verified to ensure reliable and secure transactions.",
+    "how_it_works.safety.deposit_protection.title": "Deposit Protection",
+    "how_it_works.safety.deposit_protection.description": "Deposits are held during the rental and returned after the tool is returned.",
+    "how_it_works.safety.reviews.title": "Transparent Reviews",
+    "how_it_works.safety.reviews.description": "Read reviews from other users to make informed choices.",
+    
+    // FAQ
+    "how_it_works.faq.title": "Frequently Asked Questions",
+    "how_it_works.faq.question1": "How much does it cost to rent a tool?",
+    "how_it_works.faq.answer1": "Prices vary depending on the tool and owner. You can find specific prices on each listing's detail page. Generally, renting is much more affordable than buying.",
+    "how_it_works.faq.question2": "What if the tool breaks during the rental?",
+    "how_it_works.faq.answer2": "The deposit is designed to cover any damage. If the tool gets damaged, the deposit can be used for repairs. Contact the owner immediately to report the issue.",
+    "how_it_works.faq.question3": "How can I publish my tools?",
+    "how_it_works.faq.answer3": "Log in to your account, go to Dashboard and click 'Publish listing'. Fill in the tool details (title, description, price, photos) and publish. Your listing will be visible immediately.",
+    "how_it_works.faq.question4": "Is it safe to meet a stranger?",
+    "how_it_works.faq.answer4": "Yes, all users are verified and you can see their reviews before agreeing. We recommend always meeting in public places during the day.",
+    
+    // CTA
+    "how_it_works.cta.title": "Ready to Get Started?",
+    "how_it_works.cta.subtitle": "Join thousands of users who are already saving money and earning with Toolshare.",
+    "how_it_works.cta.browse_button": "Browse Listings",
+    "how_it_works.cta.publish_button": "Publish a Listing",
   },
 }
 
@@ -480,3 +654,4 @@ export function useLanguage() {
   }
   return context
 }
+

@@ -57,3 +57,4 @@ export async function detectCurrentLocation(): Promise<ClientLocation> {
 
   return { lat, lng, name }
 }
+

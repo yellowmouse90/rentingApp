@@ -98,3 +98,4 @@ export function Footer() {
     </footer>
   )
 }
+

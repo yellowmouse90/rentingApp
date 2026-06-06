@@ -324,3 +324,4 @@ export function BookingCard({ listing, bookings, exceptions, isOwner, isLoggedIn
     </div>
   )
 }
+

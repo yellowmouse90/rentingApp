@@ -56,3 +56,4 @@ export function HeaderActions({ user, profile }: HeaderActionsProps) {
     </>
   )
 }
+

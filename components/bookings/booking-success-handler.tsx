@@ -55,3 +55,4 @@ export function BookingSuccessHandler({ orderId, sessionId }: BookingSuccessHand
     <p className="mt-3 text-sm text-muted-foreground">{message}</p>
   )
 }
+

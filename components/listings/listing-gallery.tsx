@@ -154,3 +154,4 @@ export function ListingGallery({ images, title }: ListingGalleryProps) {
     </>
   )
 }
+

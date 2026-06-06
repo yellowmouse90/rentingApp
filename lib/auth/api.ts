@@ -30,3 +30,4 @@ export async function requireApiUser(): Promise<ApiAuthResult> {
     unauthorizedResponse: null,
   }
 }
+
