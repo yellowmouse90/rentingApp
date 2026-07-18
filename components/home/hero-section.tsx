@@ -8,10 +8,14 @@ export function HeroSection() {
   const { t } = useLanguage()
 
   return (
-    <section className="relative overflow-hidden bg-gradient-to-br from-primary/5 via-background to-accent/5 py-20 sm:py-32">
+    <section className="relative overflow-hidden py-20 sm:py-32">
+      <div
+        aria-hidden
+        className="bg-dot-grid absolute inset-0 -z-10 [mask-image:radial-gradient(ellipse_60%_80%_at_50%_0%,black_40%,transparent_100%)]"
+      />
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-3xl text-center">
-          <h1 className="text-balance text-4xl font-bold tracking-tight text-foreground sm:text-5xl lg:text-6xl">
+          <h1 className="text-balance font-heading text-4xl font-bold tracking-[-0.02em] text-foreground sm:text-5xl lg:text-6xl">
             {t("home.hero.title")}
           </h1>
           <p className="mt-6 text-pretty text-lg text-muted-foreground sm:text-xl">
@@ -57,10 +61,6 @@ export function HeroSection() {
           </div>
         </div>
       </div>
-
-      {/* Background decoration */}
-      <div className="absolute -top-40 right-0 -z-10 h-[500px] w-[500px] rounded-full bg-primary/5 blur-3xl" />
-      <div className="absolute -bottom-40 left-0 -z-10 h-[500px] w-[500px] rounded-full bg-accent/5 blur-3xl" />
     </section>
   )
 }

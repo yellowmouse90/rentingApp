@@ -1,9 +1,10 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, useMemo } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
+import { useAuth } from "@/lib/auth/context"
 import type { Category } from "@/lib/types"
 import { formatPrice, getConditionLabel } from "@/lib/utils"
 import { LocationSearch } from "./location-search"
@@ -55,6 +56,7 @@ export function ListingsGridWithLocation({
 }: ListingsGridWithLocationProps) {
   const router = useRouter()
   const supabase = createClient()
+  const { user } = useAuth()
   
   const [location, setLocation] = useState<{ lat: number; lng: number; name: string } | null>(
     initialParams.lat && initialParams.lng
@@ -66,8 +68,48 @@ export function ListingsGridWithLocation({
   const [isLoading, setIsLoading] = useState(true)
   const [totalCount, setTotalCount] = useState(0)
 
+  const categoryChildrenMap = useMemo(() => {
+    const map = new Map<string, string[]>()
+    for (const category of categories) {
+      if (category.parent_id) {
+        const children = map.get(category.parent_id) || []
+        children.push(category.id)
+        map.set(category.parent_id, children)
+      }
+    }
+    return map
+  }, [categories])
+
+  const getDescendantCategoryIds = useCallback((categoryId: string) => {
+    const ids = [categoryId]
+    const stack = [categoryId]
+
+    while (stack.length > 0) {
+      const currentId = stack.pop()
+      if (!currentId) continue
+      const children = categoryChildrenMap.get(currentId)
+      if (!children) continue
+
+      for (const childId of children) {
+        ids.push(childId)
+        stack.push(childId)
+      }
+    }
+
+    return ids
+  }, [categoryChildrenMap])
+
+  const getCategoryFilterIds = useCallback(() => {
+    if (!initialParams.category) return null
+    const category = categories.find((c) => c.slug === initialParams.category)
+    if (!category) return null
+    return getDescendantCategoryIds(category.id)
+  }, [categories, getDescendantCategoryIds, initialParams.category])
+
   const fetchListings = useCallback(async () => {
     setIsLoading(true)
+
+    const categoryFilterIds = getCategoryFilterIds()
 
     const runRegularQuery = async () => {
       let query = supabase
@@ -91,11 +133,12 @@ export function ListingsGridWithLocation({
         query = query.ilike("title", `%${initialParams.q}%`)
       }
 
-      if (initialParams.category) {
-        const cat = categories.find(c => c.slug === initialParams.category)
-        if (cat) {
-          query = query.eq("category_id", cat.id)
-        }
+      if (categoryFilterIds && categoryFilterIds.length > 0) {
+        query = query.in("category_id", categoryFilterIds)
+      }
+
+      if (user?.id) {
+        query = query.neq("owner_id", user.id)
       }
 
       if (initialParams.condition) {
@@ -166,8 +209,9 @@ export function ListingsGridWithLocation({
       })
 
       if (!error && data) {
-        setListings(data)
-        setTotalCount(data.length)
+        const filtered = user?.id ? data.filter((listing: any) => listing.owner_id !== user.id) : data
+        setListings(filtered)
+        setTotalCount(filtered.length)
       } else {
         console.error("[listings] Nearby search failed, fallback to regular query:", error)
         await runRegularQuery()
@@ -177,7 +221,7 @@ export function ListingsGridWithLocation({
     }
 
     setIsLoading(false)
-  }, [location, radius, initialParams, supabase, categories])
+  }, [location, radius, initialParams, supabase, categories, user])
 
   useEffect(() => {
     fetchListings()
@@ -298,7 +342,7 @@ function ListingCard({ listing, showDistance }: { listing: ListingWithDistance; 
   return (
     <Link
       href={`/listings/${listing.id}`}
-      className="group overflow-hidden rounded-xl border border-border bg-card transition-all hover:border-primary/50 hover:shadow-lg"
+      className="group overflow-hidden rounded-2xl border border-border bg-card transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-primary/5"
     >
       {/* Image */}
       <div className="relative aspect-[4/3] overflow-hidden bg-muted">

@@ -11,7 +11,7 @@ export function HowItWorksSection() {
     <section className="py-16 sm:py-24">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-foreground sm:text-3xl">
+          <h2 className="font-heading text-2xl font-bold tracking-[-0.01em] text-foreground sm:text-3xl">
             {t("home.how.title")}
           </h2>
           <p className="mt-2 text-muted-foreground">

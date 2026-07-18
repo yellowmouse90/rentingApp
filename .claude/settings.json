@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl -s \"http://localhost:3000/_next/static/chunks/%5Broot-of-the-server%5D__0nvm1y-._.css\" -o /tmp/app.css)"
+    ]
+  }
+}

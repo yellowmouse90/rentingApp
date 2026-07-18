@@ -150,6 +150,12 @@ const translations: Record<Language, Record<string, string>> = {
     "nav.settings": "Impostazioni",
     "nav.open_menu": "Apri menu",
     "nav.close_menu": "Chiudi menu",
+
+    // Theme
+    "theme.toggle": "Cambia tema",
+    "theme.light": "Chiaro",
+    "theme.dark": "Scuro",
+    "theme.system": "Sistema",
     
     // Homepage extra
     "home.hero.search_example": "Cerca un attrezzo... (es. trapano, tagliaerba)",
@@ -434,6 +440,12 @@ const translations: Record<Language, Record<string, string>> = {
     "nav.settings": "Settings",
     "nav.open_menu": "Open menu",
     "nav.close_menu": "Close menu",
+
+    // Theme
+    "theme.toggle": "Toggle theme",
+    "theme.light": "Light",
+    "theme.dark": "Dark",
+    "theme.system": "System",
     
     // Homepage extra
     "home.hero.search_example": "Search for a tool... (e.g. drill, lawnmower)",

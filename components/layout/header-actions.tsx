@@ -4,6 +4,7 @@ import Link from "next/link"
 import { Plus } from "lucide-react"
 import { useLanguage } from "@/lib/i18n/language-context"
 import { LanguageSwitcher } from "./language-switcher"
+import { ThemeSwitcher } from "./theme-switcher"
 import { UserMenu } from "./user-menu"
 import { ChatNotification } from "@/components/chat/chat-notification"
 import type { User } from "@supabase/supabase-js"
@@ -21,6 +22,7 @@ export function HeaderActions({ user, profile }: HeaderActionsProps) {
     return (
       <>
         <LanguageSwitcher />
+        <ThemeSwitcher />
         <Link
           href="/listings/new"
           className="inline-flex items-center gap-2 rounded-lg bg-accent px-4 py-2 text-sm font-medium text-accent-foreground transition-colors hover:bg-accent/90"
@@ -37,6 +39,7 @@ export function HeaderActions({ user, profile }: HeaderActionsProps) {
   return (
     <>
       <LanguageSwitcher />
+      <ThemeSwitcher />
       <Link
         href="/auth/login"
         className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"

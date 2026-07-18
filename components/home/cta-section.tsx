@@ -11,7 +11,7 @@ export function CTASection() {
     <section className="bg-primary py-16 sm:py-20">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-2xl text-center">
-          <h2 className="text-2xl font-bold text-primary-foreground sm:text-3xl">
+          <h2 className="font-heading text-2xl font-bold tracking-[-0.01em] text-primary-foreground sm:text-3xl">
             {t("home.cta.title")}
           </h2>
           <p className="mt-4 text-primary-foreground/80">

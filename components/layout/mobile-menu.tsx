@@ -10,6 +10,7 @@ import { useUnreadMessageCount } from "@/lib/chat/use-unread-count"
 import type { Profile } from "@/lib/types"
 import { useLanguage } from "@/lib/i18n/language-context"
 import { LanguageSwitcher } from "./language-switcher"
+import { ThemeSwitcher } from "./theme-switcher"
 
 interface MobileMenuProps {
   user: User | null
@@ -44,7 +45,10 @@ export function MobileMenu({ user, profile }: MobileMenuProps) {
           <nav className="flex flex-col gap-2">
             <div className="flex items-center justify-between px-3 py-2">
               <span className="text-xs font-medium text-muted-foreground uppercase">{t("nav.home")}</span>
-              <LanguageSwitcher />
+              <div className="flex items-center gap-1">
+                <LanguageSwitcher />
+                <ThemeSwitcher />
+              </div>
             </div>
             <Link
               href="/listings"
