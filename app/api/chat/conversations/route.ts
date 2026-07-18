@@ -1,19 +1,13 @@
-import { createClient } from "@/lib/supabase/server"
+import { requireApiUser } from "@/lib/auth/api"
 import { NextResponse } from "next/server"
 
-export async function GET(request: Request) {
+export async function GET() {
   try {
-    const { searchParams } = new URL(request.url)
-    const userId = searchParams.get("user_id")
-
-    if (!userId) {
-      return NextResponse.json(
-        { error: "user_id is required" },
-        { status: 400 }
-      )
+    const { supabase, user, unauthorizedResponse } = await requireApiUser()
+    if (unauthorizedResponse) {
+      return unauthorizedResponse
     }
-
-    const supabase = await createClient()
+    const userId = user!.id
 
     // Get all conversations for the user
     const { data: conversations, error } = await supabase

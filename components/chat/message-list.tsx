@@ -56,10 +56,16 @@ export function MessageList({
   useEffect(() => {
     if (!containerRef.current || !onMessagesVisible) return
 
+    const unreadIncomingIds = new Set(
+      messages
+        .filter((m) => m.sender_id !== currentUserId && !m.is_read)
+        .map((m) => m.id)
+    )
+
     const observer = new IntersectionObserver(
       (entries) => {
         const visibleIds = entries
-          .filter((entry) => entry.isIntersecting)
+          .filter((entry) => entry.isIntersecting && unreadIncomingIds.has(entry.target.id))
           .map((entry) => entry.target.id)
 
         if (visibleIds.length > 0) {
@@ -73,7 +79,7 @@ export function MessageList({
     messageElements.forEach((el) => observer.observe(el))
 
     return () => observer.disconnect()
-  }, [onMessagesVisible])
+  }, [onMessagesVisible, messages, currentUserId])
 
   return (
     <div

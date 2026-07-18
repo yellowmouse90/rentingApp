@@ -37,7 +37,6 @@ export function InitiateChat({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           rentalOrderId,
-          participantOneId: currentUserId,
           participantTwoId: otherUserId,
         }),
       })

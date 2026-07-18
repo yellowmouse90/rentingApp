@@ -132,7 +132,6 @@ export function ChatThread({
           body: JSON.stringify({
             conversationId: conversation.id,
             content: content.trim(),
-            senderId: user.id,
           }),
         })
 

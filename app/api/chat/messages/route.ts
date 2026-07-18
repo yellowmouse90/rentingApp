@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server"
+import { requireApiUser } from "@/lib/auth/api"
 import { NextResponse } from "next/server"
 
 export async function GET(request: Request) {
@@ -47,24 +48,27 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const { conversationId, content, senderId } = await request.json()
+    const { supabase, user, unauthorizedResponse } = await requireApiUser()
+    if (unauthorizedResponse) {
+      return unauthorizedResponse
+    }
 
-    if (!conversationId || !content || !senderId) {
+    const { conversationId, content } = await request.json()
+
+    if (!conversationId || !content) {
       return NextResponse.json(
         { error: "Missing required fields" },
         { status: 400 }
       )
     }
 
-    const supabase = await createClient()
-
-    // Create the message
+    // Create the message (sender is always the authenticated user)
     const { data: message, error: messageError } = await supabase
       .schema("interactions_domain")
       .from("messages")
       .insert({
         conversation_id: conversationId,
-        sender_id: senderId,
+        sender_id: user!.id,
         content,
         is_read: false,
       })

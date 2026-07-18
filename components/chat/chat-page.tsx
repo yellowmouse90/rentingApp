@@ -31,9 +31,7 @@ export function ChatPage({ initialConversationId }: ChatPageProps) {
     const fetchConversations = async () => {
       try {
         setIsLoading(true)
-        const response = await fetch(
-          `/api/chat/conversations?user_id=${user.id}`
-        )
+        const response = await fetch("/api/chat/conversations")
 
         if (!response.ok) throw new Error("Failed to fetch conversations")
 
