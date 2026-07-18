@@ -2,20 +2,23 @@ import Link from "next/link"
 import { requirePageUser } from "@/lib/auth/page"
 import { getServerI18n } from "@/lib/i18n/server"
 import { StripeConnectCard } from "@/components/dashboard/stripe-connect-card"
+import { DbErrorNotice } from "@/components/ui/db-error-notice"
 import { Shield, CreditCard, CheckCircle, ArrowRight } from "lucide-react"
 
 export default async function PaymentsPage() {
   const { t } = await getServerI18n()
   const { supabase, user } = await requirePageUser("/dashboard/payments")
 
-  const { data: profile } = await supabase
-    .from("user_domain.profiles")
+  const { data: profile, error: profileError } = await supabase
+    .schema("users_domain")
+    .from("profiles")
     .select("stripe_account_id, stripe_onboarding_complete")
     .eq("id", user.id)
     .single()
 
   return (
     <main className="min-h-screen bg-muted/30 py-10">
+      <DbErrorNotice message={profileError ? `Profilo: ${profileError.message}` : null} />
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
         <div className="rounded-3xl border border-border bg-card p-8 shadow-sm">
           <div className="grid gap-10 lg:grid-cols-[1.4fr_0.9fr] lg:items-start">

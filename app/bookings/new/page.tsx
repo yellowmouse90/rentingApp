@@ -5,6 +5,7 @@ import { getServerI18n } from "@/lib/i18n/server"
 import { formatPrice, calculateDays, calculateRentalPrice, calculateServiceFee } from "@/lib/utils"
 import { format } from "date-fns"
 import { BookingForm } from "@/components/bookings/booking-form"
+import { DbErrorNotice } from "@/components/ui/db-error-notice"
 import { ChevronLeft, Calendar, Shield, Clock } from "lucide-react"
 
 interface NewBookingPageProps {
@@ -61,9 +62,9 @@ export default async function NewBookingPage({ searchParams }: NewBookingPagePro
   const totalToPayNow = subtotal + serviceFee
   const grandTotal = subtotal + serviceFee + deposit
 
-  const { data: ownerProfile } = await supabase
+  const { data: ownerProfile, error: ownerProfileError } = await supabase
     .schema("users_domain")
-    .from("user_domain.profiles")
+    .from("profiles")
     .select("id, display_name, avatar_url, stripe_account_id, stripe_onboarding_complete")
     .eq("id", listing.owner_id)
     .single()
@@ -88,6 +89,7 @@ export default async function NewBookingPage({ searchParams }: NewBookingPagePro
 
   return (
     <div className="min-h-screen bg-muted/30 py-8">
+      <DbErrorNotice message={ownerProfileError ? `Profilo proprietario: ${ownerProfileError.message}` : null} />
       <div className="mx-auto max-w-4xl px-4 sm:px-6">
         <Link
           href={`/listings/${listing.id}`}

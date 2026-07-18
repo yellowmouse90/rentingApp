@@ -47,7 +47,8 @@ export async function POST(request: NextRequest) {
     }
 
     const { data: ownerProfile, error: ownerError } = await supabase
-      .from("user_domain.profiles")
+      .schema("users_domain")
+      .from("profiles")
       .select("stripe_account_id, stripe_onboarding_complete")
       .eq("id", item.owner_id)
       .single()

@@ -2,39 +2,48 @@ import Link from "next/link"
 import { requirePageUser } from "@/lib/auth/page"
 import { getServerI18n } from "@/lib/i18n/server"
 import { StripeConnectCard } from "@/components/dashboard/stripe-connect-card"
+import { DbErrorNotice } from "@/components/ui/db-error-notice"
 import { Package, Plus, CreditCard, BarChart3, ArrowRight } from "lucide-react"
 
 export default async function DashboardPage() {
   const { t } = await getServerI18n()
   const { supabase, user } = await requirePageUser("/dashboard")
 
+  const dbErrors: string[] = []
+
   // Fetch user stats
-  const { data: profile } = await supabase
-    .from("user_domain.profiles")
+  const { data: profile, error: profileError } = await supabase
+    .schema("users_domain")
+    .from("profiles")
     .select("*, stripe_account_id, stripe_onboarding_complete")
     .eq("id", user.id)
     .single()
+  if (profileError) dbErrors.push(`Profilo: ${profileError.message}`)
 
-  const { count: listingsCount } = await supabase
+  const { count: listingsCount, error: listingsError } = await supabase
     .schema('inventory_domain')
     .from("listings")
     .select("*", { count: "exact", head: true })
     .eq("owner_id", user.id)
+  if (listingsError) dbErrors.push(`Annunci: ${listingsError.message}`)
 
-  const { count: ordersAsRenter } = await supabase
+  const { count: ordersAsRenter, error: renterOrdersError } = await supabase
     .schema("rentals_domain")
     .from("rental_orders")
     .select("*", { count: "exact", head: true })
     .eq("renter_id", user.id)
+  if (renterOrdersError) dbErrors.push(`Noleggi come locatario: ${renterOrdersError.message}`)
 
-  const { count: ordersAsOwner } = await supabase
+  const { count: ordersAsOwner, error: ownerOrdersError } = await supabase
     .schema("rentals_domain")
     .from("rental_items")
     .select("*", { count: "exact", head: true })
     .eq("owner_id", user.id)
+  if (ownerOrdersError) dbErrors.push(`Noleggi ricevuti: ${ownerOrdersError.message}`)
 
   return (
     <div className="min-h-screen bg-muted/30 py-8">
+      <DbErrorNotice message={dbErrors.length ? dbErrors.join(" | ") : null} />
       <div className="mx-auto max-w-5xl px-4 sm:px-6">
         <div className="flex items-center justify-between">
           <div>

@@ -1,6 +1,7 @@
 import { Suspense } from "react"
 import { createClient } from "@/lib/supabase/server"
 import { ListingsGridWithLocation } from "@/components/listings/listings-grid-location"
+import { DbErrorNotice } from "@/components/ui/db-error-notice"
 import { Search } from "lucide-react"
 
 interface ListingsPageProps {
@@ -22,7 +23,7 @@ export default async function ListingsPage({ searchParams }: ListingsPageProps) 
   const supabase = await createClient()
 
   // Fetch categories for filter
-  const { data: categories } = await supabase
+  const { data: categories, error: categoriesError } = await supabase
     .schema('inventory_domain')
     .from("categories")
     .select("*")
@@ -32,6 +33,7 @@ export default async function ListingsPage({ searchParams }: ListingsPageProps) 
 
   return (
     <div className="min-h-screen bg-muted/30">
+      <DbErrorNotice message={categoriesError ? `Categorie: ${categoriesError.message}` : null} />
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-8">

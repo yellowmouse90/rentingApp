@@ -6,7 +6,8 @@ import { getServerI18n } from "@/lib/i18n/server"
 import { formatPrice, getConditionLabel } from "@/lib/utils"
 import { ListingGallery } from "@/components/listings/listing-gallery"
 import { BookingCard } from "@/components/listings/booking-card"
-import { 
+import { DbErrorNotice } from "@/components/ui/db-error-notice"
+import {
   Star, 
   Shield, 
   Calendar, 
@@ -53,10 +54,12 @@ export default async function ListingDetailPage({ params }: ListingDetailPagePro
     notFound()
   }
 
+  const dbErrors: string[] = []
+
   // Fetch owner separately to avoid cross-schema embed issues.
-  const { data: ownerProfile } = await supabase
+  const { data: ownerProfile, error: ownerProfileError } = await supabase
     .schema("users_domain")
-    .from("user_domain.profiles")
+    .from("profiles")
     .select("id, email, display_name, avatar_url, bio, average_rating_as_owner, total_reviews_as_owner, created_at")
     .eq("id", listing.owner_id)
     .maybeSingle()
@@ -66,30 +69,34 @@ export default async function ListingDetailPage({ params }: ListingDetailPagePro
   // If RLS blocks profile visibility, use a server-side admin fallback for public fields only.
   if (!effectiveOwnerProfile) {
     const admin = createAdminClient()
-    const { data: ownerProfileAdmin } = await admin
+    const { data: ownerProfileAdmin, error: ownerProfileAdminError } = await admin
       .schema("users_domain")
-      .from("user_domain.profiles")
+      .from("profiles")
       .select("id, email, display_name, avatar_url, bio, average_rating_as_owner, total_reviews_as_owner, created_at")
       .eq("id", listing.owner_id)
       .maybeSingle()
 
     effectiveOwnerProfile = ownerProfileAdmin || null
+    if (ownerProfileAdminError) dbErrors.push(`Profilo proprietario: ${ownerProfileAdminError.message}`)
+    else if (ownerProfileError) dbErrors.push(`Profilo proprietario: ${ownerProfileError.message}`)
   }
 
   // Fetch existing bookings to show unavailable dates
-  const { data: bookings } = await supabase
+  const { data: bookings, error: bookingsError } = await supabase
     .schema("rentals_domain")
     .from("rental_items")
     .select("start_date, end_date, status")
     .eq("listing_id", id)
     .not("status", "in", '("cancelled","unavailable")')
+  if (bookingsError) dbErrors.push(`Disponibilità: ${bookingsError.message}`)
 
   // Fetch availability exceptions
-  const { data: exceptions } = await supabase
+  const { data: exceptions, error: exceptionsError } = await supabase
     .schema("inventory_domain")
     .from("listing_availability_exceptions")
     .select("unavailable_date")
     .eq("listing_id", id)
+  if (exceptionsError) dbErrors.push(`Eccezioni disponibilità: ${exceptionsError.message}`)
 
   const owner = (effectiveOwnerProfile || {
     id: listing.owner_id,
@@ -122,6 +129,7 @@ export default async function ListingDetailPage({ params }: ListingDetailPagePro
 
   return (
     <div className="min-h-screen bg-background">
+      <DbErrorNotice message={dbErrors.length ? dbErrors.join(" | ") : null} />
       <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
         {/* Back button */}
         <Link

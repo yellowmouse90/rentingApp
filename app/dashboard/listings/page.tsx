@@ -3,6 +3,7 @@ import { requirePageUser } from "@/lib/auth/page"
 import { getServerI18n } from "@/lib/i18n/server"
 import { formatPrice, getConditionLabel } from "@/lib/utils"
 import { ListingActions } from "@/components/dashboard/listing-actions"
+import { DbErrorNotice } from "@/components/ui/db-error-notice"
 import { ImageIcon, Plus, Package, ArrowLeft } from "lucide-react"
 
 interface ListingRow {
@@ -22,7 +23,7 @@ export default async function DashboardListingsPage() {
   const { t, intlLocale } = await getServerI18n()
   const { supabase, user } = await requirePageUser("/dashboard/listings")
 
-  const { data: listings } = await supabase
+  const { data: listings, error: listingsError } = await supabase
     .schema("inventory_domain")
     .from("listings")
     .select(`
@@ -44,6 +45,7 @@ export default async function DashboardListingsPage() {
 
   return (
     <div className="min-h-screen bg-muted/30 py-8">
+      <DbErrorNotice message={listingsError ? `Annunci: ${listingsError.message}` : null} />
       <div className="mx-auto max-w-5xl px-4 sm:px-6">
         <div className="mb-6">
           <Link

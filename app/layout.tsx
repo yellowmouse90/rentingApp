@@ -1,10 +1,13 @@
 import type { Metadata, Viewport } from "next"
 import { Inter } from "next/font/google"
+import { Suspense } from "react"
 import "./globals.css"
 import { Header } from "@/components/layout/header"
 import { Footer } from "@/components/layout/footer"
 import { LanguageProvider } from "@/lib/i18n/language-context"
 import { AuthProvider } from "@/lib/auth/context"
+import { ToastProvider } from "@/components/ui/toast-provider"
+import { QueryErrorToast } from "@/components/ui/query-error-toast"
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" })
 
@@ -35,15 +38,20 @@ export default function RootLayout({
   return (
     <html lang="it" className="bg-background">
       <body className={`${inter.variable} font-sans antialiased`}>
-        <AuthProvider>
-          <LanguageProvider>
-            <div className="flex min-h-screen flex-col">
-              <Header />
-              <main className="flex-1">{children}</main>
-              <Footer />
-            </div>
-          </LanguageProvider>
-        </AuthProvider>
+        <ToastProvider>
+          <Suspense fallback={null}>
+            <QueryErrorToast />
+          </Suspense>
+          <AuthProvider>
+            <LanguageProvider>
+              <div className="flex min-h-screen flex-col">
+                <Header />
+                <main className="flex-1">{children}</main>
+                <Footer />
+              </div>
+            </LanguageProvider>
+          </AuthProvider>
+        </ToastProvider>
       </body>
     </html>
   )

@@ -6,7 +6,8 @@ import { format } from "date-fns"
 import { it } from "date-fns/locale"
 import { BookingActions } from "@/components/bookings/booking-actions"
 import { InitiateChat } from "@/components/chat/initiate-chat"
-import { 
+import { DbErrorNotice } from "@/components/ui/db-error-notice"
+import {
   ChevronLeft, 
   Calendar, 
   User, 
@@ -92,7 +93,9 @@ export default async function BookingDetailPage({ params }: BookingDetailPagePro
     notFound()
   }
 
-  const { data: listingData } = await supabase
+  const dbErrors: string[] = []
+
+  const { data: listingData, error: listingError } = await supabase
     .schema("inventory_domain")
     .from("listings")
     .select(`
@@ -103,20 +106,23 @@ export default async function BookingDetailPage({ params }: BookingDetailPagePro
     `)
     .eq("id", item.listing_id)
     .single()
+  if (listingError) dbErrors.push(`Annuncio: ${listingError.message}`)
 
-  const { data: renterProfile } = await supabase
+  const { data: renterProfile, error: renterProfileError } = await supabase
     .schema("users_domain")
-    .from("user_domain.profiles")
+    .from("profiles")
     .select("id, display_name, avatar_url, email")
     .eq("id", order.renter_id)
     .maybeSingle()
+  if (renterProfileError) dbErrors.push(`Profilo locatario: ${renterProfileError.message}`)
 
-  const { data: ownerProfile } = await supabase
+  const { data: ownerProfile, error: ownerProfileError } = await supabase
     .schema("users_domain")
-    .from("user_domain.profiles")
+    .from("profiles")
     .select("id, display_name, avatar_url, email")
     .eq("id", item.owner_id)
     .maybeSingle()
+  if (ownerProfileError) dbErrors.push(`Profilo proprietario: ${ownerProfileError.message}`)
 
   const renter = (renterProfile || {
     id: order.renter_id,
@@ -147,6 +153,7 @@ export default async function BookingDetailPage({ params }: BookingDetailPagePro
 
   return (
     <div className="min-h-screen bg-muted/30 py-8">
+      <DbErrorNotice message={dbErrors.length ? dbErrors.join(" | ") : null} />
       <div className="mx-auto max-w-3xl px-4 sm:px-6">
         <Link
           href="/bookings"

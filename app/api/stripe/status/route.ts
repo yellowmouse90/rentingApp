@@ -11,7 +11,8 @@ export async function GET(request: NextRequest) {
     }
 
     const { data: profile } = await supabase
-      .from("user_domain.profiles")
+      .schema("users_domain")
+      .from("profiles")
       .select("stripe_account_id, stripe_onboarding_complete")
       .eq("id", user.id)
       .single()
@@ -33,7 +34,8 @@ export async function GET(request: NextRequest) {
     // Update profile if status changed
     if (onboardingComplete !== profile.stripe_onboarding_complete) {
       await supabase
-        .from("user_domain.profiles")
+        .schema("users_domain")
+        .from("profiles")
         .update({ stripe_onboarding_complete: onboardingComplete })
         .eq("id", user.id)
     }

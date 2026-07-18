@@ -5,38 +5,44 @@ import { formatPrice, getRentalStatusLabel, getRentalStatusColor } from "@/lib/u
 import { format } from "date-fns"
 import type { Locale } from "date-fns"
 import { Calendar, Package, ChevronRight, ImageIcon } from "lucide-react"
+import { DbErrorNotice } from "@/components/ui/db-error-notice"
 
 export default async function BookingsPage() {
   const { t, dateLocale } = await getServerI18n()
   const { supabase, user } = await requirePageUser("/bookings")
 
+  const dbErrors: string[] = []
+
   // Fetch user's rental orders (as renter)
-  const { data: orders } = await supabase
+  const { data: orders, error: ordersError } = await supabase
     .schema("rentals_domain")
     .from("rental_orders")
     .select("*")
     .eq("renter_id", user.id)
     .order("created_at", { ascending: false })
+  if (ordersError) dbErrors.push(`Ordini: ${ordersError.message}`)
 
   const orderIds = (orders || []).map((order) => order.id)
 
-  const { data: orderItems } = orderIds.length
+  const { data: orderItems, error: orderItemsError } = orderIds.length
     ? await supabase
         .schema("rentals_domain")
         .from("rental_items")
         .select("id, order_id, listing_id, start_date, end_date, status")
         .in("order_id", orderIds)
-    : { data: [] as any[] }
+    : { data: [] as any[], error: null }
+  if (orderItemsError) dbErrors.push(`Dettagli ordini: ${orderItemsError.message}`)
 
   const listingIdsFromOrders = Array.from(new Set((orderItems || []).map((item) => item.listing_id)))
 
-  const { data: listingsFromOrders } = listingIdsFromOrders.length
+  const { data: listingsFromOrders, error: listingsFromOrdersError } = listingIdsFromOrders.length
     ? await supabase
         .schema("inventory_domain")
         .from("listings")
         .select("id, title, images:listing_images(image_url, display_order)")
         .in("id", listingIdsFromOrders)
-    : { data: [] as any[] }
+    : { data: [] as any[], error: null }
+  if (listingsFromOrdersError) dbErrors.push(`Annunci noleggiati: ${listingsFromOrdersError.message}`)
 
   const itemsByOrderId = new Map((orderItems || []).map((item) => [item.order_id, item]))
   const listingsById = new Map((listingsFromOrders || []).map((listing) => [listing.id, listing]))
@@ -53,41 +59,45 @@ export default async function BookingsPage() {
   })
 
   // Fetch rental items where user is owner
-  const { data: ownerItems } = await supabase
+  const { data: ownerItems, error: ownerItemsError } = await supabase
     .schema("rentals_domain")
     .from("rental_items")
     .select("id, order_id, listing_id, owner_id, start_date, end_date, status")
     .eq("owner_id", user.id)
     .order("created_at", { ascending: false })
+  if (ownerItemsError) dbErrors.push(`Noleggi ricevuti: ${ownerItemsError.message}`)
 
   const ownerOrderIds = Array.from(new Set((ownerItems || []).map((item) => item.order_id)))
   const ownerListingIds = Array.from(new Set((ownerItems || []).map((item) => item.listing_id)))
 
-  const { data: ownerOrders } = ownerOrderIds.length
+  const { data: ownerOrders, error: ownerOrdersError } = ownerOrderIds.length
     ? await supabase
         .schema("rentals_domain")
         .from("rental_orders")
         .select("id, renter_id")
         .in("id", ownerOrderIds)
-    : { data: [] as any[] }
+    : { data: [] as any[], error: null }
+  if (ownerOrdersError) dbErrors.push(`Ordini ricevuti: ${ownerOrdersError.message}`)
 
   const renterIds = Array.from(new Set((ownerOrders || []).map((order) => order.renter_id)))
 
-  const { data: renterProfiles } = renterIds.length
+  const { data: renterProfiles, error: renterProfilesError } = renterIds.length
     ? await supabase
         .schema("users_domain")
-        .from("user_domain.profiles")
+        .from("profiles")
         .select("id, display_name, avatar_url")
         .in("id", renterIds)
-    : { data: [] as any[] }
+    : { data: [] as any[], error: null }
+  if (renterProfilesError) dbErrors.push(`Profili locatari: ${renterProfilesError.message}`)
 
-  const { data: ownerListings } = ownerListingIds.length
+  const { data: ownerListings, error: ownerListingsError } = ownerListingIds.length
     ? await supabase
         .schema("inventory_domain")
         .from("listings")
         .select("id, title, images:listing_images(image_url, display_order)")
         .in("id", ownerListingIds)
-    : { data: [] as any[] }
+    : { data: [] as any[], error: null }
+  if (ownerListingsError) dbErrors.push(`Annunci: ${ownerListingsError.message}`)
 
   const ownerOrdersById = new Map((ownerOrders || []).map((order) => [order.id, order]))
   const profilesById = new Map((renterProfiles || []).map((profile) => [profile.id, profile]))
@@ -107,6 +117,7 @@ export default async function BookingsPage() {
 
   return (
     <div className="min-h-screen bg-muted/30 py-8">
+      <DbErrorNotice message={dbErrors.length ? dbErrors.join(" | ") : null} />
       <div className="mx-auto max-w-4xl px-4 sm:px-6">
         <h1 className="text-2xl font-bold text-foreground">{t("bookings.title")}</h1>
 
