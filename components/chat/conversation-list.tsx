@@ -52,7 +52,8 @@ export function ConversationList({
   return (
     <div className="space-y-2 overflow-y-auto">
       {conversations.map((conversation) => {
-        const otherUserDisplayName = conversation.other_participant_details?.display_name
+        const otherUserDisplayName =
+          conversation.other_participant_details?.display_name || t("chat.default_user")
         const countItem = conversation.rental_order?.items?.length;
         return (
           <button

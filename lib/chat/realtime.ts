@@ -73,10 +73,15 @@ export function useRealtimeMessages(
 
 export function useRealtimeConversations(
   userId: string,
+  conversationIds: string[],
   onConversationUpdated: (conversation: any) => void,
   onMessageReceived?: (message: any) => void
 ) {
   const channelRef = useRef<RealtimeChannel | null>(null)
+  // Kept fresh without re-subscribing the channel on every conversation
+  // list change (the effect only depends on userId).
+  const conversationIdsRef = useRef<string[]>(conversationIds)
+  conversationIdsRef.current = conversationIds
 
   useEffect(() => {
     if (!userId) return
@@ -106,7 +111,15 @@ export function useRealtimeConversations(
           table: "messages",
         },
         (payload) => {
-          onMessageReceived?.(payload.new)
+          const message = payload.new as any
+          // This channel can't be filtered server-side to just this user's
+          // rows (messages has no participant column), so every client
+          // receives every INSERT event regardless of Realtime RLS. Guard
+          // client-side against reacting to messages from conversations
+          // this user isn't part of.
+          if (!message?.conversation_id) return
+          if (!conversationIdsRef.current.includes(message.conversation_id)) return
+          onMessageReceived?.(message)
         }
       )
       .subscribe((status) => {

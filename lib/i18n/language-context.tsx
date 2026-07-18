@@ -430,6 +430,9 @@ const translations: Record<Language, Record<string, string>> = {
     "chat.this_user": "questo utente",
     "chat.you": "Tu",
     "chat.back": "Indietro",
+    "chat.load_older_messages": "Carica messaggi precedenti",
+    "chat.loading_older_messages": "Caricamento...",
+    "chat.deleted_user": "Utente eliminato",
 
     // Misc
     "auth.invalid_credentials": "Email o password non corretti",
@@ -887,6 +890,9 @@ const translations: Record<Language, Record<string, string>> = {
     "chat.this_user": "this user",
     "chat.you": "You",
     "chat.back": "Back",
+    "chat.load_older_messages": "Load older messages",
+    "chat.loading_older_messages": "Loading...",
+    "chat.deleted_user": "Deleted user",
 
     // Misc
     "auth.invalid_credentials": "Incorrect email or password",

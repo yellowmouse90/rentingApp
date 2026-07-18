@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState, useCallback } from "react"
+import { useEffect, useState, useCallback, useMemo } from "react"
 import { useAuth } from "@/lib/auth/context"
 import { useLanguage } from "@/lib/i18n/language-context"
 import { useRealtimeConversations } from "@/lib/chat/realtime"
@@ -61,6 +61,7 @@ export function ChatPage({ initialConversationId }: ChatPageProps) {
   // Subscribe to realtime conversation updates
   useRealtimeConversations(
     user?.id || "",
+    useMemo(() => conversations.map((c) => c.id), [conversations]),
     useCallback(
       (updatedConversation: Conversation) => {
         setConversations((prev) => {

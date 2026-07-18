@@ -26,13 +26,16 @@ export async function GET() {
     return NextResponse.json({ unread_count: 0 })
   }
 
+  // sender_id can be NULL for messages from a deleted account; `.neq()`
+  // alone would silently exclude those rows since NULL <> value is unknown
+  // in SQL, not true, so they must be included explicitly.
   const { count, error: messagesError } = await supabase
     .schema("interactions_domain")
     .from("messages")
     .select("id", { count: "exact", head: true })
     .in("conversation_id", conversationIds)
     .eq("is_read", false)
-    .neq("sender_id", user?.id)
+    .or(`sender_id.neq.${user?.id},sender_id.is.null`)
 
   if (messagesError) {
     console.error("Unread count messages query error:", messagesError)

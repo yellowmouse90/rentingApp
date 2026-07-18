@@ -32,8 +32,19 @@ export function useUnreadMessageCount(userId?: string) {
   useEffect(() => {
     if (!userId) return
     fetchCount()
-    const interval = window.setInterval(fetchCount, 10000)
-    return () => window.clearInterval(interval)
+    // Realtime keeps this in sync; poll only as a fallback safety net in
+    // case a subscription silently drops, and refresh on tab refocus.
+    const interval = window.setInterval(fetchCount, 60000)
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible") fetchCount()
+    }
+    document.addEventListener("visibilitychange", handleVisibility)
+    window.addEventListener("focus", handleVisibility)
+    return () => {
+      window.clearInterval(interval)
+      document.removeEventListener("visibilitychange", handleVisibility)
+      window.removeEventListener("focus", handleVisibility)
+    }
   }, [userId, fetchCount])
 
   useEffect(() => {

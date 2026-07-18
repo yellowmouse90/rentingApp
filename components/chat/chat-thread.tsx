@@ -18,6 +18,20 @@ interface ChatThreadProps {
   isDarkMode?: boolean
 }
 
+const PAGE_SIZE = 50
+// Realtime should deliver updates instantly; this interval is only a
+// fallback safety net in case a subscription silently drops.
+const FALLBACK_POLL_INTERVAL_MS = 30000
+
+function mergeMessages(existing: Message[], incoming: Message[]): Message[] {
+  if (incoming.length === 0) return existing
+  const byId = new Map(existing.map((m) => [m.id, m]))
+  incoming.forEach((m) => byId.set(m.id, m))
+  return Array.from(byId.values()).sort(
+    (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+  )
+}
+
 export function ChatThread({
   conversation,
   onBack,
@@ -29,6 +43,8 @@ export function ChatThread({
   const [isLoading, setIsLoading] = useState(true)
   const [isSending, setIsSending] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [hasMoreMessages, setHasMoreMessages] = useState(false)
+  const [isLoadingMore, setIsLoadingMore] = useState(false)
 
   const otherUser =
     conversation.other_participant_details || ({
@@ -37,6 +53,9 @@ export function ChatThread({
       email: null,
     } as unknown as Profile)
 
+  // Fetches the most recent page of messages. Used for the initial load and
+  // as a fallback refresh; merges into (rather than replaces) local state so
+  // older messages loaded via loadOlderMessages aren't dropped.
   const fetchMessages = useCallback(
     async (showLoading = false) => {
       if (!conversation.id) return
@@ -47,13 +66,14 @@ export function ChatThread({
         }
 
         const response = await fetch(
-          `/api/chat/messages?conversation_id=${conversation.id}`
+          `/api/chat/messages?conversation_id=${conversation.id}&limit=${PAGE_SIZE}`
         )
 
         if (!response.ok) throw new Error("Failed to fetch messages")
 
         const data = await response.json()
-        setMessages(data.messages || [])
+        setMessages((prev) => mergeMessages(prev, data.messages || []))
+        setHasMoreMessages(Boolean(data.hasMore))
         setError(null)
       } catch (err) {
         setError(t("chat.load_messages_error"))
@@ -67,12 +87,51 @@ export function ChatThread({
     [conversation.id]
   )
 
+  const loadOlderMessages = useCallback(async () => {
+    if (!conversation.id || isLoadingMore || !hasMoreMessages) return
+
+    const oldest = messages[0]
+    if (!oldest) return
+
+    try {
+      setIsLoadingMore(true)
+      const response = await fetch(
+        `/api/chat/messages?conversation_id=${conversation.id}&limit=${PAGE_SIZE}&before=${encodeURIComponent(
+          oldest.created_at
+        )}`
+      )
+
+      if (!response.ok) throw new Error("Failed to fetch older messages")
+
+      const data = await response.json()
+      setMessages((prev) => mergeMessages(prev, data.messages || []))
+      setHasMoreMessages(Boolean(data.hasMore))
+    } catch (err) {
+      console.error("Failed to load older messages:", err)
+    } finally {
+      setIsLoadingMore(false)
+    }
+  }, [conversation.id, isLoadingMore, hasMoreMessages, messages])
+
   useEffect(() => {
     if (!conversation.id) return
 
     fetchMessages(true)
-    const interval = window.setInterval(() => fetchMessages(false), 3000)
-    return () => window.clearInterval(interval)
+    const interval = window.setInterval(
+      () => fetchMessages(false),
+      FALLBACK_POLL_INTERVAL_MS
+    )
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible") fetchMessages(false)
+    }
+    document.addEventListener("visibilitychange", handleVisibility)
+    window.addEventListener("focus", handleVisibility)
+
+    return () => {
+      window.clearInterval(interval)
+      document.removeEventListener("visibilitychange", handleVisibility)
+      window.removeEventListener("focus", handleVisibility)
+    }
   }, [conversation.id, fetchMessages])
 
   // Subscribe to realtime messages
@@ -135,19 +194,22 @@ export function ChatThread({
           }),
         })
 
-        if (!response.ok) throw new Error("Failed to send message")
-
         const data = await response.json()
+
+        if (!response.ok) {
+          throw new Error(data?.error || "Failed to send message")
+        }
+
         setMessages((prev) => [...prev, data.message])
         setError(null)
       } catch (err) {
         console.error("Failed to send message:", err)
-        setError(t("chat.send_message_error"))
+        setError(err instanceof Error ? err.message : t("chat.send_message_error"))
       } finally {
         setIsSending(false)
       }
     },
-    [conversation.id, user?.id]
+    [conversation.id, user?.id, t]
   )
 
   if (isLoading) {
@@ -196,6 +258,9 @@ export function ChatThread({
         currentUserId={user?.id || ""}
         otherUser={otherUser}
         onMessagesVisible={handleMarkAsRead}
+        hasMore={hasMoreMessages}
+        isLoadingMore={isLoadingMore}
+        onLoadMore={loadOlderMessages}
       />
 
       {/* Input */}

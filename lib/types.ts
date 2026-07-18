@@ -148,8 +148,8 @@ export interface Review {
 export interface Conversation {
   id: string
   rental_order_id: string
-  participant_one: string
-  participant_two: string
+  participant_one: string | null
+  participant_two: string | null
   last_message_at: string | null
   created_at: string
   // Joined fields
@@ -163,7 +163,7 @@ export interface Conversation {
 export interface Message {
   id: string
   conversation_id: string
-  sender_id: string
+  sender_id: string | null
   content: string
   is_read: boolean
   created_at: string

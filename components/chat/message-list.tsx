@@ -1,17 +1,21 @@
 "use client"
 
-import { useCallback, useEffect, useRef } from "react"
+import { useCallback, useEffect, useLayoutEffect, useRef } from "react"
 import { ChatMessage } from "@/lib/types/chat"
 import { Profile } from "@/lib/types"
 import { formatDistanceToNow } from "date-fns"
 import { it, enUS } from "date-fns/locale"
 import { useLanguage } from "@/lib/i18n/language-context"
+import { Loader2 } from "lucide-react"
 
 interface MessageListProps {
   messages: ChatMessage[]
   currentUserId: string
   otherUser: Profile
   onMessagesVisible?: (messageIds: string[]) => void
+  hasMore?: boolean
+  isLoadingMore?: boolean
+  onLoadMore?: () => void
 }
 
 export function MessageList({
@@ -19,6 +23,9 @@ export function MessageList({
   currentUserId,
   otherUser,
   onMessagesVisible,
+  hasMore = false,
+  isLoadingMore = false,
+  onLoadMore,
 }: MessageListProps) {
   const { t, language } = useLanguage()
   const dateLocale = language === "en" ? enUS : it
@@ -26,6 +33,29 @@ export function MessageList({
   const containerRef = useRef<HTMLDivElement>(null)
   const hasLoadedRef = useRef(false)
   const isAtBottomRef = useRef(true)
+  const scrollAdjustRef = useRef<{ scrollHeight: number; scrollTop: number } | null>(null)
+
+  const handleLoadMore = useCallback(() => {
+    const element = containerRef.current
+    if (element) {
+      scrollAdjustRef.current = {
+        scrollHeight: element.scrollHeight,
+        scrollTop: element.scrollTop,
+      }
+    }
+    onLoadMore?.()
+  }, [onLoadMore])
+
+  // Keep the viewport anchored on the same message after older messages are
+  // prepended, instead of jumping the user back to the top of the list.
+  useLayoutEffect(() => {
+    const element = containerRef.current
+    const adjust = scrollAdjustRef.current
+    if (!element || !adjust) return
+
+    element.scrollTop = element.scrollHeight - adjust.scrollHeight + adjust.scrollTop
+    scrollAdjustRef.current = null
+  }, [messages])
 
   const scrollToBottom = (behavior: ScrollBehavior = "auto") => {
     endOfMessagesRef.current?.scrollIntoView({ behavior })
@@ -87,6 +117,21 @@ export function MessageList({
       onScroll={handleScroll}
       className="flex-1 overflow-y-auto space-y-4 p-4 sm:p-6"
     >
+      {hasMore && messages.length > 0 && (
+        <div className="flex justify-center pb-2">
+          <button
+            type="button"
+            onClick={handleLoadMore}
+            disabled={isLoadingMore}
+            className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted disabled:opacity-50"
+          >
+            {isLoadingMore && <Loader2 className="h-3 w-3 animate-spin" />}
+            {isLoadingMore
+              ? t("chat.loading_older_messages")
+              : t("chat.load_older_messages")}
+          </button>
+        </div>
+      )}
       {messages.length === 0 ? (
         <div className="flex h-full items-center justify-center text-center">
           <div>
@@ -103,7 +148,9 @@ export function MessageList({
           const isCurrentUser = message.sender_id === currentUserId
           const sender = isCurrentUser
             ? { display_name: t("chat.you") }
-            : otherUser
+            : message.sender_id
+              ? otherUser
+              : { display_name: t("chat.deleted_user") }
 
           return (
             <div

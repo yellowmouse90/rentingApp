@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react"
 import { Send, Loader2 } from "lucide-react"
 import { useLanguage } from "@/lib/i18n/language-context"
+import { MAX_MESSAGE_LENGTH } from "@/lib/types/chat"
 
 interface MessageInputProps {
   onSendMessage: (content: string) => Promise<void>
@@ -56,6 +57,7 @@ export function MessageInput({
           onChange={(e) => setMessage(e.target.value)}
           placeholder={placeholder || t("chat.message_placeholder")}
           disabled={disabled || isLoading}
+          maxLength={MAX_MESSAGE_LENGTH}
           onKeyDown={(e) => {
             if (e.key === "Enter" && e.ctrlKey) {
               handleSubmit(e as any)
@@ -77,8 +79,13 @@ export function MessageInput({
           )}
         </button>
       </div>
-      <p className="mt-2 text-xs text-muted-foreground">
-        {t("chat.ctrl_enter_hint")}
+      <p className="mt-2 flex items-center justify-between text-xs text-muted-foreground">
+        <span>{t("chat.ctrl_enter_hint")}</span>
+        {message.length > MAX_MESSAGE_LENGTH * 0.8 && (
+          <span>
+            {message.length}/{MAX_MESSAGE_LENGTH}
+          </span>
+        )}
       </p>
     </form>
   )
