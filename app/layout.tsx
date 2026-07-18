@@ -56,22 +56,22 @@ export default function RootLayout({
         </Script>
       </head>
       <body className={`${inter.variable} ${sora.variable} font-sans antialiased`} suppressHydrationWarning>
-        <ToastProvider>
-          <Suspense fallback={null}>
-            <QueryErrorToast />
-          </Suspense>
-          <ThemeProvider>
-            <AuthProvider>
-              <LanguageProvider>
+        <ThemeProvider>
+          <LanguageProvider>
+            <ToastProvider>
+              <Suspense fallback={null}>
+                <QueryErrorToast />
+              </Suspense>
+              <AuthProvider>
                 <div className="flex min-h-screen flex-col">
                   <Header />
                   <main className="flex-1">{children}</main>
                   <Footer />
                 </div>
-              </LanguageProvider>
-            </AuthProvider>
-          </ThemeProvider>
-        </ToastProvider>
+              </AuthProvider>
+            </ToastProvider>
+          </LanguageProvider>
+        </ThemeProvider>
       </body>
     </html>
   )

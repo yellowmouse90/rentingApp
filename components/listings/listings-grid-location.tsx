@@ -5,6 +5,7 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
 import { useAuth } from "@/lib/auth/context"
+import { useLanguage } from "@/lib/i18n/language-context"
 import type { Category } from "@/lib/types"
 import { formatPrice, getConditionLabel } from "@/lib/utils"
 import { LocationSearch } from "./location-search"
@@ -57,6 +58,7 @@ export function ListingsGridWithLocation({
   const router = useRouter()
   const supabase = createClient()
   const { user } = useAuth()
+  const { t } = useLanguage()
   
   const [location, setLocation] = useState<{ lat: number; lng: number; name: string } | null>(
     initialParams.lat && initialParams.lng
@@ -294,12 +296,12 @@ export function ListingsGridWithLocation({
         <div className="mb-4 flex items-center justify-between">
           <p className="text-sm text-muted-foreground">
             {isLoading ? (
-              "Caricamento..."
+              t("common.loading")
             ) : (
               <>
-                <span className="font-semibold text-foreground">{totalCount}</span> risultati
+                <span className="font-semibold text-foreground">{totalCount}</span> {t("listings_grid.results_count")}
                 {location && location.lat !== 0 && (
-                  <> entro <span className="font-semibold text-foreground">{radius} km</span> da {location.name}</>
+                  <> {t("listings_grid.within")} <span className="font-semibold text-foreground">{radius} km</span> {t("listings_grid.km_from")} {location.name}</>
                 )}
               </>
             )}
@@ -313,17 +315,17 @@ export function ListingsGridWithLocation({
         ) : listings.length === 0 ? (
           <div className="rounded-xl border border-dashed border-border bg-card p-12 text-center">
             <Package className="mx-auto h-12 w-12 text-muted-foreground/50" />
-            <h3 className="mt-4 text-lg font-semibold text-foreground">Nessun risultato</h3>
+            <h3 className="mt-4 text-lg font-semibold text-foreground">{t("listings_grid.no_results")}</h3>
             <p className="mt-2 text-sm text-muted-foreground">
               {location && location.lat !== 0
-                ? "Prova ad aumentare il raggio di ricerca o a modificare i filtri"
-                : "Abilita la geolocalizzazione per vedere gli attrezzi vicino a te"}
+                ? t("listings_grid.no_results_with_location")
+                : t("listings_grid.no_results_no_location")}
             </p>
             <Link
               href="/listings"
               className="mt-4 inline-flex items-center rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
             >
-              Vedi tutti gli annunci
+              {t("listings_grid.view_all")}
             </Link>
           </div>
         ) : (
@@ -339,6 +341,7 @@ export function ListingsGridWithLocation({
 }
 
 function ListingCard({ listing, showDistance }: { listing: ListingWithDistance; showDistance: boolean }) {
+  const { t } = useLanguage()
   return (
     <Link
       href={`/listings/${listing.id}`}
@@ -359,7 +362,7 @@ function ListingCard({ listing, showDistance }: { listing: ListingWithDistance; 
         )}
         <div className="absolute left-2 top-2">
           <span className="rounded-md bg-background/90 px-2 py-1 text-xs font-medium text-foreground backdrop-blur-sm">
-            {getConditionLabel(listing.condition)}
+            {getConditionLabel(listing.condition, t)}
           </span>
         </div>
         {showDistance && listing.distance_km >= 0 && (
@@ -397,12 +400,12 @@ function ListingCard({ listing, showDistance }: { listing: ListingWithDistance; 
           <span className="text-xl font-bold text-primary">
             {formatPrice(listing.price_per_day_cents, listing.currency_code)}
           </span>
-          <span className="text-sm text-muted-foreground">/giorno</span>
+          <span className="text-sm text-muted-foreground">{t("listings.per_day")}</span>
         </div>
 
         {listing.price_per_week_cents && (
           <p className="mt-1 text-xs text-muted-foreground">
-            {formatPrice(listing.price_per_week_cents, listing.currency_code)}/settimana
+            {formatPrice(listing.price_per_week_cents, listing.currency_code)}{t("listings_grid.per_week")}
           </p>
         )}
       </div>

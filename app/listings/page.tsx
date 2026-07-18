@@ -1,5 +1,6 @@
 import { Suspense } from "react"
 import { createClient } from "@/lib/supabase/server"
+import { getServerI18n } from "@/lib/i18n/server"
 import { ListingsGridWithLocation } from "@/components/listings/listings-grid-location"
 import { DbErrorNotice } from "@/components/ui/db-error-notice"
 import { Search } from "lucide-react"
@@ -21,6 +22,7 @@ interface ListingsPageProps {
 export default async function ListingsPage({ searchParams }: ListingsPageProps) {
   const params = await searchParams
   const supabase = await createClient()
+  const { t } = await getServerI18n()
 
   // Fetch categories for filter
   const { data: categories, error: categoriesError } = await supabase
@@ -33,15 +35,15 @@ export default async function ListingsPage({ searchParams }: ListingsPageProps) 
 
   return (
     <div className="min-h-screen bg-muted/30">
-      <DbErrorNotice message={categoriesError ? `Categorie: ${categoriesError.message}` : null} />
+      <DbErrorNotice message={categoriesError ? `${t("listings_page.categories_error")}: ${categoriesError.message}` : null} />
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-8">
           <h1 className="font-heading text-3xl font-bold tracking-[-0.01em] text-foreground">
-            {activeCategory ? activeCategory.name : "Tutti gli attrezzi"}
+            {activeCategory ? activeCategory.name : t("listings_page.all_tools")}
           </h1>
           <p className="mt-2 text-muted-foreground">
-            Trova gli attrezzi piu vicini a te
+            {t("listings_page.subtitle")}
           </p>
         </div>
 
@@ -53,7 +55,7 @@ export default async function ListingsPage({ searchParams }: ListingsPageProps) 
               type="text"
               name="q"
               defaultValue={params.q}
-              placeholder="Cerca attrezzi..."
+              placeholder={t("listings_page.search_placeholder")}
               className="w-full rounded-lg border border-input bg-background py-3 pl-12 pr-4 text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
             />
             {/* Preserve other filters */}

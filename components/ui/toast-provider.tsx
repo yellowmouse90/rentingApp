@@ -1,6 +1,7 @@
 "use client"
 
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react"
+import { useLanguage } from "@/lib/i18n/language-context"
 
 type ToastVariant = "error" | "success" | "info"
 
@@ -22,6 +23,7 @@ export function emitToast(message: string, variant: ToastVariant = "error") {
 const ToastContext = createContext<Listener | null>(null)
 
 export function ToastProvider({ children }: { children: React.ReactNode }) {
+  const { t } = useLanguage()
   const [toasts, setToasts] = useState<ToastItem[]>([])
   const idRef = useRef(0)
 
@@ -66,7 +68,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
               type="button"
               onClick={() => dismiss(toast.id)}
               className="text-xs font-medium opacity-70 hover:opacity-100"
-              aria-label="Chiudi notifica"
+              aria-label={t("common.close_notification")}
             >
               ✕
             </button>

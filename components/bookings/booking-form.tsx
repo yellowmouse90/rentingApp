@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
+import { useLanguage } from "@/lib/i18n/language-context"
 import type { Listing } from "@/lib/types"
 import { formatPrice } from "@/lib/utils"
 import { format } from "date-fns"
@@ -37,6 +38,7 @@ export function BookingForm({
   deposit,
   grandTotal,
 }: BookingFormProps) {
+  const { t } = useLanguage()
   const router = useRouter()
   const supabase = createClient()
   const [isLoading, setIsLoading] = useState(false)
@@ -70,7 +72,7 @@ export function BookingForm({
       }
 
       if ((overlappingCount || 0) > 0) {
-        setError("Le date selezionate non sono piu disponibili. Scegli un altro periodo.")
+        setError(t("booking_form.dates_unavailable"))
         setIsLoading(false)
         return
       }
@@ -120,7 +122,7 @@ export function BookingForm({
           .eq("id", order.id)
 
         if ((itemError as { code?: string }).code === "23P01") {
-          setError("Le date selezionate non sono piu disponibili. Scegli un altro periodo.")
+          setError(t("booking_form.dates_unavailable"))
           setIsLoading(false)
           return
         }
@@ -132,7 +134,7 @@ export function BookingForm({
       router.push(`/bookings/${order.id}`)
     } catch (err) {
       console.error("Booking error:", err)
-      setError("Errore durante la prenotazione. Riprova.")
+      setError(t("booking_form.booking_error"))
       setIsLoading(false)
     }
   }
@@ -144,9 +146,9 @@ export function BookingForm({
         <div className="flex items-start gap-3 rounded-lg bg-amber-50 p-4 text-amber-800">
           <AlertCircle className="mt-0.5 h-5 w-5 shrink-0" />
           <div>
-            <p className="font-medium">Pagamento non disponibile</p>
+            <p className="font-medium">{t("booking_form.payment_unavailable_title")}</p>
             <p className="mt-1 text-sm">
-              Il proprietario non ha ancora configurato i pagamenti. La prenotazione verra inviata come richiesta e dovrai concordare il pagamento direttamente.
+              {t("booking_form.payment_unavailable_desc")}
             </p>
           </div>
         </div>
@@ -162,7 +164,7 @@ export function BookingForm({
         {/* Notes */}
         <div>
           <label htmlFor="notes" className="mb-1.5 block text-sm font-medium text-foreground">
-            Messaggio per il proprietario (opzionale)
+            {t("booking_form.message_label")}
           </label>
           <textarea
             id="notes"
@@ -170,18 +172,18 @@ export function BookingForm({
             onChange={(e) => setNotes(e.target.value)}
             rows={3}
             className="w-full rounded-lg border border-input bg-background px-4 py-2.5 text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
-            placeholder="Presentati e spiega per cosa ti serve l'attrezzo..."
+            placeholder={t("booking_form.message_placeholder")}
           />
         </div>
 
         {/* Terms */}
         <div className="mt-6 rounded-lg bg-muted p-4">
-          <h3 className="font-medium text-foreground">Termini del noleggio</h3>
+          <h3 className="font-medium text-foreground">{t("booking_form.terms_title")}</h3>
           <ul className="mt-2 space-y-1 text-sm text-muted-foreground">
-            <li>• Ritiro e consegna da concordare con il proprietario</li>
-            <li>• L&apos;attrezzo deve essere restituito nelle stesse condizioni</li>
-            <li>• La cauzione viene rimborsata dopo la restituzione</li>
-            <li>• Cancellazione gratuita fino a 24 ore prima</li>
+            <li>• {t("booking_form.term1")}</li>
+            <li>• {t("booking_form.term2")}</li>
+            <li>• {t("booking_form.term3")}</li>
+            <li>• {t("booking_form.term4")}</li>
           </ul>
         </div>
 
@@ -194,19 +196,19 @@ export function BookingForm({
           {isLoading ? (
             <>
               <Loader2 className="h-4 w-4 animate-spin" />
-              Elaborazione...
+              {t("booking_form.processing")}
             </>
           ) : (
-            "Invia richiesta di noleggio"
+            t("booking_form.submit")
           )}
         </button>
 
         <p className="mt-4 text-center text-xs text-muted-foreground">
-          Cliccando il pulsante accetti i{" "}
+          {t("booking_form.disclaimer_prefix")}{" "}
           <a href="/terms" className="underline hover:text-foreground">
-            Termini di Servizio
+            {t("booking_form.disclaimer_terms")}
           </a>{" "}
-          e la{" "}
+          {t("booking_form.disclaimer_and")}{" "}
           <a href="/privacy" className="underline hover:text-foreground">
             Privacy Policy
           </a>

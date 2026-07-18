@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react"
 import { MapPin, Navigation, Loader2, X } from "lucide-react"
 import { detectCurrentLocation } from "@/lib/location/client"
+import { useLanguage } from "@/lib/i18n/language-context"
 
 interface LocationSearchProps {
   onLocationChange: (lat: number, lng: number, name: string) => void
@@ -25,6 +26,7 @@ export function LocationSearch({
   radius,
   onRadiusChange,
 }: LocationSearchProps) {
+  const { t } = useLanguage()
   const [isLocating, setIsLocating] = useState(false)
   const [locationError, setLocationError] = useState<string | null>(null)
   const [manualAddress, setManualAddress] = useState("")
@@ -38,13 +40,13 @@ export function LocationSearch({
       const detected = await detectCurrentLocation()
       onLocationChange(detected.lat, detected.lng, detected.name)
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Errore nella geolocalizzazione"
+      const message = error instanceof Error ? error.message : t("location_search.geo_error")
       setLocationError(message)
       setShowManualInput(true)
     } finally {
       setIsLocating(false)
     }
-  }, [onLocationChange])
+  }, [onLocationChange, t])
 
   const searchAddress = async () => {
     if (!manualAddress.trim()) return
@@ -68,10 +70,10 @@ export function LocationSearch({
         setShowManualInput(false)
         setManualAddress("")
       } else {
-        setLocationError("Indirizzo non trovato. Prova con un altro indirizzo.")
+        setLocationError(t("location_search.address_not_found"))
       }
     } catch {
-      setLocationError("Errore nella ricerca dell'indirizzo")
+      setLocationError(t("location_search.address_search_error"))
     }
 
     setIsLocating(false)
@@ -86,7 +88,7 @@ export function LocationSearch({
       <div className="flex items-center justify-between">
         <h3 className="flex items-center gap-2 text-sm font-semibold text-foreground">
           <MapPin className="h-4 w-4 text-primary" />
-          Posizione
+          {t("location_search.title")}
         </h3>
         {currentLocation && currentLocation.lat !== 0 && (
           <button
@@ -110,7 +112,7 @@ export function LocationSearch({
           {/* Radius selector */}
           <div>
             <label className="mb-2 block text-xs text-muted-foreground">
-              Raggio di ricerca
+              {t("location_search.radius")}
             </label>
             <div className="flex flex-wrap gap-2">
               {radiusOptions.map((option) => (
@@ -139,7 +141,7 @@ export function LocationSearch({
             ) : (
               <Navigation className="h-4 w-4" />
             )}
-            Aggiorna posizione
+            {t("location_search.update_location")}
           </button>
         </div>
       ) : (
@@ -154,14 +156,14 @@ export function LocationSearch({
             ) : (
               <Navigation className="h-4 w-4" />
             )}
-            Usa la mia posizione
+            {t("location_search.use_my_location")}
           </button>
 
           <button
             onClick={() => setShowManualInput(!showManualInput)}
             className="w-full text-center text-xs text-muted-foreground hover:text-foreground"
           >
-            {showManualInput ? "Nascondi" : "Inserisci manualmente"}
+            {showManualInput ? t("location_search.hide") : t("location_search.enter_manually")}
           </button>
 
           {showManualInput && (
@@ -170,7 +172,7 @@ export function LocationSearch({
                 type="text"
                 value={manualAddress}
                 onChange={(e) => setManualAddress(e.target.value)}
-                placeholder="Inserisci citta o indirizzo..."
+                placeholder={t("location_search.address_placeholder")}
                 className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
                 onKeyDown={(e) => e.key === "Enter" && searchAddress()}
               />
@@ -179,7 +181,7 @@ export function LocationSearch({
                 disabled={isLocating || !manualAddress.trim()}
                 className="w-full rounded-lg bg-muted px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted/80 disabled:opacity-50"
               >
-                Cerca
+                {t("location_search.search")}
               </button>
             </div>
           )}

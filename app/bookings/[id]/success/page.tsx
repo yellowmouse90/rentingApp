@@ -1,6 +1,7 @@
 import Link from "next/link"
 import { CheckCircle } from "lucide-react"
 import { BookingSuccessHandler } from "@/components/bookings/booking-success-handler"
+import { getServerI18n } from "@/lib/i18n/server"
 
 interface BookingSuccessPageProps {
   params: Promise<{ id: string }>
@@ -10,6 +11,7 @@ interface BookingSuccessPageProps {
 export default async function BookingSuccessPage({ params, searchParams }: BookingSuccessPageProps) {
   const { id } = await params
   const { session_id } = await searchParams
+  const { t } = await getServerI18n()
 
   return (
     <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center px-4 py-12">
@@ -19,10 +21,10 @@ export default async function BookingSuccessPage({ params, searchParams }: Booki
             <CheckCircle className="h-8 w-8 text-accent" />
           </div>
 
-          <h1 className="text-2xl font-bold text-foreground">Prenotazione confermata!</h1>
-          
+          <h1 className="text-2xl font-bold text-foreground">{t("booking_success.title")}</h1>
+
           <p className="mt-4 text-muted-foreground">
-            La tua richiesta di noleggio e stata inviata con successo. Il proprietario ricevera una notifica e potra confermare la disponibilita.
+            {t("booking_success.description")}
           </p>
 
           <BookingSuccessHandler orderId={id} sessionId={session_id || null} />
@@ -32,13 +34,13 @@ export default async function BookingSuccessPage({ params, searchParams }: Booki
               href={`/bookings/${id}`}
               className="inline-flex items-center justify-center rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
             >
-              Visualizza prenotazione
+              {t("booking_success.view_booking")}
             </Link>
             <Link
               href="/listings"
               className="text-sm font-medium text-muted-foreground hover:text-foreground"
             >
-              Continua a esplorare
+              {t("booking_success.continue_exploring")}
             </Link>
           </div>
         </div>

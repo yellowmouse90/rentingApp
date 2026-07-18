@@ -1,5 +1,6 @@
 import Link from "next/link"
 import { createClient } from "@/lib/supabase/server"
+import { getServerI18n } from "@/lib/i18n/server"
 import { Wrench } from "lucide-react"
 import { MobileMenu } from "./mobile-menu"
 import { HeaderNav } from "./header-nav"
@@ -8,6 +9,7 @@ import { DbErrorNotice } from "@/components/ui/db-error-notice"
 
 export async function Header() {
   const supabase = await createClient()
+  const { t } = await getServerI18n()
   const {
     data: { user },
   } = await supabase.auth.getUser()
@@ -22,7 +24,7 @@ export async function Header() {
       .eq("id", user.id)
       .single()
     profile = data
-    if (error) dbError = `Errore caricamento profilo: ${error.message}`
+    if (error) dbError = `${t("header.profile_load_error")}: ${error.message}`
   }
 
   return (

@@ -18,28 +18,28 @@ export default async function DashboardPage() {
     .select("*, stripe_account_id, stripe_onboarding_complete")
     .eq("id", user.id)
     .single()
-  if (profileError) dbErrors.push(`Profilo: ${profileError.message}`)
+  if (profileError) dbErrors.push(`${t("dashboard.errors.profile")}: ${profileError.message}`)
 
   const { count: listingsCount, error: listingsError } = await supabase
     .schema('inventory_domain')
     .from("listings")
     .select("*", { count: "exact", head: true })
     .eq("owner_id", user.id)
-  if (listingsError) dbErrors.push(`Annunci: ${listingsError.message}`)
+  if (listingsError) dbErrors.push(`${t("dashboard.errors.listings")}: ${listingsError.message}`)
 
   const { count: ordersAsRenter, error: renterOrdersError } = await supabase
     .schema("rentals_domain")
     .from("rental_orders")
     .select("*", { count: "exact", head: true })
     .eq("renter_id", user.id)
-  if (renterOrdersError) dbErrors.push(`Noleggi come locatario: ${renterOrdersError.message}`)
+  if (renterOrdersError) dbErrors.push(`${t("dashboard.errors.renter_orders")}: ${renterOrdersError.message}`)
 
   const { count: ordersAsOwner, error: ownerOrdersError } = await supabase
     .schema("rentals_domain")
     .from("rental_items")
     .select("*", { count: "exact", head: true })
     .eq("owner_id", user.id)
-  if (ownerOrdersError) dbErrors.push(`Noleggi ricevuti: ${ownerOrdersError.message}`)
+  if (ownerOrdersError) dbErrors.push(`${t("dashboard.errors.owner_orders")}: ${ownerOrdersError.message}`)
 
   return (
     <div className="min-h-screen bg-muted/30 py-8">

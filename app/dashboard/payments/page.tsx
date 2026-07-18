@@ -18,7 +18,7 @@ export default async function PaymentsPage() {
 
   return (
     <main className="min-h-screen bg-muted/30 py-10">
-      <DbErrorNotice message={profileError ? `Profilo: ${profileError.message}` : null} />
+      <DbErrorNotice message={profileError ? `${t("dashboard.payments.error_profile")}: ${profileError.message}` : null} />
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
         <div className="rounded-3xl border border-border bg-card p-8 shadow-sm">
           <div className="grid gap-10 lg:grid-cols-[1.4fr_0.9fr] lg:items-start">

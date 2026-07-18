@@ -4,6 +4,7 @@ import { useState } from "react"
 import Link from "next/link"
 import { MessageSquare, Loader2 } from "lucide-react"
 import { useRouter } from "next/navigation"
+import { useLanguage } from "@/lib/i18n/language-context"
 
 interface InitiateChatProps {
   rentalOrderId: string
@@ -22,6 +23,7 @@ export function InitiateChat({
   className = "",
   variant = "button",
 }: InitiateChatProps) {
+  const { t } = useLanguage()
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
 
@@ -69,7 +71,7 @@ export function InitiateChat({
         ) : (
           <MessageSquare className="h-4 w-4" />
         )}
-        {isLoading ? "Caricamento..." : `Invia messaggio a ${otherUserName}`}
+        {isLoading ? t("chat.loading") : `${t("chat.send_message_to")} ${otherUserName}`}
       </button>
     )
   }
@@ -85,7 +87,7 @@ export function InitiateChat({
       ) : (
         <MessageSquare className="h-4 w-4" />
       )}
-      {isLoading ? "Caricamento..." : "Invia messaggio"}
+      {isLoading ? t("chat.loading") : t("chat.send_message")}
     </button>
   )
 }

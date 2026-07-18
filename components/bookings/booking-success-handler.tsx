@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { useLanguage } from "@/lib/i18n/language-context"
 
 interface BookingSuccessHandlerProps {
   orderId: string
@@ -8,6 +9,7 @@ interface BookingSuccessHandlerProps {
 }
 
 export function BookingSuccessHandler({ orderId, sessionId }: BookingSuccessHandlerProps) {
+  const { t } = useLanguage()
   const [message, setMessage] = useState<string | null>(null)
 
   useEffect(() => {
@@ -28,14 +30,14 @@ export function BookingSuccessHandler({ orderId, sessionId }: BookingSuccessHand
         if (cancelled) return
 
         if (!response.ok) {
-          setMessage(payload.error || "Pagamento non ancora confermato")
+          setMessage(payload.error || t("booking_success_handler.not_confirmed"))
           return
         }
 
-        setMessage("Pagamento autorizzato con successo")
+        setMessage(t("booking_success_handler.confirmed"))
       } catch {
         if (!cancelled) {
-          setMessage("Errore durante la conferma del pagamento")
+          setMessage(t("booking_success_handler.confirm_error"))
         }
       }
     }
@@ -45,7 +47,7 @@ export function BookingSuccessHandler({ orderId, sessionId }: BookingSuccessHand
     return () => {
       cancelled = true
     }
-  }, [orderId, sessionId])
+  }, [orderId, sessionId, t])
 
   if (!sessionId || !message) {
     return null

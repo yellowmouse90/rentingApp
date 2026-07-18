@@ -2,9 +2,11 @@
 
 import { useState } from "react"
 import { createClient } from "@/lib/supabase/client"
+import { useLanguage } from "@/lib/i18n/language-context"
 import { Loader2 } from "lucide-react"
 
 export function GoogleButton() {
+  const { t } = useLanguage()
   const [isLoading, setIsLoading] = useState(false)
   const supabase = createClient()
 
@@ -50,7 +52,7 @@ export function GoogleButton() {
           />
         </svg>
       )}
-      Continua con Google
+      {t("auth.continue_google")}
     </button>
   )
 }

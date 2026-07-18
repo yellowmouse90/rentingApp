@@ -2,8 +2,9 @@
 
 import { Conversation, Profile } from "@/lib/types"
 import { formatDistanceToNow } from "date-fns"
-import { it } from "date-fns/locale"
+import { it, enUS } from "date-fns/locale"
 import { MessageCircle } from "lucide-react"
+import { useLanguage } from "@/lib/i18n/language-context"
 
 interface ConversationListProps {
   conversations: (Conversation & {
@@ -21,10 +22,13 @@ export function ConversationList({
   onSelectConversation,
   isLoading = false,
 }: ConversationListProps) {
+  const { t, language } = useLanguage()
+  const dateLocale = language === "en" ? enUS : it
+
   if (isLoading) {
     return (
       <div className="flex h-full items-center justify-center">
-        <p className="text-sm text-muted-foreground">Caricamento...</p>
+        <p className="text-sm text-muted-foreground">{t("chat.loading")}</p>
       </div>
     )
   }
@@ -36,9 +40,9 @@ export function ConversationList({
           <MessageCircle className="h-6 w-6 text-muted-foreground" />
         </div>
         <div>
-          <p className="font-medium text-foreground">Nessuna conversazione</p>
+          <p className="font-medium text-foreground">{t("chat.no_conversation")}</p>
           <p className="text-sm text-muted-foreground">
-            Inizia una nuova conversazione da un ordine
+            {t("chat.start_new_from_order")}
           </p>
         </div>
       </div>
@@ -66,10 +70,10 @@ export function ConversationList({
                   {otherUserDisplayName}
                 </p>
                 <p className="text-xs text-muted-foreground truncate">
-                  {countItem} oggetti
+                  {countItem} {t("chat.items_count")}
                 </p>
                 <p className="text-xs text-muted-foreground truncate">
-                  {conversation.last_message?.content || "Nessun messaggio"}
+                  {conversation.last_message?.content || t("chat.no_messages_short")}
                 </p>
               </div>
               <div className="shrink-0 text-right">
@@ -79,10 +83,10 @@ export function ConversationList({
                         new Date(conversation.last_message_at),
                         {
                           addSuffix: false,
-                          locale: it,
+                          locale: dateLocale,
                         }
                       )
-                    : "Oggi"}
+                    : t("chat.today")}
                 </p>
                 {(conversation.unread_count ?? 0) > 0 && (
                   <span className="mt-1 inline-flex h-5 w-5 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">

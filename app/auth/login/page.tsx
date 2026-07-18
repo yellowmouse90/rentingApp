@@ -34,7 +34,7 @@ function LoginForm() {
     if (error) {
       setError(
         error.message === "Invalid login credentials"
-          ? "Email o password non corretti"
+          ? t("auth.invalid_credentials")
           : error.message
       )
       setIsLoading(false)

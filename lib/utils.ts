@@ -17,39 +17,43 @@ export function formatPrice(cents: number, currency: string = "EUR"): string {
 }
 
 /**
- * Get condition label in Italian
+ * Get the translated condition label. Pass the `t` function from
+ * useLanguage() (client) or getServerI18n() (server).
  */
-export function getConditionLabel(condition: string): string {
-  const labels: Record<string, string> = {
-    new: "Nuovo",
-    like_new: "Come nuovo",
-    good: "Buono",
-    fair: "Discreto",
+export function getConditionLabel(condition: string, t: (key: string) => string): string {
+  const keys: Record<string, string> = {
+    new: "condition.new",
+    like_new: "condition.like_new",
+    good: "condition.good",
+    fair: "condition.fair",
   }
-  return labels[condition] || condition
+  const key = keys[condition]
+  return key ? t(key) : condition
 }
 
 /**
- * Get rental status label in Italian
+ * Get the translated rental status label. Pass the `t` function from
+ * useLanguage() (client) or getServerI18n() (server).
  */
-export function getRentalStatusLabel(status: string): string {
-  const labels: Record<string, string> = {
-    pending: "In attesa",
-    approved: "Approvato",
-    accepted: "Accettato",
-    paid: "Pagato",
-    in_progress: "In noleggio",
-    ongoing: "In corso",
-    completed: "Completato",
-    cancelled: "Annullato",
-    disputed: "Contestato",
-    requested: "Richiesto",
-    unavailable: "Non disponibile",
-    collected: "Consegnato",
-    returned_ok: "Restituito integro",
-    damaged: "Danneggiato",
+export function getRentalStatusLabel(status: string, t: (key: string) => string): string {
+  const keys: Record<string, string> = {
+    pending: "rental_status.pending",
+    approved: "rental_status.approved",
+    accepted: "rental_status.accepted",
+    paid: "rental_status.paid",
+    in_progress: "rental_status.in_progress",
+    ongoing: "rental_status.ongoing",
+    completed: "rental_status.completed",
+    cancelled: "rental_status.cancelled",
+    disputed: "rental_status.disputed",
+    requested: "rental_status.requested",
+    unavailable: "rental_status.unavailable",
+    collected: "rental_status.collected",
+    returned_ok: "rental_status.returned_ok",
+    damaged: "rental_status.damaged",
   }
-  return labels[status] || status
+  const key = keys[status]
+  return key ? t(key) : status
 }
 
 /**

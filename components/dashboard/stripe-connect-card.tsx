@@ -29,7 +29,7 @@ export function StripeConnectCard({ hasAccount, onboardingComplete }: StripeConn
       const data = await response.json()
 
       if (!response.ok) {
-        setError(data.error || `Errore ${response.status}`)
+        setError(data.error || `${t("dashboard.payments.card.error_status")} ${response.status}`)
         setIsLoading(false)
         return
       }
@@ -38,7 +38,7 @@ export function StripeConnectCard({ hasAccount, onboardingComplete }: StripeConn
         window.location.href = data.url
       }
     } catch (err) {
-      setError("Errore durante la configurazione. Riprova.")
+      setError(t("dashboard.payments.card.setup_error"))
       setIsLoading(false)
     }
   }

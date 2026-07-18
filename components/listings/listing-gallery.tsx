@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { ImageIcon, ChevronLeft, ChevronRight, X } from "lucide-react"
+import { useLanguage } from "@/lib/i18n/language-context"
 
 interface ListingGalleryProps {
   images: { id: string; image_url: string; display_order: number }[]
@@ -9,6 +10,7 @@ interface ListingGalleryProps {
 }
 
 export function ListingGallery({ images, title }: ListingGalleryProps) {
+  const { t } = useLanguage()
   const [currentIndex, setCurrentIndex] = useState(0)
   const [isFullscreen, setIsFullscreen] = useState(false)
 
@@ -17,7 +19,7 @@ export function ListingGallery({ images, title }: ListingGalleryProps) {
       <div className="flex aspect-[16/9] items-center justify-center rounded-xl bg-muted">
         <div className="text-center">
           <ImageIcon className="mx-auto h-16 w-16 text-muted-foreground/50" />
-          <p className="mt-2 text-sm text-muted-foreground">Nessuna immagine</p>
+          <p className="mt-2 text-sm text-muted-foreground">{t("listing_gallery.no_image")}</p>
         </div>
       </div>
     )
@@ -41,7 +43,7 @@ export function ListingGallery({ images, title }: ListingGalleryProps) {
         >
           <img
             src={images[currentIndex].image_url}
-            alt={`${title} - Immagine ${currentIndex + 1}`}
+            alt={`${title} - ${t("listing_gallery.image_alt")} ${currentIndex + 1}`}
             className="h-full w-full object-cover"
           />
         </div>
@@ -108,7 +110,7 @@ export function ListingGallery({ images, title }: ListingGalleryProps) {
             >
               <img
                 src={image.image_url}
-                alt={`${title} - Miniatura ${index + 1}`}
+                alt={`${title} - ${t("listing_gallery.thumbnail_alt")} ${index + 1}`}
                 className="h-full w-full object-cover"
               />
             </button>
@@ -135,7 +137,7 @@ export function ListingGallery({ images, title }: ListingGalleryProps) {
 
           <img
             src={images[currentIndex].image_url}
-            alt={`${title} - Immagine ${currentIndex + 1}`}
+            alt={`${title} - ${t("listing_gallery.image_alt")} ${currentIndex + 1}`}
             className="max-h-[90vh] max-w-[90vw] object-contain"
           />
 

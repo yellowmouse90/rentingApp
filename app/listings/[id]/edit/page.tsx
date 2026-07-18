@@ -7,15 +7,9 @@ import { createClient } from "@/lib/supabase/client"
 import { detectCurrentLocation, type ClientLocation } from "@/lib/location/client"
 import { locationToPointWkt, parseListingPrices, pointWktToLocation } from "@/lib/listings/form"
 import { CategoryHierarchySelect } from "@/components/listings/category-hierarchy-select"
+import { useLanguage } from "@/lib/i18n/language-context"
 import type { Category } from "@/lib/types"
 import { ChevronLeft, Loader2, Navigation, Trash2 } from "lucide-react"
-
-const conditions = [
-  { value: "new", label: "Nuovo" },
-  { value: "like_new", label: "Come nuovo" },
-  { value: "good", label: "Buono" },
-  { value: "fair", label: "Discreto" },
-] as const
 
 interface EditableListing {
   id: string
@@ -33,10 +27,18 @@ interface EditableListing {
 }
 
 export default function EditListingPage() {
+  const { t } = useLanguage()
   const router = useRouter()
   const params = useParams<{ id: string }>()
   const listingId = useMemo(() => params?.id || "", [params])
   const supabase = createClient()
+
+  const conditions = [
+    { value: "new", label: t("condition.new") },
+    { value: "like_new", label: t("condition.like_new") },
+    { value: "good", label: t("condition.good") },
+    { value: "fair", label: t("condition.fair") },
+  ] as const
 
   const [categories, setCategories] = useState<Category[]>([])
   const [isPageLoading, setIsPageLoading] = useState(true)
@@ -84,7 +86,7 @@ export default function EditListingPage() {
       ])
 
       if (listingError || !listing) {
-        setError("Non puoi modificare questo prodotto o il prodotto non esiste.")
+        setError(t("listing_edit.load_error"))
         setIsPageLoading(false)
         return
       }
@@ -115,7 +117,7 @@ export default function EditListingPage() {
     detectCurrentLocation()
       .then((detected) => setLocation(detected))
       .catch((error) => {
-        const message = error instanceof Error ? error.message : "Errore nella geolocalizzazione"
+        const message = error instanceof Error ? error.message : t("listing_edit.geo_error")
         setLocationError(message)
       })
       .finally(() => setIsLocating(false))
@@ -124,9 +126,7 @@ export default function EditListingPage() {
   const handleDelete = async () => {
     if (!listingId || isDeleting) return
 
-    const confirmed = window.confirm(
-      "Vuoi archiviare questo prodotto? Verra rimosso dagli annunci pubblici."
-    )
+    const confirmed = window.confirm(t("listing_edit.confirm_archive"))
 
     if (!confirmed) return
 
@@ -137,12 +137,12 @@ export default function EditListingPage() {
       const response = await fetch(`/api/listings/${listingId}`, { method: "DELETE" })
       if (!response.ok) {
         const body = (await response.json().catch(() => null)) as { error?: string } | null
-        throw new Error(body?.error || "Errore durante l'archiviazione")
+        throw new Error(body?.error || t("listing_edit.archive_error"))
       }
 
       router.push("/dashboard/listings")
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Errore durante l'archiviazione")
+      setError(err instanceof Error ? err.message : t("listing_edit.archive_error"))
       setIsDeleting(false)
     }
   }
@@ -165,7 +165,7 @@ export default function EditListingPage() {
       }
 
       if (!title || !condition || !pricePerDay) {
-        setError("Compila tutti i campi obbligatori")
+        setError(t("listing_edit.required_fields"))
         setIsSaving(false)
         return
       }
@@ -183,7 +183,7 @@ export default function EditListingPage() {
         setError(
           validationError instanceof Error
             ? validationError.message
-            : "Prezzi non validi"
+            : t("listing_edit.invalid_prices")
         )
         setIsSaving(false)
         return
@@ -215,7 +215,7 @@ export default function EditListingPage() {
       router.push(`/listings/${listingId}`)
     } catch (err) {
       console.error("Error updating listing:", err)
-      setError("Errore durante la modifica del prodotto. Riprova.")
+      setError(t("listing_edit.update_error"))
       setIsSaving(false)
     }
   }
@@ -236,13 +236,13 @@ export default function EditListingPage() {
           className="mb-6 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
         >
           <ChevronLeft className="h-4 w-4" />
-          Torna ai tuoi prodotti
+          {t("listing_edit.back")}
         </Link>
 
         <div className="rounded-xl border border-border bg-card p-6 sm:p-8">
-          <h1 className="text-2xl font-bold text-foreground">Modifica prodotto</h1>
+          <h1 className="text-2xl font-bold text-foreground">{t("listing_edit.title")}</h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            Aggiorna i dettagli del tuo prodotto. Solo il proprietario puo effettuare modifiche.
+            {t("listing_edit.subtitle")}
           </p>
 
           <form onSubmit={handleSubmit} className="mt-8 space-y-6">
@@ -252,7 +252,7 @@ export default function EditListingPage() {
 
             <div>
               <label htmlFor="title" className="mb-1.5 block text-sm font-medium text-foreground">
-                Titolo *
+                {t("listing_edit.field_title")}
               </label>
               <input
                 id="title"
@@ -262,26 +262,26 @@ export default function EditListingPage() {
                 required
                 maxLength={150}
                 className="w-full rounded-lg border border-input bg-background px-4 py-2.5 text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
-                placeholder="es. Trapano Bosch Professional GSB 18V"
+                placeholder={t("listing_edit.title_placeholder")}
               />
             </div>
 
             <div>
               <label htmlFor="category" className="mb-1.5 block text-sm font-medium text-foreground">
-                Categoria
+                {t("listing_edit.field_category")}
               </label>
               <CategoryHierarchySelect
                 categories={categories}
                 value={categoryId}
                 onChange={setCategoryId}
                 id="category"
-                placeholder="Seleziona una categoria"
+                placeholder={t("listing_edit.category_placeholder")}
               />
             </div>
 
             <div>
               <label htmlFor="condition" className="mb-1.5 block text-sm font-medium text-foreground">
-                Condizione *
+                {t("listing_edit.field_condition")}
               </label>
               <select
                 id="condition"
@@ -290,7 +290,7 @@ export default function EditListingPage() {
                 required
                 className="w-full rounded-lg border border-input bg-background px-4 py-2.5 text-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
               >
-                <option value="">Seleziona la condizione</option>
+                <option value="">{t("listing_edit.select_condition")}</option>
                 {conditions.map((c) => (
                   <option key={c.value} value={c.value}>
                     {c.label}
@@ -301,7 +301,7 @@ export default function EditListingPage() {
 
             <div>
               <label htmlFor="description" className="mb-1.5 block text-sm font-medium text-foreground">
-                Descrizione
+                {t("listing_edit.field_description")}
               </label>
               <textarea
                 id="description"
@@ -309,14 +309,14 @@ export default function EditListingPage() {
                 onChange={(e) => setDescription(e.target.value)}
                 rows={5}
                 className="w-full rounded-lg border border-input bg-background px-4 py-2.5 text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
-                placeholder="Descrivi il prodotto, eventuali accessori inclusi e consigli d'uso"
+                placeholder={t("listing_edit.description_placeholder")}
               />
             </div>
 
             <div className="grid gap-4 sm:grid-cols-3">
               <div>
                 <label htmlFor="pricePerDay" className="mb-1.5 block text-sm font-medium text-foreground">
-                  Prezzo/giorno (€) *
+                  {t("listing_edit.field_price_day")}
                 </label>
                 <input
                   id="pricePerDay"
@@ -332,7 +332,7 @@ export default function EditListingPage() {
 
               <div>
                 <label htmlFor="pricePerWeek" className="mb-1.5 block text-sm font-medium text-foreground">
-                  Prezzo/settimana (€)
+                  {t("listing_edit.field_price_week")}
                 </label>
                 <input
                   id="pricePerWeek"
@@ -347,7 +347,7 @@ export default function EditListingPage() {
 
               <div>
                 <label htmlFor="deposit" className="mb-1.5 block text-sm font-medium text-foreground">
-                  Cauzione (€)
+                  {t("listing_edit.field_deposit")}
                 </label>
                 <input
                   id="deposit"
@@ -364,9 +364,9 @@ export default function EditListingPage() {
             <div className="rounded-lg border border-border p-4">
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <p className="text-sm font-medium text-foreground">Disponibilita prodotto</p>
+                  <p className="text-sm font-medium text-foreground">{t("listing_edit.availability_title")}</p>
                   <p className="mt-1 text-sm text-muted-foreground">
-                    Se disattivata, il prodotto resta pubblicato ma non prenotabile.
+                    {t("listing_edit.availability_desc")}
                   </p>
                 </div>
                 <label className="inline-flex cursor-pointer items-center">
@@ -389,7 +389,7 @@ export default function EditListingPage() {
                   className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {isLocating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Navigation className="h-4 w-4" />}
-                  Aggiorna posizione
+                  {t("listing_edit.update_location")}
                 </button>
 
                 {location ? (
@@ -398,14 +398,14 @@ export default function EditListingPage() {
                     onClick={() => setLocation(null)}
                     className="rounded-lg border border-border px-3 py-2 text-sm text-muted-foreground hover:bg-muted"
                   >
-                    Rimuovi posizione
+                    {t("listing_edit.remove_location")}
                   </button>
                 ) : null}
               </div>
 
               {location ? (
                 <p className="text-sm text-foreground">
-                  Posizione: <span className="font-medium">{location.name}</span>
+                  {t("listing_edit.location_label")} <span className="font-medium">{location.name}</span>
                 </p>
               ) : null}
               {locationError ? <p className="text-sm text-destructive">{locationError}</p> : null}
@@ -419,7 +419,7 @@ export default function EditListingPage() {
                 className="inline-flex items-center gap-2 rounded-lg border border-destructive/40 px-4 py-2 text-sm font-medium text-destructive transition-colors hover:bg-destructive/10 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {isDeleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
-                Archivia prodotto
+                {t("listing_edit.archive")}
               </button>
 
               <div className="flex items-center gap-2">
@@ -427,7 +427,7 @@ export default function EditListingPage() {
                   href={`/listings/${listingId}`}
                   className="rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted"
                 >
-                  Annulla
+                  {t("listing_edit.cancel")}
                 </Link>
                 <button
                   type="submit"
@@ -435,7 +435,7 @@ export default function EditListingPage() {
                   className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-                  Salva modifiche
+                  {t("listing_edit.save")}
                 </button>
               </div>
             </div>

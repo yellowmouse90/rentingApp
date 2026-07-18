@@ -20,7 +20,7 @@ export default async function BookingsPage() {
     .select("*")
     .eq("renter_id", user.id)
     .order("created_at", { ascending: false })
-  if (ordersError) dbErrors.push(`Ordini: ${ordersError.message}`)
+  if (ordersError) dbErrors.push(`${t("bookings.errors.orders")}: ${ordersError.message}`)
 
   const orderIds = (orders || []).map((order) => order.id)
 
@@ -31,7 +31,7 @@ export default async function BookingsPage() {
         .select("id, order_id, listing_id, start_date, end_date, status")
         .in("order_id", orderIds)
     : { data: [] as any[], error: null }
-  if (orderItemsError) dbErrors.push(`Dettagli ordini: ${orderItemsError.message}`)
+  if (orderItemsError) dbErrors.push(`${t("bookings.errors.order_items")}: ${orderItemsError.message}`)
 
   const listingIdsFromOrders = Array.from(new Set((orderItems || []).map((item) => item.listing_id)))
 
@@ -42,7 +42,7 @@ export default async function BookingsPage() {
         .select("id, title, images:listing_images(image_url, display_order)")
         .in("id", listingIdsFromOrders)
     : { data: [] as any[], error: null }
-  if (listingsFromOrdersError) dbErrors.push(`Annunci noleggiati: ${listingsFromOrdersError.message}`)
+  if (listingsFromOrdersError) dbErrors.push(`${t("bookings.errors.listings_from_orders")}: ${listingsFromOrdersError.message}`)
 
   const itemsByOrderId = new Map((orderItems || []).map((item) => [item.order_id, item]))
   const listingsById = new Map((listingsFromOrders || []).map((listing) => [listing.id, listing]))
@@ -65,7 +65,7 @@ export default async function BookingsPage() {
     .select("id, order_id, listing_id, owner_id, start_date, end_date, status")
     .eq("owner_id", user.id)
     .order("created_at", { ascending: false })
-  if (ownerItemsError) dbErrors.push(`Noleggi ricevuti: ${ownerItemsError.message}`)
+  if (ownerItemsError) dbErrors.push(`${t("bookings.errors.owner_items")}: ${ownerItemsError.message}`)
 
   const ownerOrderIds = Array.from(new Set((ownerItems || []).map((item) => item.order_id)))
   const ownerListingIds = Array.from(new Set((ownerItems || []).map((item) => item.listing_id)))
@@ -77,7 +77,7 @@ export default async function BookingsPage() {
         .select("id, renter_id")
         .in("id", ownerOrderIds)
     : { data: [] as any[], error: null }
-  if (ownerOrdersError) dbErrors.push(`Ordini ricevuti: ${ownerOrdersError.message}`)
+  if (ownerOrdersError) dbErrors.push(`${t("bookings.errors.owner_orders")}: ${ownerOrdersError.message}`)
 
   const renterIds = Array.from(new Set((ownerOrders || []).map((order) => order.renter_id)))
 
@@ -88,7 +88,7 @@ export default async function BookingsPage() {
         .select("id, display_name, avatar_url")
         .in("id", renterIds)
     : { data: [] as any[], error: null }
-  if (renterProfilesError) dbErrors.push(`Profili locatari: ${renterProfilesError.message}`)
+  if (renterProfilesError) dbErrors.push(`${t("bookings.errors.renter_profiles")}: ${renterProfilesError.message}`)
 
   const { data: ownerListings, error: ownerListingsError } = ownerListingIds.length
     ? await supabase
@@ -97,7 +97,7 @@ export default async function BookingsPage() {
         .select("id, title, images:listing_images(image_url, display_order)")
         .in("id", ownerListingIds)
     : { data: [] as any[], error: null }
-  if (ownerListingsError) dbErrors.push(`Annunci: ${ownerListingsError.message}`)
+  if (ownerListingsError) dbErrors.push(`${t("bookings.errors.owner_listings")}: ${ownerListingsError.message}`)
 
   const ownerOrdersById = new Map((ownerOrders || []).map((order) => [order.id, order]))
   const profilesById = new Map((renterProfiles || []).map((profile) => [profile.id, profile]))
@@ -220,7 +220,7 @@ function OrderCard({
         </div>
         <div className="mt-2 flex items-center gap-3">
           <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${getRentalStatusColor(order.status)}`}>
-            {getRentalStatusLabel(order.status)}
+            {getRentalStatusLabel(order.status, t)}
           </span>
           <span className="text-sm font-medium text-foreground">
             {formatPrice(order.grand_total_cents, order.currency_code)}
@@ -268,7 +268,7 @@ function OwnerItemCard({
           {listing?.title || t("bookings.removed_listing")}
         </h3>
         <div className="mt-1 text-sm text-muted-foreground">
-          {t("bookings.request_from")} {renter?.display_name || "Utente"}
+          {t("bookings.request_from")} {renter?.display_name || t("bookings.default_user")}
         </div>
         <div className="mt-1 flex items-center gap-2 text-sm text-muted-foreground">
           <Calendar className="h-4 w-4" />
@@ -277,7 +277,7 @@ function OwnerItemCard({
         </div>
         <div className="mt-2">
           <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${getRentalStatusColor(item.status)}`}>
-            {getRentalStatusLabel(item.status)}
+            {getRentalStatusLabel(item.status, t)}
           </span>
         </div>
       </div>

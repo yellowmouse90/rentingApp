@@ -77,8 +77,8 @@ export default async function ListingDetailPage({ params }: ListingDetailPagePro
       .maybeSingle()
 
     effectiveOwnerProfile = ownerProfileAdmin || null
-    if (ownerProfileAdminError) dbErrors.push(`Profilo proprietario: ${ownerProfileAdminError.message}`)
-    else if (ownerProfileError) dbErrors.push(`Profilo proprietario: ${ownerProfileError.message}`)
+    if (ownerProfileAdminError) dbErrors.push(`${t("listing_detail.owner_profile_error")}: ${ownerProfileAdminError.message}`)
+    else if (ownerProfileError) dbErrors.push(`${t("listing_detail.owner_profile_error")}: ${ownerProfileError.message}`)
   }
 
   // Fetch existing bookings to show unavailable dates
@@ -88,7 +88,7 @@ export default async function ListingDetailPage({ params }: ListingDetailPagePro
     .select("start_date, end_date, status")
     .eq("listing_id", id)
     .not("status", "in", '("cancelled","unavailable")')
-  if (bookingsError) dbErrors.push(`Disponibilità: ${bookingsError.message}`)
+  if (bookingsError) dbErrors.push(`${t("listing_detail.availability_error")}: ${bookingsError.message}`)
 
   // Fetch availability exceptions
   const { data: exceptions, error: exceptionsError } = await supabase
@@ -96,12 +96,12 @@ export default async function ListingDetailPage({ params }: ListingDetailPagePro
     .from("listing_availability_exceptions")
     .select("unavailable_date")
     .eq("listing_id", id)
-  if (exceptionsError) dbErrors.push(`Eccezioni disponibilità: ${exceptionsError.message}`)
+  if (exceptionsError) dbErrors.push(`${t("listing_detail.exceptions_error")}: ${exceptionsError.message}`)
 
   const owner = (effectiveOwnerProfile || {
     id: listing.owner_id,
     email: "",
-    display_name: "Utente",
+    display_name: t("listing_detail.default_user"),
     avatar_url: null,
     bio: null,
     average_rating_as_owner: 0,
@@ -121,7 +121,7 @@ export default async function ListingDetailPage({ params }: ListingDetailPagePro
   const ownerDisplayName =
     owner.display_name?.trim() ||
     owner.email?.split("@")[0]?.trim() ||
-    "Utente"
+    t("listing_detail.default_user")
 
   const images = (listing.images as { id: string; image_url: string; display_order: number }[])?.sort(
     (a, b) => a.display_order - b.display_order
@@ -181,7 +181,7 @@ export default async function ListingDetailPage({ params }: ListingDetailPagePro
               {/* Badges */}
               <div className="mt-4 flex flex-wrap gap-2">
                 <span className="inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-sm font-medium text-primary">
-                  {getConditionLabel(listing.condition)}
+                  {getConditionLabel(listing.condition, t)}
                 </span>
                 {listing.deposit_cents > 0 && (
                   <span className="inline-flex items-center rounded-full bg-amber-100 px-3 py-1 text-sm font-medium text-amber-800">
@@ -212,14 +212,14 @@ export default async function ListingDetailPage({ params }: ListingDetailPagePro
                       className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground hover:bg-primary/90"
                     >
                       <Settings className="h-4 w-4" />
-                      Modifica annuncio
+                      {t("listing_detail.edit_listing")}
                     </Link>
                     <Link
                       href="/dashboard/listings"
                       className="inline-flex items-center gap-2 rounded-lg border border-border px-4 py-2.5 text-sm font-medium text-foreground hover:bg-muted"
                     >
                       <Package className="h-4 w-4" />
-                      I tuoi annunci
+                      {t("listing_detail.your_listings")}
                     </Link>
                   </>
                 ) : (
@@ -228,7 +228,7 @@ export default async function ListingDetailPage({ params }: ListingDetailPagePro
                     className="inline-flex items-center gap-2 rounded-lg bg-accent px-4 py-2.5 text-sm font-medium text-accent-foreground hover:bg-accent/90"
                   >
                     <ShoppingBag className="h-4 w-4" />
-                    Noleggia ora
+                    {t("listing_detail.rent_now")}
                   </a>
                 )}
               </div>

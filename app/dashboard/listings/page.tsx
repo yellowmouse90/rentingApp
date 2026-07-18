@@ -45,7 +45,7 @@ export default async function DashboardListingsPage() {
 
   return (
     <div className="min-h-screen bg-muted/30 py-8">
-      <DbErrorNotice message={listingsError ? `Annunci: ${listingsError.message}` : null} />
+      <DbErrorNotice message={listingsError ? `${t("dashboard_listings.error_listings")}: ${listingsError.message}` : null} />
       <div className="mx-auto max-w-5xl px-4 sm:px-6">
         <div className="mb-6">
           <Link
@@ -134,7 +134,7 @@ export default async function DashboardListingsPage() {
                       </div>
 
                       <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground">
-                        <span>{getConditionLabel(listing.condition)}</span>
+                        <span>{getConditionLabel(listing.condition, t)}</span>
                         {listing.category?.[0]?.name ? <span>{t("dashboard_listings.category")}: {listing.category[0].name}</span> : null}
                         <span>
                           {t("dashboard_listings.created_on")} {new Date(listing.created_at).toLocaleDateString(intlLocale)}

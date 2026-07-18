@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react"
 import { useAuth } from "@/lib/auth/context"
+import { useLanguage } from "@/lib/i18n/language-context"
 import { useRealtimeConversations } from "@/lib/chat/realtime"
 import { Conversation } from "@/lib/types"
 import { ConversationList } from "./conversation-list"
@@ -14,6 +15,7 @@ interface ChatPageProps {
 
 export function ChatPage({ initialConversationId }: ChatPageProps) {
   const { user, isLoading: authLoading } = useAuth()
+  const { t } = useLanguage()
   const [conversations, setConversations] = useState<Conversation[]>([])
   const [selectedConversationId, setSelectedConversationId] = useState<
     string | null
@@ -49,7 +51,7 @@ export function ChatPage({ initialConversationId }: ChatPageProps) {
         }
       } catch (err) {
         console.error("Conversations fetch error:", err)
-        setError("Errore nel caricamento delle conversazioni")
+        setError(t("chat.load_conversations_error"))
       } finally {
         setIsLoading(false)
       }
@@ -108,7 +110,7 @@ export function ChatPage({ initialConversationId }: ChatPageProps) {
     return (
       <div className="flex h-full items-center justify-center">
         <p className="text-sm text-muted-foreground">
-          Effettua l'accesso per visualizzare i messaggi
+          {t("chat.login_required")}
         </p>
       </div>
     )
@@ -125,7 +127,7 @@ export function ChatPage({ initialConversationId }: ChatPageProps) {
         } lg:col-span-1`}
       >
         <div className="border-b border-border px-4 py-3 sm:px-6 sm:py-4">
-          <h2 className="font-semibold text-foreground">Messaggi</h2>
+          <h2 className="font-semibold text-foreground">{t("chat.title")}</h2>
         </div>
 
         <div className="flex-1 overflow-hidden p-4">
@@ -155,13 +157,13 @@ export function ChatPage({ initialConversationId }: ChatPageProps) {
             <div className="text-center">
               <p className="text-sm font-medium text-foreground">
                 {conversations.length === 0
-                  ? "Nessuna conversazione"
-                  : "Seleziona una conversazione"}
+                  ? t("chat.no_conversation")
+                  : t("chat.select_conversation")}
               </p>
               <p className="mt-1 text-xs text-muted-foreground">
                 {conversations.length === 0
-                  ? "Inizia una nuova conversazione da un ordine"
-                  : "Clicca su una conversazione per iniziare"}
+                  ? t("chat.start_new_from_order")
+                  : t("chat.click_to_start")}
               </p>
             </div>
           </div>
@@ -172,12 +174,12 @@ export function ChatPage({ initialConversationId }: ChatPageProps) {
       <div className="fixed inset-0 top-16 z-40 flex flex-col lg:hidden bg-background">
         {selectedConversationId && (
           <div className="flex items-center justify-between border-b border-border px-4 py-3">
-            <h2 className="font-semibold text-foreground">Messaggi</h2>
+            <h2 className="font-semibold text-foreground">{t("chat.title")}</h2>
             <button
               onClick={() => setIsMobileListVisible(false)}
               className="text-sm text-muted-foreground hover:text-foreground"
             >
-              Chiudi
+              {t("chat.close")}
             </button>
           </div>
         )}

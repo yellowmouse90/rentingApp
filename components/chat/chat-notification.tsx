@@ -3,6 +3,7 @@
 import Link from "next/link"
 import { MessageSquare } from "lucide-react"
 import { useUnreadMessageCount } from "@/lib/chat/use-unread-count"
+import { useLanguage } from "@/lib/i18n/language-context"
 
 interface ChatNotificationProps {
   userId: string
@@ -10,12 +11,13 @@ interface ChatNotificationProps {
 
 export function ChatNotification({ userId }: ChatNotificationProps) {
   const { count } = useUnreadMessageCount(userId)
+  const { t } = useLanguage()
 
   return (
     <Link
       href="/messages"
       className="relative rounded-lg p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-      aria-label="Messaggi"
+      aria-label={t("nav.messages")}
     >
       <MessageSquare className="h-5 w-5" />
       {count > 0 && (

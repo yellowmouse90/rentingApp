@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react"
 import { useAuth } from "@/lib/auth/context"
+import { useLanguage } from "@/lib/i18n/language-context"
 import { useRealtimeMessages } from "@/lib/chat/realtime"
 import { Conversation, Profile, Message } from "@/lib/types"
 import { MessageList } from "./message-list"
@@ -23,6 +24,7 @@ export function ChatThread({
   isDarkMode,
 }: ChatThreadProps) {
   const { user } = useAuth()
+  const { t } = useLanguage()
   const [messages, setMessages] = useState<Message[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isSending, setIsSending] = useState(false)
@@ -30,7 +32,7 @@ export function ChatThread({
 
   const otherUser =
     conversation.other_participant_details || ({
-      display_name: "Utente",
+      display_name: t("chat.default_user"),
       avatar_url: null,
       email: null,
     } as unknown as Profile)
@@ -54,7 +56,7 @@ export function ChatThread({
         setMessages(data.messages || [])
         setError(null)
       } catch (err) {
-        setError("Errore nel caricamento dei messaggi")
+        setError(t("chat.load_messages_error"))
         console.error("Messages fetch error:", err)
       } finally {
         if (showLoading) {
@@ -141,7 +143,7 @@ export function ChatThread({
         setError(null)
       } catch (err) {
         console.error("Failed to send message:", err)
-        setError("Errore nell'invio del messaggio")
+        setError(t("chat.send_message_error"))
       } finally {
         setIsSending(false)
       }
@@ -154,7 +156,7 @@ export function ChatThread({
       <div className="flex h-full flex-col items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
         <p className="mt-3 text-sm text-muted-foreground">
-          Caricamento conversazione...
+          {t("chat.loading_conversation")}
         </p>
       </div>
     )
@@ -169,7 +171,7 @@ export function ChatThread({
             <button
               onClick={onBack}
               className="rounded p-1 hover:bg-muted lg:hidden"
-              aria-label="Back"
+              aria-label={t("chat.back")}
             >
               <ChevronLeft className="h-5 w-5" />
             </button>
@@ -201,7 +203,7 @@ export function ChatThread({
       <MessageInput
         onSendMessage={handleSendMessage}
         disabled={isSending}
-        placeholder="Scrivi un messaggio..."
+        placeholder={t("chat.message_placeholder")}
       />
     </div>
   )

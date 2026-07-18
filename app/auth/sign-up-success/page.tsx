@@ -1,7 +1,9 @@
 import Link from "next/link"
 import { Mail, CheckCircle } from "lucide-react"
+import { getServerI18n } from "@/lib/i18n/server"
 
-export default function SignUpSuccessPage() {
+export default async function SignUpSuccessPage() {
+  const { t } = await getServerI18n()
   return (
     <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center px-4 py-12">
       <div className="w-full max-w-md text-center">
@@ -10,16 +12,16 @@ export default function SignUpSuccessPage() {
             <CheckCircle className="h-8 w-8 text-accent" />
           </div>
 
-          <h1 className="text-2xl font-bold text-foreground">Controlla la tua email</h1>
-          
+          <h1 className="text-2xl font-bold text-foreground">{t("signup_success.title")}</h1>
+
           <p className="mt-4 text-muted-foreground">
-            Ti abbiamo inviato un link di conferma. Clicca sul link nella email per attivare il tuo account.
+            {t("signup_success.description")}
           </p>
 
           <div className="mt-6 flex items-center justify-center gap-2 rounded-lg bg-muted p-4">
             <Mail className="h-5 w-5 text-muted-foreground" />
             <span className="text-sm text-muted-foreground">
-              Il link scade tra 24 ore
+              {t("signup_success.expires")}
             </span>
           </div>
 
@@ -28,7 +30,7 @@ export default function SignUpSuccessPage() {
               href="/auth/login"
               className="text-sm font-medium text-primary hover:underline"
             >
-              Torna al login
+              {t("signup_success.back_to_login")}
             </Link>
           </div>
         </div>

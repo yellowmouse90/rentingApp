@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react"
 import { Send, Loader2 } from "lucide-react"
+import { useLanguage } from "@/lib/i18n/language-context"
 
 interface MessageInputProps {
   onSendMessage: (content: string) => Promise<void>
@@ -12,8 +13,9 @@ interface MessageInputProps {
 export function MessageInput({
   onSendMessage,
   disabled = false,
-  placeholder = "Scrivi un messaggio...",
+  placeholder,
 }: MessageInputProps) {
+  const { t } = useLanguage()
   const [message, setMessage] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
@@ -52,7 +54,7 @@ export function MessageInput({
           ref={textareaRef}
           value={message}
           onChange={(e) => setMessage(e.target.value)}
-          placeholder={placeholder}
+          placeholder={placeholder || t("chat.message_placeholder")}
           disabled={disabled || isLoading}
           onKeyDown={(e) => {
             if (e.key === "Enter" && e.ctrlKey) {
@@ -66,7 +68,7 @@ export function MessageInput({
           type="submit"
           disabled={disabled || isLoading || !message.trim()}
           className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
-          aria-label="Invia messaggio"
+          aria-label={t("chat.send_message")}
         >
           {isLoading ? (
             <Loader2 className="h-4 w-4 animate-spin" />
@@ -76,7 +78,7 @@ export function MessageInput({
         </button>
       </div>
       <p className="mt-2 text-xs text-muted-foreground">
-        Ctrl + Enter per inviare
+        {t("chat.ctrl_enter_hint")}
       </p>
     </form>
   )

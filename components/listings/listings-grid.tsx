@@ -1,6 +1,7 @@
 import Link from "next/link"
 import type { Listing } from "@/lib/types"
 import { formatPrice, getConditionLabel } from "@/lib/utils"
+import { useLanguage } from "@/lib/i18n/language-context"
 import { ImageIcon, Package } from "lucide-react"
 
 interface ListingsGridProps {
@@ -36,6 +37,7 @@ export function ListingsGrid({ listings }: ListingsGridProps) {
 }
 
 function ListingCard({ listing }: { listing: Listing }) {
+  const { t } = useLanguage()
   const mainImage = listing.images?.sort((a, b) => a.display_order - b.display_order)[0]
 
   return (
@@ -58,7 +60,7 @@ function ListingCard({ listing }: { listing: Listing }) {
         )}
         <div className="absolute left-2 top-2">
           <span className="rounded-md bg-background/90 px-2 py-1 text-xs font-medium text-foreground backdrop-blur-sm">
-            {getConditionLabel(listing.condition)}
+            {getConditionLabel(listing.condition, t)}
           </span>
         </div>
         {listing.deposit_cents > 0 && (

@@ -4,7 +4,8 @@ import { useCallback, useEffect, useRef } from "react"
 import { ChatMessage } from "@/lib/types/chat"
 import { Profile } from "@/lib/types"
 import { formatDistanceToNow } from "date-fns"
-import { it } from "date-fns/locale"
+import { it, enUS } from "date-fns/locale"
+import { useLanguage } from "@/lib/i18n/language-context"
 
 interface MessageListProps {
   messages: ChatMessage[]
@@ -19,6 +20,8 @@ export function MessageList({
   otherUser,
   onMessagesVisible,
 }: MessageListProps) {
+  const { t, language } = useLanguage()
+  const dateLocale = language === "en" ? enUS : it
   const endOfMessagesRef = useRef<HTMLDivElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   const hasLoadedRef = useRef(false)
@@ -82,10 +85,10 @@ export function MessageList({
         <div className="flex h-full items-center justify-center text-center">
           <div>
             <p className="text-sm text-muted-foreground">
-              Non ci sono ancora messaggi
+              {t("chat.no_messages_yet")}
             </p>
             <p className="mt-1 text-xs text-muted-foreground">
-              Iniza la conversazione con {otherUser.display_name || "questo utente"}
+              {t("chat.start_conversation_with")} {otherUser.display_name || t("chat.this_user")}
             </p>
           </div>
         </div>
@@ -93,7 +96,7 @@ export function MessageList({
         messages.map((message) => {
           const isCurrentUser = message.sender_id === currentUserId
           const sender = isCurrentUser
-            ? { display_name: "Tu" }
+            ? { display_name: t("chat.you") }
             : otherUser
 
           return (
@@ -141,7 +144,7 @@ export function MessageList({
                   <time>
                     {formatDistanceToNow(new Date(message.created_at), {
                       addSuffix: true,
-                      locale: it,
+                      locale: dateLocale,
                     })}
                   </time>
                   {isCurrentUser && message.is_read && (

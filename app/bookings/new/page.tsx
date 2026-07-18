@@ -71,7 +71,7 @@ export default async function NewBookingPage({ searchParams }: NewBookingPagePro
 
   const owner = (ownerProfile || {
     id: listing.owner_id,
-    display_name: "Utente",
+    display_name: t("booking_new.default_user"),
     avatar_url: null,
     stripe_account_id: null,
     stripe_onboarding_complete: false,
@@ -89,7 +89,7 @@ export default async function NewBookingPage({ searchParams }: NewBookingPagePro
 
   return (
     <div className="min-h-screen bg-muted/30 py-8">
-      <DbErrorNotice message={ownerProfileError ? `Profilo proprietario: ${ownerProfileError.message}` : null} />
+      <DbErrorNotice message={ownerProfileError ? `${t("booking_new.owner_profile_error")}: ${ownerProfileError.message}` : null} />
       <div className="mx-auto max-w-4xl px-4 sm:px-6">
         <Link
           href={`/listings/${listing.id}`}
@@ -138,7 +138,7 @@ export default async function NewBookingPage({ searchParams }: NewBookingPagePro
                     {listing.title}
                   </h3>
                   <p className="mt-1 text-sm text-muted-foreground">
-                    {t("booking_new.by")} {owner.display_name || "Utente"}
+                    {t("booking_new.by")} {owner.display_name || t("booking_new.default_user")}
                   </p>
                 </div>
               </div>
@@ -175,16 +175,16 @@ export default async function NewBookingPage({ searchParams }: NewBookingPagePro
                   </div>
                 )}
                 <div className="flex justify-between border-t border-border pt-3 font-semibold">
-                  <span className="text-foreground">Totale noleggio da pagare</span>
+                  <span className="text-foreground">{t("booking_new.total_to_pay")}</span>
                   <span className="text-foreground">{formatPrice(totalToPayNow, listing.currency_code)}</span>
                 </div>
                 {deposit > 0 && (
                   <div className="rounded-lg bg-muted p-3 text-xs text-muted-foreground">
                     <p>
-                      Caparra separata: <span className="font-medium text-foreground">{formatPrice(deposit, listing.currency_code)}</span>
+                      {t("booking_new.deposit_separate")} <span className="font-medium text-foreground">{formatPrice(deposit, listing.currency_code)}</span>
                     </p>
                     <p className="mt-1">
-                      Importo totale autorizzato sulla carta (noleggio + caparra):
+                      {t("booking_new.total_authorized")}
                       <span className="ml-1 font-semibold text-foreground">{formatPrice(grandTotal, listing.currency_code)}</span>
                     </p>
                   </div>

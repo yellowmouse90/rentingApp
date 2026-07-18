@@ -1,5 +1,5 @@
-# Build stage
-FROM node:20-alpine AS builder
+# Dependencies stage (used as-is by docker-compose for dev, with hot reload)
+FROM node:20-alpine AS deps
 
 WORKDIR /app
 
@@ -11,6 +11,11 @@ RUN npm install -g pnpm
 
 # Install dependencies
 RUN pnpm install --frozen-lockfile
+
+# Build stage (production only)
+FROM deps AS builder
+
+WORKDIR /app
 
 # Copy application code
 COPY . .

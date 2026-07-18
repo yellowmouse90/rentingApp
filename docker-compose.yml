@@ -1,11 +1,9 @@
-version: '3.8'
-
 services:
   app:
     build:
       context: .
       dockerfile: Dockerfile
-      target: builder # 1. <--- Forziamo Docker a fermarsi prima del "pnpm run build"
+      target: deps # 1. <--- Fermiamo Docker prima del "pnpm run build" (solo install)
     container_name: renting-app
     ports:
       - "3000:3000"
