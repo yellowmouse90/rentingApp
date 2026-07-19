@@ -23,17 +23,25 @@ export async function POST(request: NextRequest) {
       user.email?.split("@")[0] ||
       null
 
-    const { data: profileDB } = await supabase
+    const { data: profileDB, error: profileFetchError } = await supabase
       .schema("users_domain")
       .from("profiles")
       .select("*")
       .eq("id", user.id)
       .single()
 
-    console.log("User profile from DB:", profileDB);
+    // "PGRST116" is PostgREST's code for "no rows returned" - the only case where a missing
+    // profile is expected. Any other error (network blip, permission issue, etc.) must NOT
+    // fall through to the upsert below: that upsert writes hard-coded defaults
+    // (stripe_account_id: null, ratings: 0, ...) and would silently wipe out an existing
+    // profile's real data, including an already-configured Stripe account, on a transient error.
+    if (profileFetchError && profileFetchError.code !== "PGRST116") {
+      console.error("Stripe Connect: impossibile leggere il profilo", profileFetchError)
+      return NextResponse.json({ error: "Errore durante la verifica del profilo" }, { status: 500 })
+    }
 
     let accountId = null;
-    
+
     if (!profileDB) {
       const { data: profile, error: profileError } = await supabase
         .schema("users_domain")

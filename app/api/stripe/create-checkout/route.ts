@@ -72,42 +72,53 @@ export async function POST(request: NextRequest) {
     const platformFee = Number(order.service_fee_cents || 0)
 
     // Create checkout session with manual capture: funds are authorized, not captured.
-    const session = await stripe.checkout.sessions.create({
-      mode: "payment",
-      payment_method_types: ["card"],
-      line_items: [
-        {
-          price_data: {
-            currency: currency,
-            unit_amount: amount,
-            product_data: {
-              name: listing?.title || "Noleggio attrezzo",
-              description: `Ordine #${orderId.slice(0, 8)}`,
+    // An idempotency key scoped to the order means a double-click, a network retry, or two
+    // open tabs all resolve to the SAME Stripe session/authorization instead of creating a
+    // second one - without it, both could be completed independently, each holding funds on
+    // the card, with only one ever referenced by our transactions row. The key naturally stops
+    // applying after Stripe's ~24h idempotency window, so a genuinely new attempt on an order
+    // whose first session expired still gets a fresh session.
+    const session = await stripe.checkout.sessions.create(
+      {
+        mode: "payment",
+        payment_method_types: ["card"],
+        line_items: [
+          {
+            price_data: {
+              currency: currency,
+              unit_amount: amount,
+              product_data: {
+                name: listing?.title || "Noleggio attrezzo",
+                description: `Ordine #${orderId.slice(0, 8)}`,
+              },
             },
+            quantity: 1,
           },
-          quantity: 1,
+        ],
+        payment_intent_data: {
+          capture_method: "manual",
+          metadata: {
+            orderId,
+            listingId: item.listing_id,
+            userId: user.id,
+          },
+          application_fee_amount: platformFee,
+          transfer_data: {
+            destination: ownerProfile.stripe_account_id,
+          },
         },
-      ],
-      payment_intent_data: {
-        capture_method: "manual",
+        success_url: `${request.nextUrl.origin}/bookings/${orderId}/success?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${request.nextUrl.origin}/bookings/${orderId}`,
         metadata: {
           orderId,
           listingId: item.listing_id,
           userId: user.id,
         },
-        application_fee_amount: platformFee,
-        transfer_data: {
-          destination: ownerProfile.stripe_account_id,
-        },
       },
-      success_url: `${request.nextUrl.origin}/bookings/${orderId}/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${request.nextUrl.origin}/bookings/${orderId}`,
-      metadata: {
-        orderId,
-        listingId: item.listing_id,
-        userId: user.id,
-      },
-    })
+      {
+        idempotencyKey: `checkout-session-${orderId}`,
+      }
+    )
 
     return NextResponse.json({ url: session.url })
   } catch (error) {
