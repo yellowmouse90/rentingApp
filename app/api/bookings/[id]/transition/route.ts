@@ -17,6 +17,21 @@ interface PageParams {
   params: Promise<{ id: string }>
 }
 
+// `.update()` without `.select()` never surfaces an error when RLS blocks the write - it just
+// silently affects 0 rows, and the caller has no way to tell that apart from a real success.
+// Chaining `.select().single()` makes a 0-row update fail loudly instead.
+async function requireUpdate(
+  promise: PromiseLike<{ data: unknown; error: { message: string } | null }>,
+  label: string
+): Promise<boolean> {
+  const { data, error } = await promise
+  if (error || !data) {
+    console.error(`Booking transition: aggiornamento non riuscito (${label})`, error)
+    return false
+  }
+  return true
+}
+
 export async function POST(request: NextRequest, { params }: PageParams) {
   try {
     const { id: orderId } = await params
@@ -57,6 +72,11 @@ export async function POST(request: NextRequest, { params }: PageParams) {
     const isOwner = item.owner_id === user.id
     const isRenter = order.renter_id === user.id
     const now = new Date().toISOString()
+    const permissionErrorResponse = () =>
+      NextResponse.json(
+        { error: "Impossibile aggiornare lo stato dell'ordine (permessi insufficienti sul database)" },
+        { status: 500 }
+      )
 
     if (payload.action === "accept") {
       if (!isOwner) return NextResponse.json({ error: "Non autorizzato" }, { status: 403 })
@@ -64,8 +84,30 @@ export async function POST(request: NextRequest, { params }: PageParams) {
         return NextResponse.json({ error: "Stato non valido per accettare" }, { status: 400 })
       }
 
-      await supabase.schema("rentals_domain").from("rental_orders").update({ status: "accepted", updated_at: now }).eq("id", orderId)
-      await supabase.schema("rentals_domain").from("rental_items").update({ status: "accepted", updated_at: now }).eq("id", item.id)
+      const orderUpdated = await requireUpdate(
+        supabase
+          .schema("rentals_domain")
+          .from("rental_orders")
+          .update({ status: "accepted", updated_at: now })
+          .eq("id", orderId)
+          .select("id")
+          .single(),
+        "rental_orders.accept"
+      )
+      if (!orderUpdated) return permissionErrorResponse()
+
+      const itemUpdated = await requireUpdate(
+        supabase
+          .schema("rentals_domain")
+          .from("rental_items")
+          .update({ status: "accepted", updated_at: now })
+          .eq("id", item.id)
+          .select("id")
+          .single(),
+        "rental_items.accept"
+      )
+      if (!itemUpdated) return permissionErrorResponse()
+
       return NextResponse.json({ ok: true })
     }
 
@@ -75,8 +117,30 @@ export async function POST(request: NextRequest, { params }: PageParams) {
         return NextResponse.json({ error: "Stato non valido per rifiutare" }, { status: 400 })
       }
 
-      await supabase.schema("rentals_domain").from("rental_orders").update({ status: "cancelled", updated_at: now }).eq("id", orderId)
-      await supabase.schema("rentals_domain").from("rental_items").update({ status: "cancelled", updated_at: now }).eq("id", item.id)
+      const orderUpdated = await requireUpdate(
+        supabase
+          .schema("rentals_domain")
+          .from("rental_orders")
+          .update({ status: "cancelled", updated_at: now })
+          .eq("id", orderId)
+          .select("id")
+          .single(),
+        "rental_orders.reject"
+      )
+      if (!orderUpdated) return permissionErrorResponse()
+
+      const itemUpdated = await requireUpdate(
+        supabase
+          .schema("rentals_domain")
+          .from("rental_items")
+          .update({ status: "cancelled", updated_at: now })
+          .eq("id", item.id)
+          .select("id")
+          .single(),
+        "rental_items.reject"
+      )
+      if (!itemUpdated) return permissionErrorResponse()
+
       return NextResponse.json({ ok: true })
     }
 
@@ -86,8 +150,30 @@ export async function POST(request: NextRequest, { params }: PageParams) {
         return NextResponse.json({ error: "Stato non valido per annullare" }, { status: 400 })
       }
 
-      await supabase.schema("rentals_domain").from("rental_orders").update({ status: "cancelled", updated_at: now }).eq("id", orderId)
-      await supabase.schema("rentals_domain").from("rental_items").update({ status: "cancelled", updated_at: now }).eq("id", item.id)
+      const orderUpdated = await requireUpdate(
+        supabase
+          .schema("rentals_domain")
+          .from("rental_orders")
+          .update({ status: "cancelled", updated_at: now })
+          .eq("id", orderId)
+          .select("id")
+          .single(),
+        "rental_orders.cancel_request"
+      )
+      if (!orderUpdated) return permissionErrorResponse()
+
+      const itemUpdated = await requireUpdate(
+        supabase
+          .schema("rentals_domain")
+          .from("rental_items")
+          .update({ status: "cancelled", updated_at: now })
+          .eq("id", item.id)
+          .select("id")
+          .single(),
+        "rental_items.cancel_request"
+      )
+      if (!itemUpdated) return permissionErrorResponse()
+
       return NextResponse.json({ ok: true })
     }
 
@@ -97,12 +183,29 @@ export async function POST(request: NextRequest, { params }: PageParams) {
         return NextResponse.json({ error: "Stato non valido per la consegna" }, { status: 400 })
       }
 
-      await supabase.schema("rentals_domain").from("rental_orders").update({ status: "in_progress", updated_at: now }).eq("id", orderId)
-      await supabase
-        .schema("rentals_domain")
-        .from("rental_items")
-        .update({ status: "collected", handed_over_at: now, updated_at: now })
-        .eq("id", item.id)
+      const orderUpdated = await requireUpdate(
+        supabase
+          .schema("rentals_domain")
+          .from("rental_orders")
+          .update({ status: "in_progress", updated_at: now })
+          .eq("id", orderId)
+          .select("id")
+          .single(),
+        "rental_orders.confirm_handover"
+      )
+      if (!orderUpdated) return permissionErrorResponse()
+
+      const itemUpdated = await requireUpdate(
+        supabase
+          .schema("rentals_domain")
+          .from("rental_items")
+          .update({ status: "collected", handed_over_at: now, updated_at: now })
+          .eq("id", item.id)
+          .select("id")
+          .single(),
+        "rental_items.confirm_handover"
+      )
+      if (!itemUpdated) return permissionErrorResponse()
 
       return NextResponse.json({ ok: true })
     }
@@ -147,18 +250,46 @@ export async function POST(request: NextRequest, { params }: PageParams) {
         transferId = typeof charge.transfer === "string" ? charge.transfer : null
       }
 
-      await supabase.schema("rentals_domain").from("rental_items").update({ status: "returned_ok", returned_at: now, updated_at: now }).eq("id", item.id)
-      await supabase.schema("rentals_domain").from("rental_orders").update({ status: "completed", updated_at: now }).eq("id", orderId)
-      await supabase
-        .schema("rentals_domain")
-        .from("transactions")
-        .update({
-          status: "captured",
-          stripe_transfer_id: transferId,
-          platform_fee_cents: Number(order.service_fee_cents || 0),
-          updated_at: now,
-        })
-        .eq("id", tx.id)
+      const itemUpdated = await requireUpdate(
+        supabase
+          .schema("rentals_domain")
+          .from("rental_items")
+          .update({ status: "returned_ok", returned_at: now, updated_at: now })
+          .eq("id", item.id)
+          .select("id")
+          .single(),
+        "rental_items.mark_returned_ok"
+      )
+      if (!itemUpdated) return permissionErrorResponse()
+
+      const orderUpdated = await requireUpdate(
+        supabase
+          .schema("rentals_domain")
+          .from("rental_orders")
+          .update({ status: "completed", updated_at: now })
+          .eq("id", orderId)
+          .select("id")
+          .single(),
+        "rental_orders.mark_returned_ok"
+      )
+      if (!orderUpdated) return permissionErrorResponse()
+
+      const txUpdated = await requireUpdate(
+        supabase
+          .schema("rentals_domain")
+          .from("transactions")
+          .update({
+            status: "captured",
+            stripe_transfer_id: transferId,
+            platform_fee_cents: Number(order.service_fee_cents || 0),
+            updated_at: now,
+          })
+          .eq("id", tx.id)
+          .select("id")
+          .single(),
+        "transactions.mark_returned_ok"
+      )
+      if (!txUpdated) return permissionErrorResponse()
 
       return NextResponse.json({ ok: true })
     }
@@ -169,19 +300,35 @@ export async function POST(request: NextRequest, { params }: PageParams) {
         return NextResponse.json({ error: "Stato non valido per aprire disputa" }, { status: 400 })
       }
 
-      await supabase
-        .schema("rentals_domain")
-        .from("rental_items")
-        .update({
-          status: "damaged",
-          returned_at: now,
-          dispute_opened_at: now,
-          condition_notes: payload.notes?.trim() || null,
-          updated_at: now,
-        })
-        .eq("id", item.id)
+      const itemUpdated = await requireUpdate(
+        supabase
+          .schema("rentals_domain")
+          .from("rental_items")
+          .update({
+            status: "damaged",
+            returned_at: now,
+            dispute_opened_at: now,
+            condition_notes: payload.notes?.trim() || null,
+            updated_at: now,
+          })
+          .eq("id", item.id)
+          .select("id")
+          .single(),
+        "rental_items.report_damage"
+      )
+      if (!itemUpdated) return permissionErrorResponse()
 
-      await supabase.schema("rentals_domain").from("rental_orders").update({ status: "disputed", updated_at: now }).eq("id", orderId)
+      const orderUpdated = await requireUpdate(
+        supabase
+          .schema("rentals_domain")
+          .from("rental_orders")
+          .update({ status: "disputed", updated_at: now })
+          .eq("id", orderId)
+          .select("id")
+          .single(),
+        "rental_orders.report_damage"
+      )
+      if (!orderUpdated) return permissionErrorResponse()
 
       return NextResponse.json({ ok: true })
     }
