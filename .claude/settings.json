@@ -7,7 +7,16 @@
       "PowerShell(docker compose up -d --build 2>&1)",
       "Bash(git -C c:/GitHub/rentingApp log --oneline -15 -- app/api/chat components/chat lib/chat lib/types.ts lib/types/chat.ts)",
       "Bash(git -C c:/GitHub/rentingApp log -p -1 8b830b5 -- components/chat/chat-thread.tsx)",
-      "Bash(git -C c:/GitHub/rentingApp log -p -1 7028e02 -- components/chat/chat-thread.tsx components/chat/chat-page.tsx)"
+      "Bash(git -C c:/GitHub/rentingApp log -p -1 7028e02 -- components/chat/chat-thread.tsx components/chat/chat-page.tsx)",
+      "Bash(grep -o '^SUPABASE_SERVICE_ROLE_KEY=.\\\\{0,15\\\\}' .env.local)",
+      "Bash(psql --version)",
+      "Bash(npm install *)",
+      "Bash(rm -rf \"C:\\\\Users\\\\Ricky\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--GitHub-rentingApp\\\\2b51d868-a60e-49ba-b1dd-4a658c1c9003\\\\scratchpad\\\\node_modules\" \"C:\\\\Users\\\\Ricky\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--GitHub-rentingApp\\\\2b51d868-a60e-49ba-b1dd-4a658c1c9003\\\\scratchpad\\\\package.json\" \"C:\\\\Users\\\\Ricky\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--GitHub-rentingApp\\\\2b51d868-a60e-49ba-b1dd-4a658c1c9003\\\\scratchpad\\\\package-lock.json\")",
+      "Bash(git -C c:/GitHub/rentingApp status --short)",
+      "Bash(rm -f \"C:\\\\Users\\\\Ricky\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--GitHub-rentingApp\\\\2b51d868-a60e-49ba-b1dd-4a658c1c9003\\\\scratchpad\\\\add-tx-policies.js\" \"C:\\\\Users\\\\Ricky\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--GitHub-rentingApp\\\\2b51d868-a60e-49ba-b1dd-4a658c1c9003\\\\scratchpad\\\\verify-owner-select.js\" \"C:\\\\Users\\\\Ricky\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--GitHub-rentingApp\\\\2b51d868-a60e-49ba-b1dd-4a658c1c9003\\\\scratchpad\\\\get-owner.js\" *)"
+    ],
+    "additionalDirectories": [
+      "C:\\Users\\Ricky\\AppData\\Local\\Temp\\claude\\c--GitHub-rentingApp\\2b51d868-a60e-49ba-b1dd-4a658c1c9003\\scratchpad\\node_modules"
     ]
   }
 }

@@ -93,7 +93,10 @@ export async function POST(request: NextRequest) {
       const paymentIntentId =
         typeof session.payment_intent === "string" ? session.payment_intent : session.payment_intent?.id
 
-      if (orderId && paymentIntentId && session.payment_status === "paid") {
+      // session.payment_status stays "unpaid" for capture_method: "manual" even after a
+      // successful authorization (it only becomes "paid" once captured) - session.status
+      // "complete" is the correct signal that checkout finished successfully.
+      if (orderId && paymentIntentId && session.status === "complete") {
         await upsertAuthorizedTransaction(orderId, paymentIntentId)
       }
     }

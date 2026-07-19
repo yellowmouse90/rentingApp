@@ -45,7 +45,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Payment intent non trovato" }, { status: 400 })
     }
 
-    if (session.payment_status !== "paid") {
+    // For capture_method: "manual", session.payment_status stays "unpaid" even after a
+    // successful authorization - Stripe only marks it "paid" once funds are captured, which
+    // here only happens later at handover. The real success signal is the PaymentIntent
+    // reaching "requires_capture" (authorized) or "succeeded" (already captured).
+    if (paymentIntent.status !== "requires_capture" && paymentIntent.status !== "succeeded") {
       return NextResponse.json({ error: "Pagamento non completato" }, { status: 400 })
     }
 
