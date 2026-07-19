@@ -4,7 +4,10 @@
       "Bash(curl -s \"http://localhost:3000/_next/static/chunks/%5Broot-of-the-server%5D__0nvm1y-._.css\" -o /tmp/app.css)",
       "Bash(pnpm run *)",
       "PowerShell(docker compose build app 2>&1)",
-      "PowerShell(docker compose up -d --build 2>&1)"
+      "PowerShell(docker compose up -d --build 2>&1)",
+      "Bash(git -C c:/GitHub/rentingApp log --oneline -15 -- app/api/chat components/chat lib/chat lib/types.ts lib/types/chat.ts)",
+      "Bash(git -C c:/GitHub/rentingApp log -p -1 8b830b5 -- components/chat/chat-thread.tsx)",
+      "Bash(git -C c:/GitHub/rentingApp log -p -1 7028e02 -- components/chat/chat-thread.tsx components/chat/chat-page.tsx)"
     ]
   }
 }

@@ -148,6 +148,7 @@ export function ChatPage({ initialConversationId }: ChatPageProps) {
       <div className="lg:col-span-2">
         {selectedConversation && user ? (
           <ChatThread
+            key={selectedConversation.id}
             conversation={selectedConversation}
             onBack={() => setIsMobileListVisible(true)}
           />
