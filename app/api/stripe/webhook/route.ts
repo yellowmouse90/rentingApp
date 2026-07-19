@@ -1,74 +1,10 @@
 import { NextRequest, NextResponse } from "next/server"
 import type Stripe from "stripe"
-import { stripe, voidAuthorizationForCancelledOrder } from "@/lib/stripe"
+import { stripe, upsertAuthorizedTransaction } from "@/lib/stripe"
 import { createAdminClient } from "@/lib/supabase/admin"
 
 export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
-
-async function upsertAuthorizedTransaction(orderId: string, paymentIntentId: string) {
-  const supabase = createAdminClient()
-
-  const { data: order } = await supabase
-    .schema("rentals_domain")
-    .from("rental_orders")
-    .select("id, status, grand_total_cents, currency_code")
-    .eq("id", orderId)
-    .single()
-
-  if (!order) {
-    return
-  }
-
-  if (order.status === "cancelled") {
-    // The owner rejected (or the renter cancelled) while this payment was in flight: void the
-    // authorization instead of recording held funds against a dead order.
-    await voidAuthorizationForCancelledOrder(
-      supabase,
-      orderId,
-      paymentIntentId,
-      order.grand_total_cents,
-      order.currency_code
-    )
-    return
-  }
-
-  const { data: existingTx } = await supabase
-    .schema("rentals_domain")
-    .from("transactions")
-    .select("id, status")
-    .eq("order_id", orderId)
-    .maybeSingle()
-
-  const now = new Date().toISOString()
-
-  if (existingTx?.id) {
-    await supabase
-      .schema("rentals_domain")
-      .from("transactions")
-      .update({
-        stripe_payment_intent_id: paymentIntentId,
-        amount_cents: order.grand_total_cents,
-        currency_code: order.currency_code,
-        status: existingTx.status === "captured" ? "captured" : "authorized",
-        updated_at: now,
-      })
-      .eq("id", existingTx.id)
-  } else {
-    await supabase.schema("rentals_domain").from("transactions").insert({
-      order_id: orderId,
-      stripe_payment_intent_id: paymentIntentId,
-      amount_cents: order.grand_total_cents,
-      currency_code: order.currency_code,
-      status: "authorized",
-    })
-  }
-
-  if (order.status === "accepted" || order.status === "pending") {
-    await supabase.schema("rentals_domain").from("rental_orders").update({ status: "paid", updated_at: now }).eq("id", orderId)
-    await supabase.schema("rentals_domain").from("rental_items").update({ status: "paid", updated_at: now }).eq("order_id", orderId)
-  }
-}
 
 async function setTransactionStatusFromPaymentIntent(paymentIntent: Stripe.PaymentIntent) {
   const orderId = paymentIntent.metadata?.orderId

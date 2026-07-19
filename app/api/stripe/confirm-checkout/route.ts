@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { requireApiUser } from "@/lib/auth/api"
-import { stripe, voidAuthorizationForCancelledOrder } from "@/lib/stripe"
+import { stripe, upsertAuthorizedTransaction } from "@/lib/stripe"
 
 export async function POST(request: NextRequest) {
   try {
@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
     const { data: order, error: orderError } = await supabase
       .schema("rentals_domain")
       .from("rental_orders")
-      .select("id, renter_id, status, grand_total_cents, currency_code")
+      .select("id, renter_id")
       .eq("id", orderId)
       .single()
 
@@ -49,65 +49,22 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Pagamento non completato" }, { status: 400 })
     }
 
-    const paymentIntentId = paymentIntent.id
+    // Authorization for this confirmation is already established above (renter_id match plus
+    // the Stripe session's own metadata/user match), so the actual write goes through the
+    // admin-client-backed helper shared with the webhook - the renter's own session has no
+    // UPDATE policy on rental_items (only the owner does), so doing this write with the
+    // user-scoped client used to silently fail to move the order past "accepted".
+    const result = await upsertAuthorizedTransaction(orderId, paymentIntent.id)
 
-    if (order.status === "cancelled") {
-      // The owner rejected (or the renter cancelled) while this payment was in flight: void
-      // the authorization instead of recording held funds against a dead order.
-      await voidAuthorizationForCancelledOrder(
-        supabase,
-        orderId,
-        paymentIntentId,
-        order.grand_total_cents,
-        order.currency_code
-      )
+    if (result === "order_not_found") {
+      return NextResponse.json({ error: "Ordine non trovato" }, { status: 404 })
+    }
+
+    if (result === "cancelled") {
       return NextResponse.json(
         { error: "Questo ordine è stato annullato: il pagamento è stato annullato e non è stato addebitato alcun importo." },
         { status: 409 }
       )
-    }
-
-    const { data: existingTx } = await supabase
-      .schema("rentals_domain")
-      .from("transactions")
-      .select("id")
-      .eq("order_id", orderId)
-      .maybeSingle()
-
-    if (existingTx?.id) {
-      await supabase
-        .schema("rentals_domain")
-        .from("transactions")
-        .update({
-          stripe_payment_intent_id: paymentIntentId,
-          amount_cents: order.grand_total_cents,
-          currency_code: order.currency_code,
-          status: "authorized",
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", existingTx.id)
-    } else {
-      await supabase.schema("rentals_domain").from("transactions").insert({
-        order_id: orderId,
-        stripe_payment_intent_id: paymentIntentId,
-        amount_cents: order.grand_total_cents,
-        currency_code: order.currency_code,
-        status: "authorized",
-      })
-    }
-
-    if (order.status === "accepted" || order.status === "pending") {
-      await supabase
-        .schema("rentals_domain")
-        .from("rental_orders")
-        .update({ status: "paid", updated_at: new Date().toISOString() })
-        .eq("id", orderId)
-
-      await supabase
-        .schema("rentals_domain")
-        .from("rental_items")
-        .update({ status: "paid", updated_at: new Date().toISOString() })
-        .eq("order_id", orderId)
     }
 
     return NextResponse.json({ ok: true })
