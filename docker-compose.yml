@@ -13,6 +13,7 @@ services:
       - /app/.next
     environment:
       - NODE_ENV=development # 3. <--- Cambiamo da production a development
+      - WATCHPACK_POLLING=true # 5. <--- Forziamo il polling per l'hot reload su Windows/Docker Desktop
       # Add your environment variables here
       # - DATABASE_URL=your_database_url
       # - STRIPE_KEY=your_stripe_key

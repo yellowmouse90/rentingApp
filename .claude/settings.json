@@ -27,7 +27,18 @@
       "Bash(mv .env.local .env.local.bak)",
       "Bash(pnpm build *)",
       "Bash(NEXT_PUBLIC_SUPABASE_URL=\"https://placeholder.supabase.co\" NEXT_PUBLIC_SUPABASE_ANON_KEY=\"placeholder-anon-key\" pnpm build)",
-      "Bash(pnpm lint *)"
+      "Bash(pnpm lint *)",
+      "Bash(git config *)",
+      "Bash(git --version)",
+      "Bash(docker-compose up *)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:3000/)",
+      "Bash(curl -s -o /dev/null -w \"second request: %{http_code}\\\\n\" http://localhost:3000/)",
+      "Bash(curl -s -o /dev/null -w \"third request: %{http_code}\\\\n\" http://localhost:3000/)",
+      "Bash(grep -rn \"hot-reload test\" /dev/null 2>/dev/null; find app -maxdepth 1 -name \"page.tsx\")",
+      "Read(//dev/**)",
+      "Bash(curl -s http://localhost:3000/ -o /tmp/home.html -w \"%{http_code}\\\\n\")",
+      "Bash(docker exec *)",
+      "Bash(docker-compose restart *)"
     ],
     "additionalDirectories": [
       "C:\\Users\\Ricky\\AppData\\Local\\Temp\\claude\\c--GitHub-rentingApp\\2b51d868-a60e-49ba-b1dd-4a658c1c9003\\scratchpad\\node_modules"
