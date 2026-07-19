@@ -133,6 +133,10 @@ export async function POST(request: NextRequest, { params }: PageParams) {
 
       const paymentIntent = await stripe.paymentIntents.capture(tx.stripe_payment_intent_id, {
         amount_to_capture: amountToCapture,
+        // Re-assert the fee explicitly: it must never exceed the captured amount, and must
+        // stay in sync with the fee computed at checkout time regardless of what was stored
+        // on the PaymentIntent at authorization.
+        application_fee_amount: Number(order.service_fee_cents || 0),
       })
 
       const latestChargeId = typeof paymentIntent.latest_charge === "string" ? paymentIntent.latest_charge : null

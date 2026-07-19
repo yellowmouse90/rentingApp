@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { requireApiUser } from "@/lib/auth/api"
-import { stripe, PLATFORM_FEE_PERCENT } from "@/lib/stripe"
+import { stripe } from "@/lib/stripe"
 
 export async function POST(request: NextRequest) {
   try {
@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
     const { data: order, error: orderError } = await supabase
       .schema("rentals_domain")
       .from("rental_orders")
-      .select("id, renter_id, status, grand_total_cents, currency_code")
+      .select("id, renter_id, status, grand_total_cents, subtotal_cents, service_fee_cents, currency_code")
       .eq("id", orderId)
       .single()
 
@@ -66,7 +66,10 @@ export async function POST(request: NextRequest) {
 
     const amount = order.grand_total_cents
     const currency = String(order.currency_code || "EUR").trim().toLowerCase()
-    const platformFee = Math.round(amount * (PLATFORM_FEE_PERCENT / 100))
+    // Only subtotal + service fee are captured at handover (the deposit is authorized but
+    // released, never captured), so the platform fee must be based on that same amount -
+    // otherwise the fee could exceed the captured amount and the later capture would fail.
+    const platformFee = Number(order.service_fee_cents || 0)
 
     // Create checkout session with manual capture: funds are authorized, not captured.
     const session = await stripe.checkout.sessions.create({

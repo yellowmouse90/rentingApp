@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import type Stripe from "stripe"
-import { stripe } from "@/lib/stripe"
+import { stripe, voidAuthorizationForCancelledOrder } from "@/lib/stripe"
 import { createAdminClient } from "@/lib/supabase/admin"
 
 export const runtime = "nodejs"
@@ -17,6 +17,19 @@ async function upsertAuthorizedTransaction(orderId: string, paymentIntentId: str
     .single()
 
   if (!order) {
+    return
+  }
+
+  if (order.status === "cancelled") {
+    // The owner rejected (or the renter cancelled) while this payment was in flight: void the
+    // authorization instead of recording held funds against a dead order.
+    await voidAuthorizationForCancelledOrder(
+      supabase,
+      orderId,
+      paymentIntentId,
+      order.grand_total_cents,
+      order.currency_code
+    )
     return
   }
 

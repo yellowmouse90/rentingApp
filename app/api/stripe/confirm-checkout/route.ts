@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { requireApiUser } from "@/lib/auth/api"
-import { stripe } from "@/lib/stripe"
+import { stripe, voidAuthorizationForCancelledOrder } from "@/lib/stripe"
 
 export async function POST(request: NextRequest) {
   try {
@@ -50,6 +50,22 @@ export async function POST(request: NextRequest) {
     }
 
     const paymentIntentId = paymentIntent.id
+
+    if (order.status === "cancelled") {
+      // The owner rejected (or the renter cancelled) while this payment was in flight: void
+      // the authorization instead of recording held funds against a dead order.
+      await voidAuthorizationForCancelledOrder(
+        supabase,
+        orderId,
+        paymentIntentId,
+        order.grand_total_cents,
+        order.currency_code
+      )
+      return NextResponse.json(
+        { error: "Questo ordine è stato annullato: il pagamento è stato annullato e non è stato addebitato alcun importo." },
+        { status: 409 }
+      )
+    }
 
     const { data: existingTx } = await supabase
       .schema("rentals_domain")
