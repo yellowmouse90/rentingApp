@@ -13,7 +13,21 @@
       "Bash(npm install *)",
       "Bash(rm -rf \"C:\\\\Users\\\\Ricky\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--GitHub-rentingApp\\\\2b51d868-a60e-49ba-b1dd-4a658c1c9003\\\\scratchpad\\\\node_modules\" \"C:\\\\Users\\\\Ricky\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--GitHub-rentingApp\\\\2b51d868-a60e-49ba-b1dd-4a658c1c9003\\\\scratchpad\\\\package.json\" \"C:\\\\Users\\\\Ricky\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--GitHub-rentingApp\\\\2b51d868-a60e-49ba-b1dd-4a658c1c9003\\\\scratchpad\\\\package-lock.json\")",
       "Bash(git -C c:/GitHub/rentingApp status --short)",
-      "Bash(rm -f \"C:\\\\Users\\\\Ricky\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--GitHub-rentingApp\\\\2b51d868-a60e-49ba-b1dd-4a658c1c9003\\\\scratchpad\\\\add-tx-policies.js\" \"C:\\\\Users\\\\Ricky\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--GitHub-rentingApp\\\\2b51d868-a60e-49ba-b1dd-4a658c1c9003\\\\scratchpad\\\\verify-owner-select.js\" \"C:\\\\Users\\\\Ricky\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--GitHub-rentingApp\\\\2b51d868-a60e-49ba-b1dd-4a658c1c9003\\\\scratchpad\\\\get-owner.js\" *)"
+      "Bash(rm -f \"C:\\\\Users\\\\Ricky\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--GitHub-rentingApp\\\\2b51d868-a60e-49ba-b1dd-4a658c1c9003\\\\scratchpad\\\\add-tx-policies.js\" \"C:\\\\Users\\\\Ricky\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--GitHub-rentingApp\\\\2b51d868-a60e-49ba-b1dd-4a658c1c9003\\\\scratchpad\\\\verify-owner-select.js\" \"C:\\\\Users\\\\Ricky\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--GitHub-rentingApp\\\\2b51d868-a60e-49ba-b1dd-4a658c1c9003\\\\scratchpad\\\\get-owner.js\" *)",
+      "Bash(powershell -Command \"\\(Get-Content .env.local\\) -replace '=.*','=<redacted>'\")",
+      "Bash(sed -E 's/=.*/=<redacted>/' .env.local)",
+      "Bash(sed -E 's/=.*/=<redacted>/' .env.docker)",
+      "Bash(pnpm --version)",
+      "Bash(pnpm install *)",
+      "Bash(git check-ignore *)",
+      "Bash(gh --version)",
+      "Bash(gh auth *)",
+      "Bash(pnpm test *)",
+      "Bash(pnpm -v)",
+      "Bash(mv .env.local .env.local.bak)",
+      "Bash(pnpm build *)",
+      "Bash(NEXT_PUBLIC_SUPABASE_URL=\"https://placeholder.supabase.co\" NEXT_PUBLIC_SUPABASE_ANON_KEY=\"placeholder-anon-key\" pnpm build)",
+      "Bash(pnpm lint *)"
     ],
     "additionalDirectories": [
       "C:\\Users\\Ricky\\AppData\\Local\\Temp\\claude\\c--GitHub-rentingApp\\2b51d868-a60e-49ba-b1dd-4a658c1c9003\\scratchpad\\node_modules"

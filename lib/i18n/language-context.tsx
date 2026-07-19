@@ -150,6 +150,7 @@ const translations: Record<Language, Record<string, string>> = {
     "nav.settings": "Impostazioni",
     "nav.open_menu": "Apri menu",
     "nav.close_menu": "Chiudi menu",
+    "nav.notifications": "Notifiche",
 
     // Theme
     "theme.toggle": "Cambia tema",
@@ -472,6 +473,27 @@ const translations: Record<Language, Record<string, string>> = {
     "rental_status.collected": "Consegnato",
     "rental_status.returned_ok": "Restituito integro",
     "rental_status.damaged": "Danneggiato",
+
+    // Notifications bell + preferences
+    "notifications.title": "Notifiche",
+    "notifications.empty": "Nessuna notifica",
+    "notifications.mark_all_read": "Segna tutte come lette",
+    "notifications.prefs.load_error": "Errore nel caricamento delle preferenze",
+    "notifications.prefs.save_error": "Errore nel salvataggio della preferenza",
+    "notifications.prefs.channel_none": "Niente",
+    "notifications.prefs.channel_in_app": "In-app",
+    "notifications.prefs.channel_email": "Email",
+    "notifications.prefs.section_bookings": "Prenotazioni",
+    "notifications.prefs.section_payments": "Pagamenti",
+    "notifications.types.booking_accepted": "Prenotazione accettata",
+    "notifications.types.booking_rejected": "Prenotazione rifiutata",
+    "notifications.types.booking_cancelled_by_renter": "Prenotazione annullata dal noleggiatore",
+    "notifications.types.booking_handover_confirmed": "Consegna confermata",
+    "notifications.types.booking_returned_ok": "Noleggio completato",
+    "notifications.types.booking_damage_reported": "Danno segnalato",
+    "notifications.types.payment_succeeded": "Pagamento riuscito",
+    "notifications.types.payment_failed": "Pagamento non riuscito",
+    "notifications.types.stripe_onboarding_complete": "Configurazione pagamenti completata",
   },
   en: {
     // Header
@@ -610,6 +632,7 @@ const translations: Record<Language, Record<string, string>> = {
     "nav.settings": "Settings",
     "nav.open_menu": "Open menu",
     "nav.close_menu": "Close menu",
+    "nav.notifications": "Notifications",
 
     // Theme
     "theme.toggle": "Toggle theme",
@@ -932,6 +955,27 @@ const translations: Record<Language, Record<string, string>> = {
     "rental_status.collected": "Collected",
     "rental_status.returned_ok": "Returned in good condition",
     "rental_status.damaged": "Damaged",
+
+    // Notifications bell + preferences
+    "notifications.title": "Notifications",
+    "notifications.empty": "No notifications",
+    "notifications.mark_all_read": "Mark all as read",
+    "notifications.prefs.load_error": "Error loading preferences",
+    "notifications.prefs.save_error": "Error saving preference",
+    "notifications.prefs.channel_none": "None",
+    "notifications.prefs.channel_in_app": "In-app",
+    "notifications.prefs.channel_email": "Email",
+    "notifications.prefs.section_bookings": "Bookings",
+    "notifications.prefs.section_payments": "Payments",
+    "notifications.types.booking_accepted": "Booking accepted",
+    "notifications.types.booking_rejected": "Booking rejected",
+    "notifications.types.booking_cancelled_by_renter": "Booking cancelled by renter",
+    "notifications.types.booking_handover_confirmed": "Handover confirmed",
+    "notifications.types.booking_returned_ok": "Rental completed",
+    "notifications.types.booking_damage_reported": "Damage reported",
+    "notifications.types.payment_succeeded": "Payment succeeded",
+    "notifications.types.payment_failed": "Payment failed",
+    "notifications.types.stripe_onboarding_complete": "Payment setup complete",
   },
 }
 

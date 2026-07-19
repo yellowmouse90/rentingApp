@@ -7,6 +7,7 @@ import { LanguageSwitcher } from "./language-switcher"
 import { ThemeSwitcher } from "./theme-switcher"
 import { UserMenu } from "./user-menu"
 import { ChatNotification } from "@/components/chat/chat-notification"
+import { NotificationBell } from "@/components/notifications/notification-bell"
 import type { User } from "@supabase/supabase-js"
 import type { Profile } from "@/lib/types"
 
@@ -31,6 +32,7 @@ export function HeaderActions({ user, profile }: HeaderActionsProps) {
           {t("nav.publish_listing")}
         </Link>
         <ChatNotification userId={user.id} />
+        <NotificationBell userId={user.id} />
         <UserMenu user={user} profile={profile} />
       </>
     )

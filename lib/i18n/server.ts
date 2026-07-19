@@ -206,6 +206,11 @@ const serverTranslations: Record<Language, Record<string, string>> = {
     "rental_status.collected": "Consegnato",
     "rental_status.returned_ok": "Restituito integro",
     "rental_status.damaged": "Danneggiato",
+
+    "profile_edit.title": "Impostazioni",
+    "profile_edit.subtitle": "Gestisci le tue preferenze di notifica.",
+    "notifications.prefs.title": "Notifiche",
+    "notifications.prefs.subtitle": "Scegli come vuoi essere avvisato per ogni tipo di evento.",
   },
   en: {
     "dashboard.welcome": "Welcome",
@@ -408,10 +413,15 @@ const serverTranslations: Record<Language, Record<string, string>> = {
     "rental_status.collected": "Collected",
     "rental_status.returned_ok": "Returned in good condition",
     "rental_status.damaged": "Damaged",
+
+    "profile_edit.title": "Settings",
+    "profile_edit.subtitle": "Manage your notification preferences.",
+    "notifications.prefs.title": "Notifications",
+    "notifications.prefs.subtitle": "Choose how you want to be notified for each type of event.",
   },
 }
 
-async function getServerLanguage(): Promise<Language> {
+export async function getServerLanguage(): Promise<Language> {
   const cookieStore = await cookies()
   const lang = cookieStore.get("toolshare_language")?.value
 

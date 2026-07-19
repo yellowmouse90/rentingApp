@@ -2,9 +2,16 @@ import { NextRequest, NextResponse } from "next/server"
 import type Stripe from "stripe"
 import { stripe, upsertAuthorizedTransaction } from "@/lib/stripe"
 import { createAdminClient } from "@/lib/supabase/admin"
+import { createNotification } from "@/lib/notifications/create"
 
 export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
+
+// The webhook has no request-scoped session/cookie to read a language
+// preference from (it's a server-to-server call from Stripe, not a user
+// request) - fall back to the app's default language, same as
+// getServerLanguage() does when no cookie is present.
+const WEBHOOK_NOTIFICATION_LANGUAGE = "it" as const
 
 async function setTransactionStatusFromPaymentIntent(paymentIntent: Stripe.PaymentIntent) {
   const orderId = paymentIntent.metadata?.orderId
@@ -36,6 +43,24 @@ async function setTransactionStatusFromPaymentIntent(paymentIntent: Stripe.Payme
         updated_at: now,
       })
       .eq("order_id", orderId)
+
+    const { data: order } = await supabase
+      .schema("rentals_domain")
+      .from("rental_orders")
+      .select("renter_id")
+      .eq("id", orderId)
+      .maybeSingle()
+
+    if (order?.renter_id) {
+      await createNotification({
+        recipientId: order.renter_id,
+        actorId: null,
+        type: "payment_succeeded",
+        language: WEBHOOK_NOTIFICATION_LANGUAGE,
+        orderId,
+      })
+    }
+
     return
   }
 
@@ -60,7 +85,61 @@ async function setTransactionStatusFromPaymentIntent(paymentIntent: Stripe.Payme
         updated_at: now,
       })
       .eq("order_id", orderId)
+
+    const { data: order } = await supabase
+      .schema("rentals_domain")
+      .from("rental_orders")
+      .select("renter_id")
+      .eq("id", orderId)
+      .maybeSingle()
+
+    if (order?.renter_id) {
+      await createNotification({
+        recipientId: order.renter_id,
+        actorId: null,
+        type: "payment_failed",
+        language: WEBHOOK_NOTIFICATION_LANGUAGE,
+        orderId,
+      })
+    }
   }
+}
+
+// No account.updated webhook was configured before this - onboarding
+// completion was only ever detected by polling (see
+// syncStripeOnboardingStatus in lib/stripe.ts, called from dashboard pages).
+// Reuses that exact same completion predicate (charges_enabled &&
+// payouts_enabled) so the webhook and the polling fallback never disagree,
+// and only notifies/writes on the incomplete -> complete transition so a
+// resent event (Stripe can redeliver account.updated many times) doesn't
+// produce duplicate notifications.
+async function handleAccountUpdated(account: Stripe.Account) {
+  const supabase = createAdminClient()
+
+  const { data: profile } = await supabase
+    .schema("users_domain")
+    .from("profiles")
+    .select("id, stripe_onboarding_complete")
+    .eq("stripe_account_id", account.id)
+    .maybeSingle()
+
+  if (!profile || profile.stripe_onboarding_complete) return
+
+  const onboardingComplete = Boolean(account.charges_enabled && account.payouts_enabled)
+  if (!onboardingComplete) return
+
+  await supabase
+    .schema("users_domain")
+    .from("profiles")
+    .update({ stripe_onboarding_complete: true })
+    .eq("id", profile.id)
+
+  await createNotification({
+    recipientId: profile.id,
+    actorId: null,
+    type: "stripe_onboarding_complete",
+    language: WEBHOOK_NOTIFICATION_LANGUAGE,
+  })
 }
 
 export async function POST(request: NextRequest) {
@@ -109,6 +188,11 @@ export async function POST(request: NextRequest) {
     ) {
       const paymentIntent = event.data.object as Stripe.PaymentIntent
       await setTransactionStatusFromPaymentIntent(paymentIntent)
+    }
+
+    if (event.type === "account.updated") {
+      const account = event.data.object as Stripe.Account
+      await handleAccountUpdated(account)
     }
 
     return NextResponse.json({ received: true })
