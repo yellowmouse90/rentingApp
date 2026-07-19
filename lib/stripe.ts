@@ -66,3 +66,40 @@ export async function voidAuthorizationForCancelledOrder(
   }
 }
 
+// Re-checks a Connect account's live status with Stripe and updates the cached
+// `stripe_onboarding_complete` flag if it drifted. Pages must call this after the user comes
+// back from Stripe onboarding, since nothing else keeps that flag in sync (no `account.updated`
+// webhook is configured).
+export async function syncStripeOnboardingStatus(
+  supabase: SupabaseClient,
+  userId: string,
+  stripeAccountId: string,
+  currentOnboardingComplete: boolean
+): Promise<{ onboardingComplete: boolean; chargesEnabled: boolean; payoutsEnabled: boolean }> {
+  try {
+    const account = await stripe.accounts.retrieve(stripeAccountId)
+    const onboardingComplete = Boolean(account.charges_enabled && account.payouts_enabled)
+
+    if (onboardingComplete !== currentOnboardingComplete) {
+      await supabase
+        .schema("users_domain")
+        .from("profiles")
+        .update({ stripe_onboarding_complete: onboardingComplete })
+        .eq("id", userId)
+    }
+
+    return {
+      onboardingComplete,
+      chargesEnabled: Boolean(account.charges_enabled),
+      payoutsEnabled: Boolean(account.payouts_enabled),
+    }
+  } catch (error) {
+    console.error("Stripe: impossibile verificare lo stato dell'account Connect", stripeAccountId, error)
+    return {
+      onboardingComplete: currentOnboardingComplete,
+      chargesEnabled: false,
+      payoutsEnabled: false,
+    }
+  }
+}
+

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { requireApiUser } from "@/lib/auth/api"
-import { stripe } from "@/lib/stripe"
+import { syncStripeOnboardingStatus } from "@/lib/stripe"
 
 export async function GET(request: NextRequest) {
   try {
@@ -26,25 +26,19 @@ export async function GET(request: NextRequest) {
       })
     }
 
-    // Get account details from Stripe
-    const account = await stripe.accounts.retrieve(profile.stripe_account_id)
-
-    const onboardingComplete = account.charges_enabled && account.payouts_enabled
-
-    // Update profile if status changed
-    if (onboardingComplete !== profile.stripe_onboarding_complete) {
-      await supabase
-        .schema("users_domain")
-        .from("profiles")
-        .update({ stripe_onboarding_complete: onboardingComplete })
-        .eq("id", user.id)
-    }
+    // Get account details from Stripe and sync the cached flag if it drifted
+    const { onboardingComplete, chargesEnabled, payoutsEnabled } = await syncStripeOnboardingStatus(
+      supabase,
+      user.id,
+      profile.stripe_account_id,
+      profile.stripe_onboarding_complete
+    )
 
     return NextResponse.json({
       hasAccount: true,
       onboardingComplete,
-      chargesEnabled: account.charges_enabled,
-      payoutsEnabled: account.payouts_enabled,
+      chargesEnabled,
+      payoutsEnabled,
       accountId: profile.stripe_account_id,
     })
   } catch (error) {

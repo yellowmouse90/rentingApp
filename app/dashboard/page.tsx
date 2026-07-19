@@ -3,6 +3,7 @@ import { requirePageUser } from "@/lib/auth/page"
 import { getServerI18n } from "@/lib/i18n/server"
 import { StripeConnectCard } from "@/components/dashboard/stripe-connect-card"
 import { DbErrorNotice } from "@/components/ui/db-error-notice"
+import { syncStripeOnboardingStatus } from "@/lib/stripe"
 import { Package, Plus, CreditCard, BarChart3, ArrowRight } from "lucide-react"
 
 export default async function DashboardPage() {
@@ -40,6 +41,19 @@ export default async function DashboardPage() {
     .select("*", { count: "exact", head: true })
     .eq("owner_id", user.id)
   if (ownerOrdersError) dbErrors.push(`${t("dashboard.errors.owner_orders")}: ${ownerOrdersError.message}`)
+
+  // The DB flag is only updated here on return from Stripe onboarding (no account.updated
+  // webhook is configured), so re-check live status whenever it isn't marked complete yet.
+  let onboardingComplete = profile?.stripe_onboarding_complete || false
+  if (profile?.stripe_account_id && !onboardingComplete) {
+    const status = await syncStripeOnboardingStatus(
+      supabase,
+      user.id,
+      profile.stripe_account_id,
+      onboardingComplete
+    )
+    onboardingComplete = status.onboardingComplete
+  }
 
   return (
     <div className="min-h-screen bg-muted/30 py-8">
@@ -104,7 +118,7 @@ export default async function DashboardPage() {
         <div className="mt-8">
           <StripeConnectCard
             hasAccount={!!profile?.stripe_account_id}
-            onboardingComplete={profile?.stripe_onboarding_complete || false}
+            onboardingComplete={onboardingComplete}
           />
         </div>
 
