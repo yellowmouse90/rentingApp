@@ -117,14 +117,8 @@ export function ChatPage({ initialConversationId }: ChatPageProps) {
 
   return (
     <div className="grid h-full grid-cols-1 gap-6 lg:grid-cols-3">
-      {/* Conversation List - Hidden on mobile when thread is selected */}
-      <div
-        className={`hidden lg:flex flex-col rounded-xl border border-border bg-card ${
-          !isMobileListVisible && selectedConversationId
-            ? "hidden"
-            : "flex"
-        } lg:col-span-1`}
-      >
+      {/* Conversation List - Always visible on desktop */}
+      <div className="hidden lg:flex flex-col rounded-xl border border-border bg-card lg:col-span-1">
         <div className="border-b border-border px-4 py-3 sm:px-6 sm:py-4">
           <h2 className="font-semibold text-foreground">{t("chat.title")}</h2>
         </div>
@@ -171,7 +165,11 @@ export function ChatPage({ initialConversationId }: ChatPageProps) {
       </div>
 
       {/* Mobile Conversation List */}
-      <div className="fixed inset-0 top-16 z-40 flex flex-col lg:hidden bg-background">
+      <div
+        className={`fixed inset-0 top-16 z-40 flex-col bg-background lg:hidden ${
+          isMobileListVisible || !selectedConversationId ? "flex" : "hidden"
+        }`}
+      >
         {selectedConversationId && (
           <div className="flex items-center justify-between border-b border-border px-4 py-3">
             <h2 className="font-semibold text-foreground">{t("chat.title")}</h2>
