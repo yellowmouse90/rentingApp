@@ -38,7 +38,21 @@
       "Read(//dev/**)",
       "Bash(curl -s http://localhost:3000/ -o /tmp/home.html -w \"%{http_code}\\\\n\")",
       "Bash(docker exec *)",
-      "Bash(docker-compose restart *)"
+      "Bash(docker-compose restart *)",
+      "Bash(npm -v)",
+      "Bash(git checkout *)",
+      "Bash(docker --version)",
+      "Bash(npx cap *)",
+      "Bash(docker pull *)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(docker run *)",
+      "Bash(MSYS_NO_PATHCONV=1 docker run --rm -v \"$\\(pwd\\):/project\" -w /project/android mingc/android-build-box:latest sh -c \"chmod +x gradlew && ./gradlew assembleDebug --no-daemon\")",
+      "Bash(where adb *)",
+      "Bash(command -v adb)",
+      "Bash(certutil -hashfile \"android/app/build/outputs/apk/debug/app-debug.apk\" SHA256)",
+      "Bash(ipconfig)",
+      "Bash(npx --yes http-server \"android/app/build/outputs/apk/debug\" -p 8080 -a 0.0.0.0 --cors)"
     ],
     "additionalDirectories": [
       "C:\\Users\\Ricky\\AppData\\Local\\Temp\\claude\\c--GitHub-rentingApp\\2b51d868-a60e-49ba-b1dd-4a658c1c9003\\scratchpad\\node_modules"
