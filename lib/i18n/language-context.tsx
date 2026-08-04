@@ -457,6 +457,9 @@ const translations: Record<Language, Record<string, string>> = {
     "listings_grid.no_results_no_location": "Abilita la geolocalizzazione per vedere gli attrezzi vicino a te",
     "listings_grid.view_all": "Vedi tutti gli annunci",
     "listings_grid.per_week": "/settimana",
+    "listings_grid.location_required_title": "Indica una posizione per iniziare",
+    "listings_grid.location_required_subtitle": "Per cercare gli oggetti disponibili, indica la tua posizione o attiva la geolocalizzazione nel pannello a sinistra",
+    "listings_grid.loading_more": "Caricamento altri risultati...",
 
     // Rental statuses
     "rental_status.pending": "In attesa",
@@ -939,6 +942,9 @@ const translations: Record<Language, Record<string, string>> = {
     "listings_grid.no_results_no_location": "Enable geolocation to see tools near you",
     "listings_grid.view_all": "View all listings",
     "listings_grid.per_week": "/week",
+    "listings_grid.location_required_title": "Set a location to get started",
+    "listings_grid.location_required_subtitle": "To search for available items, set your location or enable geolocation in the panel on the left",
+    "listings_grid.loading_more": "Loading more results...",
 
     // Rental statuses
     "rental_status.pending": "Pending",

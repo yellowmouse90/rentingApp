@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback, useMemo } from "react"
+import { useState, useEffect, useCallback, useMemo, useRef } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
@@ -10,7 +10,9 @@ import type { Category } from "@/lib/types"
 import { formatPrice, getConditionLabel } from "@/lib/utils"
 import { LocationSearch } from "./location-search"
 import { ListingsFilters } from "./listings-filters"
-import { ImageIcon, Package, MapPin, Loader2 } from "lucide-react"
+import { ImageIcon, Package, MapPin, Loader2, LocateFixed } from "lucide-react"
+
+const PAGE_SIZE = 50
 
 interface ListingsGridWithLocationProps {
   categories: Category[]
@@ -68,7 +70,11 @@ export function ListingsGridWithLocation({
   const [radius, setRadius] = useState(initialParams.radius ? parseInt(initialParams.radius) : 50)
   const [listings, setListings] = useState<ListingWithDistance[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [isLoadingMore, setIsLoadingMore] = useState(false)
   const [totalCount, setTotalCount] = useState(0)
+  const [page, setPage] = useState(0)
+  const [hasMore, setHasMore] = useState(false)
+  const sentinelRef = useRef<HTMLDivElement | null>(null)
 
   const categoryChildrenMap = useMemo(() => {
     const map = new Map<string, string[]>()
@@ -108,126 +114,167 @@ export function ListingsGridWithLocation({
     return getDescendantCategoryIds(category.id)
   }, [categories, getDescendantCategoryIds, initialParams.category])
 
-  const fetchListings = useCallback(async () => {
-    setIsLoading(true)
+  const hasLocation = !!location && location.lat !== 0 && location.lng !== 0
 
+  // Fallback used only if the geographic search itself fails (e.g. RPC error).
+  const runRegularQueryFallback = useCallback(async () => {
     const categoryFilterIds = getCategoryFilterIds()
 
-    const runRegularQuery = async () => {
-      let query = supabase
-        .schema('inventory_domain')
-        .from("listings")
-        .select(`
-          *,
-          category:categories(
-            id,
-            slug,
-            translated:category_translations(
-              name
-            )
-          ),
-          images:listing_images(id, image_url, display_order)
-        `, { count: "exact" })
-        .eq("is_active", true)
-        .eq("is_available", true)
+    let query = supabase
+      .schema('inventory_domain')
+      .from("listings")
+      .select(`
+        *,
+        category:categories(
+          id,
+          slug,
+          translated:category_translations(
+            name
+          )
+        ),
+        images:listing_images(id, image_url, display_order)
+      `)
+      .eq("is_active", true)
+      .eq("is_available", true)
 
-      if (initialParams.q) {
-        query = query.ilike("title", `%${initialParams.q}%`)
-      }
-
-      if (categoryFilterIds && categoryFilterIds.length > 0) {
-        query = query.in("category_id", categoryFilterIds)
-      }
-
-      if (user?.id) {
-        query = query.neq("owner_id", user.id)
-      }
-
-      if (initialParams.condition) {
-        query = query.eq("condition", initialParams.condition)
-      }
-
-      if (initialParams.minPrice) {
-        query = query.gte("price_per_day_cents", parseInt(initialParams.minPrice) * 100)
-      }
-
-      if (initialParams.maxPrice) {
-        query = query.lte("price_per_day_cents", parseInt(initialParams.maxPrice) * 100)
-      }
-
-      query = query.order("created_at", { ascending: false }).limit(50)
-
-      const { data, count, error } = await query
-
-      if (!error && data) {
-        const transformed = data.map((listing: any) => ({
-          id: listing.id,
-          owner_id: listing.owner_id,
-          category_id: listing.category_id,
-          title: listing.title,
-          description: listing.description,
-          condition: listing.condition,
-          price_per_day_cents: listing.price_per_day_cents,
-          price_per_week_cents: listing.price_per_week_cents,
-          currency_code: listing.currency_code,
-          deposit_cents: listing.deposit_cents,
-          item_location_name: listing.item_location_name || "",
-          is_available: listing.is_available,
-          views_count: listing.views_count,
-          created_at: listing.created_at,
-          distance_km: -1,
-          owner_display_name: "",
-          owner_avatar_url: null,
-          owner_rating: 0,
-          category_name: listing.category?.name || "",
-          category_icon: listing.category?.icon_name || "",
-          first_image_url: listing.images?.sort((a: any, b: any) => a.display_order - b.display_order)[0]?.image_url || null,
-        }))
-
-        setListings(transformed)
-        setTotalCount(count || transformed.length)
-      } else {
-        console.error("[listings] Regular query failed:", error)
-        setListings([])
-        setTotalCount(0)
-      }
+    if (initialParams.q) {
+      query = query.ilike("title", `%${initialParams.q}%`)
     }
 
-    if (location && location.lat !== 0 && location.lng !== 0) {
-      // Use geographic search function
-      const { data, error } = await supabase
-        .schema('inventory_domain')
-        .rpc("search_listings_nearby", {
-          user_lat: location.lat,
-          user_lng: location.lng,
-          radius_km: radius,
-          category_slug: initialParams.category || null,
-          search_query: initialParams.q || null,
-          min_price: initialParams.minPrice ? parseInt(initialParams.minPrice) * 100 : null,
-          max_price: initialParams.maxPrice ? parseInt(initialParams.maxPrice) * 100 : null,
-          item_condition: initialParams.condition || null,
-          page_limit: 50,
-          page_offset: 0,
+    if (categoryFilterIds && categoryFilterIds.length > 0) {
+      query = query.in("category_id", categoryFilterIds)
+    }
+
+    if (user?.id) {
+      query = query.neq("owner_id", user.id)
+    }
+
+    if (initialParams.condition) {
+      query = query.eq("condition", initialParams.condition)
+    }
+
+    if (initialParams.minPrice) {
+      query = query.gte("price_per_day_cents", parseInt(initialParams.minPrice) * 100)
+    }
+
+    if (initialParams.maxPrice) {
+      query = query.lte("price_per_day_cents", parseInt(initialParams.maxPrice) * 100)
+    }
+
+    query = query.order("created_at", { ascending: false }).limit(PAGE_SIZE)
+
+    const { data, error } = await query
+
+    if (!error && data) {
+      const transformed = data.map((listing: any) => ({
+        id: listing.id,
+        owner_id: listing.owner_id,
+        category_id: listing.category_id,
+        title: listing.title,
+        description: listing.description,
+        condition: listing.condition,
+        price_per_day_cents: listing.price_per_day_cents,
+        price_per_week_cents: listing.price_per_week_cents,
+        currency_code: listing.currency_code,
+        deposit_cents: listing.deposit_cents,
+        item_location_name: listing.item_location_name || "",
+        is_available: listing.is_available,
+        views_count: listing.views_count,
+        created_at: listing.created_at,
+        distance_km: -1,
+        owner_display_name: "",
+        owner_avatar_url: null,
+        owner_rating: 0,
+        category_name: listing.category?.name || "",
+        category_icon: listing.category?.icon_name || "",
+        first_image_url: listing.images?.sort((a: any, b: any) => a.display_order - b.display_order)[0]?.image_url || null,
+      }))
+
+      setListings(transformed)
+      setTotalCount(transformed.length)
+    } else {
+      console.error("[listings] Regular query fallback failed:", error)
+      setListings([])
+      setTotalCount(0)
+    }
+    setHasMore(false)
+  }, [getCategoryFilterIds, initialParams, supabase, user])
+
+  const fetchNearbyPage = useCallback(async (pageNum: number, append: boolean) => {
+    if (!location || !hasLocation) return
+
+    const { data, error } = await supabase
+      .schema('inventory_domain')
+      .rpc("search_listings_nearby", {
+        user_lat: location.lat,
+        user_lng: location.lng,
+        radius_km: radius,
+        category_slug: initialParams.category || null,
+        search_query: initialParams.q || null,
+        min_price: initialParams.minPrice ? parseInt(initialParams.minPrice) * 100 : null,
+        max_price: initialParams.maxPrice ? parseInt(initialParams.maxPrice) * 100 : null,
+        item_condition: initialParams.condition || null,
+        page_limit: PAGE_SIZE,
+        page_offset: pageNum * PAGE_SIZE,
       })
 
-      if (!error && data) {
-        const filtered = user?.id ? data.filter((listing: any) => listing.owner_id !== user.id) : data
-        setListings(filtered)
-        setTotalCount(filtered.length)
-      } else {
-        console.error("[listings] Nearby search failed, fallback to regular query:", error)
-        await runRegularQuery()
-      }
+    if (!error && data) {
+      const filtered = user?.id ? data.filter((listing: any) => listing.owner_id !== user.id) : data
+      setListings((prev) => (append ? [...prev, ...filtered] : filtered))
+      setTotalCount((prev) => (append ? prev + filtered.length : filtered.length))
+      setHasMore(data.length === PAGE_SIZE)
+      setPage(pageNum)
     } else {
-      await runRegularQuery()
+      console.error("[listings] Nearby search failed:", error)
+      if (!append) {
+        await runRegularQueryFallback()
+      } else {
+        setHasMore(false)
+      }
+    }
+  }, [location, hasLocation, radius, initialParams, supabase, user, runRegularQueryFallback])
+
+  // Reset and fetch the first page whenever the location or filters change.
+  useEffect(() => {
+    if (!hasLocation) {
+      setListings([])
+      setTotalCount(0)
+      setHasMore(false)
+      setIsLoading(false)
+      return
     }
 
-    setIsLoading(false)
-  }, [location, radius, initialParams, supabase, categories, user])
+    let cancelled = false
+    setIsLoading(true)
+    fetchNearbyPage(0, false).finally(() => {
+      if (!cancelled) setIsLoading(false)
+    })
+    return () => {
+      cancelled = true
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hasLocation, location?.lat, location?.lng, radius, initialParams.q, initialParams.category, initialParams.condition, initialParams.minPrice, initialParams.maxPrice])
 
+  const loadMore = useCallback(() => {
+    if (isLoadingMore || isLoading || !hasMore || !hasLocation) return
+    setIsLoadingMore(true)
+    fetchNearbyPage(page + 1, true).finally(() => setIsLoadingMore(false))
+  }, [isLoadingMore, isLoading, hasMore, hasLocation, page, fetchNearbyPage])
+
+  // Infinite scroll: fetch the next page when the sentinel at the bottom of the grid becomes visible.
   useEffect(() => {
-    fetchListings()
-  }, [fetchListings])
+    const sentinel = sentinelRef.current
+    if (!sentinel || !hasLocation) return
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) loadMore()
+      },
+      { rootMargin: "400px" }
+    )
+    observer.observe(sentinel)
+    return () => observer.disconnect()
+  }, [loadMore, hasLocation, listings.length])
 
   const handleLocationChange = (lat: number, lng: number, name: string) => {
     if (lat === 0 && lng === 0) {
@@ -293,22 +340,28 @@ export function ListingsGridWithLocation({
       {/* Listings Grid */}
       <main className="flex-1">
         {/* Results count */}
-        <div className="mb-4 flex items-center justify-between">
-          <p className="text-sm text-muted-foreground">
-            {isLoading ? (
-              t("common.loading")
-            ) : (
-              <>
-                <span className="font-semibold text-foreground">{totalCount}</span> {t("listings_grid.results_count")}
-                {location && location.lat !== 0 && (
-                  <> {t("listings_grid.within")} <span className="font-semibold text-foreground">{radius} km</span> {t("listings_grid.km_from")} {location.name}</>
-                )}
-              </>
-            )}
-          </p>
-        </div>
+        {hasLocation && (
+          <div className="mb-4 flex items-center justify-between">
+            <p className="text-sm text-muted-foreground">
+              {isLoading ? (
+                t("common.loading")
+              ) : (
+                <>
+                  <span className="font-semibold text-foreground">{totalCount}</span> {t("listings_grid.results_count")}
+                  {" "}{t("listings_grid.within")} <span className="font-semibold text-foreground">{radius} km</span> {t("listings_grid.km_from")} {location!.name}
+                </>
+              )}
+            </p>
+          </div>
+        )}
 
-        {isLoading ? (
+        {!hasLocation ? (
+          <div className="rounded-xl border border-dashed border-border bg-card p-12 text-center">
+            <LocateFixed className="mx-auto h-12 w-12 text-muted-foreground/50" />
+            <h3 className="mt-4 text-lg font-semibold text-foreground">{t("listings_grid.location_required_title")}</h3>
+            <p className="mt-2 text-sm text-muted-foreground">{t("listings_grid.location_required_subtitle")}</p>
+          </div>
+        ) : isLoading ? (
           <div className="flex items-center justify-center py-20">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
           </div>
@@ -317,23 +370,25 @@ export function ListingsGridWithLocation({
             <Package className="mx-auto h-12 w-12 text-muted-foreground/50" />
             <h3 className="mt-4 text-lg font-semibold text-foreground">{t("listings_grid.no_results")}</h3>
             <p className="mt-2 text-sm text-muted-foreground">
-              {location && location.lat !== 0
-                ? t("listings_grid.no_results_with_location")
-                : t("listings_grid.no_results_no_location")}
+              {t("listings_grid.no_results_with_location")}
             </p>
-            <Link
-              href="/listings"
-              className="mt-4 inline-flex items-center rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
-            >
-              {t("listings_grid.view_all")}
-            </Link>
           </div>
         ) : (
-          <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
-            {listings.map((listing) => (
-              <ListingCard key={listing.id} listing={listing} showDistance={location !== null && location.lat !== 0} />
-            ))}
-          </div>
+          <>
+            <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
+              {listings.map((listing) => (
+                <ListingCard key={listing.id} listing={listing} showDistance={hasLocation} />
+              ))}
+            </div>
+            {/* Infinite scroll sentinel */}
+            <div ref={sentinelRef} className="h-1" />
+            {isLoadingMore && (
+              <div className="flex items-center justify-center gap-2 py-8 text-sm text-muted-foreground">
+                <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                {t("listings_grid.loading_more")}
+              </div>
+            )}
+          </>
         )}
       </main>
     </div>
