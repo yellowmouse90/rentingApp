@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
 import { useAuth } from "@/lib/auth/context"
 import { useLanguage } from "@/lib/i18n/language-context"
+import { detectCurrentLocation } from "@/lib/location/client"
 import type { Category } from "@/lib/types"
 import { formatPrice, getConditionLabel } from "@/lib/utils"
 import { LocationSearch } from "./location-search"
@@ -74,6 +75,8 @@ export function ListingsGridWithLocation({
   const [totalCount, setTotalCount] = useState(0)
   const [page, setPage] = useState(0)
   const [hasMore, setHasMore] = useState(false)
+  const [isAutoDetecting, setIsAutoDetecting] = useState(!(initialParams.lat && initialParams.lng))
+  const autoDetectAttempted = useRef(false)
   const sentinelRef = useRef<HTMLDivElement | null>(null)
 
   const categoryChildrenMap = useMemo(() => {
@@ -299,6 +302,24 @@ export function ListingsGridWithLocation({
     }
   }
 
+  // On first load, if no location was passed via URL, silently ask for geolocation
+  // permission (or use it immediately if already granted) and search around it.
+  useEffect(() => {
+    if (location || autoDetectAttempted.current) return
+    autoDetectAttempted.current = true
+
+    detectCurrentLocation()
+      .then((detected) => {
+        handleLocationChange(detected.lat, detected.lng, detected.name)
+      })
+      .catch(() => {
+        // Permission denied, unavailable, or unsupported - fall back to asking
+        // the user to set a location manually via the sidebar.
+      })
+      .finally(() => setIsAutoDetecting(false))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   const handleRadiusChange = (newRadius: number) => {
     setRadius(newRadius)
     if (location) {
@@ -355,7 +376,11 @@ export function ListingsGridWithLocation({
           </div>
         )}
 
-        {!hasLocation ? (
+        {!hasLocation && isAutoDetecting ? (
+          <div className="flex items-center justify-center py-20">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+        ) : !hasLocation ? (
           <div className="rounded-xl border border-dashed border-border bg-card p-12 text-center">
             <LocateFixed className="mx-auto h-12 w-12 text-muted-foreground/50" />
             <h3 className="mt-4 text-lg font-semibold text-foreground">{t("listings_grid.location_required_title")}</h3>

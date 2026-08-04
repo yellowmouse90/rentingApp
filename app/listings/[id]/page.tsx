@@ -78,8 +78,13 @@ export default async function ListingDetailPage({ params }: ListingDetailPagePro
         .maybeSingle()
 
       effectiveOwnerProfile = ownerProfileAdmin || null
-      if (ownerProfileAdminError) dbErrors.push(`${t("listing_detail.owner_profile_error")}: ${ownerProfileAdminError.message}`)
-      else if (ownerProfileError) dbErrors.push(`${t("listing_detail.owner_profile_error")}: ${ownerProfileError.message}`)
+      // Only surface an error if the profile is still unavailable after the fallback -
+      // the initial anon-role failure is expected (RLS/grants) and not worth showing
+      // once the admin fallback has successfully recovered the profile.
+      if (!effectiveOwnerProfile) {
+        const message = ownerProfileAdminError?.message || ownerProfileError?.message
+        if (message) dbErrors.push(`${t("listing_detail.owner_profile_error")}: ${message}`)
+      }
     } catch (adminError) {
       // Admin client unavailable (e.g. missing service role key) - fall back to the placeholder owner below.
       effectiveOwnerProfile = null

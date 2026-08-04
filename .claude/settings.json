@@ -65,7 +65,12 @@
       "Bash(bash /c/GitHub/rentingApp/scripts/build-android.sh)",
       "Bash(MSYS_NO_PATHCONV=1 docker run --rm -v /c/GitHub/rentingApp/dist:/out toolshare-android-build sh -c 'cp /app/android/app/build/outputs/apk/debug/app-debug.apk /out/')",
       "Bash(MSYS_NO_PATHCONV=1 docker run --rm -v /c/GitHub/rentingApp/dist:/out toolshare-android-build sh -c 'cd /app/android && ./gradlew assembleDebug && cp app/build/outputs/apk/debug/app-debug.apk /out/')",
-      "Read(//c/GitHub-rentingApp/app/listings/\\\\[id\\\\]/**)"
+      "Read(//c/GitHub-rentingApp/app/listings/\\\\[id\\\\]/**)",
+      "Bash(command -v psql)",
+      "Bash(node -e \"require\\('pg'\\)\")",
+      "Bash(npm init *)",
+      "Bash(PG_CONN='postgres://postgres.ddosczkxolgphqgxjreh:2yj3eVGvPN4ETENk@aws-1-us-east-1.pooler.supabase.com:5432/postgres?sslmode=require' node check_grants.js)",
+      "Bash(PG_CONN='postgres://postgres.ddosczkxolgphqgxjreh:2yj3eVGvPN4ETENk@aws-1-us-east-1.pooler.supabase.com:5432/postgres' node check_grants.js)"
     ],
     "additionalDirectories": [
       "C:\\Users\\Ricky\\AppData\\Local\\Temp\\claude\\c--GitHub-rentingApp\\2b51d868-a60e-49ba-b1dd-4a658c1c9003\\scratchpad\\node_modules"
