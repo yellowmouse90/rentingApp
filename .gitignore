@@ -3,3 +3,16 @@ node_modules
 .vercel
 .env.local
 .env*.local
+
+# Android (Capacitor)
+android/.gradle/
+android/build/
+android/app/build/
+android/capacitor-cordova-android-plugins/build/
+android/local.properties
+android/.idea/
+android/*.iml
+android/app/*.iml
+android/app/release/
+android/app/src/main/assets/public/
+dist/

@@ -1,0 +1,22 @@
+# Builds the Android debug APK reproducibly (JDK + Android SDK + Node bundled).
+# Usage: see scripts/build-android.sh
+FROM cimg/android:2026.07.1-node
+
+WORKDIR /app
+
+RUN corepack enable && corepack prepare pnpm@11.1.3 --activate
+
+COPY --chown=circleci:circleci package.json pnpm-lock.yaml ./
+# --ignore-scripts: this container only runs `cap sync` + Gradle, never `next build`,
+# so native postinstall builds (e.g. sharp) aren't needed and would otherwise require
+# interactive `pnpm approve-builds` approval.
+RUN pnpm install --frozen-lockfile --ignore-scripts
+
+COPY --chown=circleci:circleci . .
+
+RUN pnpm exec cap sync android
+
+WORKDIR /app/android
+RUN chmod +x gradlew
+
+CMD ["./gradlew", "assembleDebug"]

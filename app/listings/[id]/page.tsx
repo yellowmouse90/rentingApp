@@ -68,17 +68,24 @@ export default async function ListingDetailPage({ params }: ListingDetailPagePro
 
   // If RLS blocks profile visibility, use a server-side admin fallback for public fields only.
   if (!effectiveOwnerProfile) {
-    const admin = createAdminClient()
-    const { data: ownerProfileAdmin, error: ownerProfileAdminError } = await admin
-      .schema("users_domain")
-      .from("profiles")
-      .select("id, email, display_name, avatar_url, bio, average_rating_as_owner, total_reviews_as_owner, created_at")
-      .eq("id", listing.owner_id)
-      .maybeSingle()
+    try {
+      const admin = createAdminClient()
+      const { data: ownerProfileAdmin, error: ownerProfileAdminError } = await admin
+        .schema("users_domain")
+        .from("profiles")
+        .select("id, email, display_name, avatar_url, bio, average_rating_as_owner, total_reviews_as_owner, created_at")
+        .eq("id", listing.owner_id)
+        .maybeSingle()
 
-    effectiveOwnerProfile = ownerProfileAdmin || null
-    if (ownerProfileAdminError) dbErrors.push(`${t("listing_detail.owner_profile_error")}: ${ownerProfileAdminError.message}`)
-    else if (ownerProfileError) dbErrors.push(`${t("listing_detail.owner_profile_error")}: ${ownerProfileError.message}`)
+      effectiveOwnerProfile = ownerProfileAdmin || null
+      if (ownerProfileAdminError) dbErrors.push(`${t("listing_detail.owner_profile_error")}: ${ownerProfileAdminError.message}`)
+      else if (ownerProfileError) dbErrors.push(`${t("listing_detail.owner_profile_error")}: ${ownerProfileError.message}`)
+    } catch (adminError) {
+      // Admin client unavailable (e.g. missing service role key) - fall back to the placeholder owner below.
+      effectiveOwnerProfile = null
+      const message = adminError instanceof Error ? adminError.message : String(adminError)
+      dbErrors.push(`${t("listing_detail.owner_profile_error")}: ${message}`)
+    }
   }
 
   // Fetch existing bookings to show unavailable dates

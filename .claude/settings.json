@@ -52,7 +52,20 @@
       "Bash(command -v adb)",
       "Bash(certutil -hashfile \"android/app/build/outputs/apk/debug/app-debug.apk\" SHA256)",
       "Bash(ipconfig)",
-      "Bash(npx --yes http-server \"android/app/build/outputs/apk/debug\" -p 8080 -a 0.0.0.0 --cors)"
+      "Bash(npx --yes http-server \"android/app/build/outputs/apk/debug\" -p 8080 -a 0.0.0.0 --cors)",
+      "Bash(grep -E \"build\\\\.gradle$|settings\\\\.gradle$|AndroidManifest\\\\.xml$|MainActivity\")",
+      "Bash(git -C /c/GitHub/rentingApp status --porcelain -- android)",
+      "Bash(git rm *)",
+      "Bash(keytool -genkeypair -v -keystore /c/GitHub/rentingApp/android/debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname \"CN=ToolShare Debug, OU=Dev, O=ToolShare, L=Unknown, ST=Unknown, C=IT\")",
+      "Bash(MSYS_NO_PATHCONV=1 docker run --rm -v \"/c/GitHub/rentingApp/android:/out\" eclipse-temurin:17-jdk keytool -genkeypair -v -keystore /out/debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname \"CN=ToolShare Debug, OU=Dev, O=ToolShare, L=Unknown, ST=Unknown, C=IT\")",
+      "Bash(MSYS_NO_PATHCONV=1 docker run --rm -v \"/c/GitHub/rentingApp/android:/out\" eclipse-temurin:17-jdk keytool -list -v -keystore /out/debug.keystore -storepass android)",
+      "WebFetch(domain:hub.docker.com)",
+      "Bash(pnpm exec *)",
+      "Bash(chmod +x /c/GitHub/rentingApp/scripts/build-android.sh)",
+      "Bash(bash /c/GitHub/rentingApp/scripts/build-android.sh)",
+      "Bash(MSYS_NO_PATHCONV=1 docker run --rm -v /c/GitHub/rentingApp/dist:/out toolshare-android-build sh -c 'cp /app/android/app/build/outputs/apk/debug/app-debug.apk /out/')",
+      "Bash(MSYS_NO_PATHCONV=1 docker run --rm -v /c/GitHub/rentingApp/dist:/out toolshare-android-build sh -c 'cd /app/android && ./gradlew assembleDebug && cp app/build/outputs/apk/debug/app-debug.apk /out/')",
+      "Read(//c/GitHub-rentingApp/app/listings/\\\\[id\\\\]/**)"
     ],
     "additionalDirectories": [
       "C:\\Users\\Ricky\\AppData\\Local\\Temp\\claude\\c--GitHub-rentingApp\\2b51d868-a60e-49ba-b1dd-4a658c1c9003\\scratchpad\\node_modules"

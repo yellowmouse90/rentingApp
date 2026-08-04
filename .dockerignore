@@ -13,6 +13,7 @@ README.md
 .idea
 dist
 build
+android/.gradle
 coverage
 .turbo
 yarn.lock
