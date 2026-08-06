@@ -31,7 +31,7 @@ All tables live in dedicated schemas, always accessed via `.schema("...")` on th
 - `interactions_domain` — `conversations`, `messages`
 - `notifications_domain` — `notifications`
 
-Migrations are plain numbered SQL files in `db/migrations/` (001…008), applied by hand against Supabase — there is no migration runner/CLI wired up in this repo. Shared TS types for these tables are hand-maintained in `lib/types.ts` (core rows) and `lib/types/chat.ts` (chat-specific) — keep them in sync manually when a migration changes a table shape.
+Migrations are plain numbered SQL files in `db/migrations/` (001…009), applied by hand against Supabase — there is no migration runner/CLI wired up in this repo. Shared TS types for these tables are hand-maintained in `lib/types.ts` (core rows) and `lib/types/chat.ts` (chat-specific) — keep them in sync manually when a migration changes a table shape.
 
 ### Two Supabase clients — this distinction is the source of most subtle bugs in this codebase
 
