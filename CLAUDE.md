@@ -1,0 +1,75 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## Commands
+
+```bash
+pnpm dev                          # dev server (Next.js + Turbopack)
+pnpm build                        # production build
+pnpm lint                         # next lint
+pnpm test                         # vitest run (all tests, once)
+pnpm test:watch                   # vitest watch mode
+pnpm vitest run lib/utils.test.ts # run a single test file
+```
+
+CI (`.github/workflows/ci.yml`) runs `pnpm test` then `pnpm build` with placeholder Supabase env vars — a broken build with real env vars but working placeholders will still pass CI, so don't rely on CI alone to catch env-dependent issues.
+
+Local dev needs `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `STRIPE_SECRET_KEY`, `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`, `STRIPE_WEBHOOK_SECRET` in `.env.local` (see `.env.docker` for the full list). Docker setup is in `DOCKER.md`; Android (Capacitor) build notes live in `Dockerfile.android`.
+
+## Architecture
+
+Next.js 16 App Router + Supabase (Postgres/PostGIS, Auth, Realtime) + Stripe Connect. Server components/route handlers talk to Postgres exclusively through PostgREST via the Supabase JS client — there is no ORM and no direct SQL from the app layer.
+
+### Database: four domain schemas, not `public`
+
+All tables live in dedicated schemas, always accessed via `.schema("...")` on the Supabase client:
+
+- `users_domain` — `profiles`, addresses
+- `inventory_domain` — categories, listings, images
+- `rentals_domain` — `rental_orders`, `rental_items`, `transactions`
+- `interactions_domain` — `conversations`, `messages`
+- `notifications_domain` — `notifications`
+
+Migrations are plain numbered SQL files in `db/migrations/` (001…008), applied by hand against Supabase — there is no migration runner/CLI wired up in this repo. Shared TS types for these tables are hand-maintained in `lib/types.ts` (core rows) and `lib/types/chat.ts` (chat-specific) — keep them in sync manually when a migration changes a table shape.
+
+### Two Supabase clients — this distinction is the source of most subtle bugs in this codebase
+
+- **User-scoped client** (`lib/supabase/server.ts` `createClient()`, or `lib/supabase/client.ts` for the browser): reads the session cookie, RLS applies.
+- **Admin client** (`lib/supabase/admin.ts` `createAdminClient()`, `server-only`): service-role key, bypasses RLS entirely.
+
+Rule of thumb enforced across the codebase (see comments in `lib/stripe.ts` and `app/api/stripe/webhook/route.ts`): use the admin client only for writes that legitimately cross user boundaries and have no request-scoped session to authorize them with (the Stripe webhook, `upsertAuthorizedTransaction`, notification creation writing into someone else's inbox). Everything a user does to their own/their counterparty's rows through an authenticated request should go through the user-scoped client so RLS is the actual authorization mechanism — don't reach for the admin client just to make a blocked write succeed; add the missing RLS policy instead (see below).
+
+### RLS failure mode: silent no-ops, not errors
+
+A recurring, already-shipped-and-fixed class of bug in this repo (migrations 003, 005, 006, 007): a Postgres `UPDATE`/`INSERT` blocked by RLS (missing or wrong policy) returns success with 0 rows affected — no exception, no error field — if the caller doesn't check row count. Two defenses are already in place and must be preserved when adding new mutations against these schemas:
+
+1. Every `.update()`/`.insert()` call in API routes chains `.select().single()` (or uses the `requireUpdate()` helper in `app/api/bookings/[id]/transition/route.ts`) so a 0-row write throws instead of silently doing nothing.
+2. Custom schemas need explicit `GRANT`s for `service_role`/`anon`/`authenticated` (they are not auto-granted) *and* explicit RLS policies per command (`SELECT`/`INSERT`/`UPDATE` are independent — having one does not imply the others). When adding a table or a new write path to an existing table, check both grants and per-command policies exist, don't assume they carry over.
+
+### Booking lifecycle (`rentals_domain.rental_orders` / `rental_items`)
+
+Driven entirely through `POST /api/bookings/[id]/transition` (`action`: `accept | reject | cancel_request | confirm_handover | mark_returned_ok | report_damage`), which checks caller identity against `owner_id`/`renter_id` before allowing a transition. Order status flow: `pending → accepted/cancelled → paid → in_progress → completed | disputed`. Payment capture (`mark_returned_ok`) and Stripe Connect transfer happen inside this route, using the owner's user-scoped client — not the webhook — so the RLS policies on `rental_orders`/`rental_items`/`transactions` for the *owner* (not just the renter) must exist for this route to work (this is exactly what migrations 005/007 fixed after the fact).
+
+### Stripe integration
+
+- Checkout uses `capture_method: "manual"` (authorize now, capture on `mark_returned_ok`) — `session.payment_status` stays `"unpaid"` until capture, so completion is detected via `session.status === "complete"`, not `payment_status`.
+- `lib/stripe.ts` `upsertAuthorizedTransaction()` is the single place that reconciles a Stripe PaymentIntent into `transactions`/`rental_orders`/`rental_items`; called from both the webhook and `/api/stripe/confirm-checkout` so the two paths can't disagree.
+- Stripe Connect onboarding status (`profiles.stripe_onboarding_complete`) is kept in sync two ways: polling via `syncStripeOnboardingStatus()` (called from dashboard pages) and the `account.updated` webhook event — both use the same `charges_enabled && payouts_enabled` predicate; keep them matching if either changes.
+- Platform fee is a flat `PLATFORM_FEE_PERCENT` (10%) in `lib/stripe.ts`.
+
+### Chat (`interactions_domain`)
+
+One conversation per `rental_order_id` (unique constraint), between the two `rental_items` counterparties. Deleting a profile does **not** cascade-delete conversations/messages (migration 004 changed this deliberately) — `participant_one`/`participant_two`/`sender_id` go `NULL` instead, and the UI (`components/chat/message-list.tsx`, the conversations route) renders a null sender/participant as "utente eliminato" rather than erroring. Realtime updates go through `lib/chat/realtime.ts` (Supabase Realtime subscriptions), not polling.
+
+### Notifications (`notifications_domain`)
+
+Always written by trusted server code via the admin client (`lib/notifications/create.ts`) — there is deliberately no `authenticated`-role INSERT policy, since a user's own session has no legitimate reason to write into someone else's inbox. Copy/i18n for notification types lives in `lib/notifications/copy.ts`; email sending in `lib/notifications/email.ts` (Resend).
+
+### Auth
+
+`requireApiUser()` (`lib/auth/api.ts`) is the standard guard for API routes: returns the user-scoped client + user, or a 401 `NextResponse` to return early. Route protection for pages (not API routes) happens in `middleware.ts`, which redirects unauthenticated users away from a hardcoded list of protected path prefixes and authenticated users away from `/auth/login`/`/auth/sign-up`.
+
+### i18n
+
+`lib/i18n/` provides a language context (client) and `getServerLanguage()` (server, cookie-based) — user-facing strings (including notification copy and API error messages) are Italian-first; check `lib/i18n/` before assuming a hardcoded string should be translated inline vs. sourced from the language layer.
