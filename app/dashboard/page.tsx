@@ -42,8 +42,8 @@ export default async function DashboardPage() {
     .eq("owner_id", user.id)
   if (ownerOrdersError) dbErrors.push(`${t("dashboard.errors.owner_orders")}: ${ownerOrdersError.message}`)
 
-  // The DB flag is only updated here on return from Stripe onboarding (no account.updated
-  // webhook is configured), so re-check live status whenever it isn't marked complete yet.
+  // Re-check live status whenever the cached flag isn't marked complete yet - see
+  // syncStripeOnboardingStatus in lib/stripe.ts for how this races the account.updated webhook.
   let onboardingComplete = profile?.stripe_onboarding_complete || false
   if (profile?.stripe_account_id && !onboardingComplete) {
     const status = await syncStripeOnboardingStatus(
