@@ -29,12 +29,11 @@ CREATE TABLE IF NOT EXISTS interactions_domain.messages (
   sender_id UUID NOT NULL REFERENCES users_domain.profiles(id) ON DELETE CASCADE,
   content TEXT NOT NULL,
   is_read BOOLEAN NOT NULL DEFAULT FALSE,
-  created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
-  
-  -- Index for faster queries
-  INDEX idx_conversation_id (conversation_id),
-  INDEX idx_sender_id (sender_id),
-  INDEX idx_created_at (created_at)
+  created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+  -- Indexes are created below with CREATE INDEX - MySQL-style inline INDEX(...)
+  -- clauses aren't valid Postgres syntax and made this CREATE TABLE fail outright
+  -- on a fresh database (caught while validating db/migrations/000_baseline_core_schema.sql
+  -- replays cleanly end to end).
 );
 
 -- Create indexes for better query performance
@@ -46,8 +45,10 @@ CREATE INDEX IF NOT EXISTS idx_conversations_last_message_at
   ON interactions_domain.conversations(last_message_at DESC);
 CREATE INDEX IF NOT EXISTS idx_messages_conversation_id 
   ON interactions_domain.messages(conversation_id);
-CREATE INDEX IF NOT EXISTS idx_messages_sender_id 
+CREATE INDEX IF NOT EXISTS idx_messages_sender_id
   ON interactions_domain.messages(sender_id);
+CREATE INDEX IF NOT EXISTS idx_messages_created_at
+  ON interactions_domain.messages(created_at);
 
 -- Enable Row Level Security
 ALTER TABLE interactions_domain.conversations ENABLE ROW LEVEL SECURITY;
