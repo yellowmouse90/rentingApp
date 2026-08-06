@@ -17,8 +17,9 @@ export default async function PaymentsPage() {
     .eq("id", user.id)
     .single()
 
-  // The DB flag is only updated here on return from Stripe onboarding (no account.updated
-  // webhook is configured), so re-check live status whenever it isn't marked complete yet.
+  // Re-check live status whenever the cached flag isn't marked complete yet: this page load
+  // (the Stripe onboarding return URL) usually wins the race against the account.updated
+  // webhook, so it's the most reliable place to catch the transition (see syncStripeOnboardingStatus).
   let onboardingComplete = profile?.stripe_onboarding_complete || false
   if (profile?.stripe_account_id && !onboardingComplete) {
     const status = await syncStripeOnboardingStatus(

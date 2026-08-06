@@ -51,18 +51,19 @@ export function useUnreadNotificationCount(userId?: string) {
     const channelName = `unread-notifications-${userId}-${Math.random().toString(36).slice(2)}`
     const channel = supabase.channel(channelName)
 
-    // RLS already restricts SELECT to `recipient_id = auth.uid()` at the
-    // wire level, so the channel can safely listen unfiltered here (same
-    // pattern as lib/chat/use-unread-count.tsx for interactions_domain).
+    // Realtime postgres_changes events are not actually scoped by RLS on the wire (see
+    // lib/chat/realtime.ts's useRealtimeConversations, which has to guard client-side for
+    // exactly this reason) - filter server-side on recipient_id instead of trusting RLS to
+    // keep other users' notification payloads off this channel.
     channel
       .on(
         "postgres_changes",
-        { event: "INSERT", schema: "notifications_domain", table: "notifications" },
+        { event: "INSERT", schema: "notifications_domain", table: "notifications", filter: `recipient_id=eq.${userId}` },
         () => fetchCount()
       )
       .on(
         "postgres_changes",
-        { event: "UPDATE", schema: "notifications_domain", table: "notifications" },
+        { event: "UPDATE", schema: "notifications_domain", table: "notifications", filter: `recipient_id=eq.${userId}` },
         () => fetchCount()
       )
 

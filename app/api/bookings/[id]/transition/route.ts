@@ -269,22 +269,10 @@ export async function POST(request: NextRequest, { params }: PageParams) {
         return NextResponse.json({ error: "Importo di cattura non valido" }, { status: 400 })
       }
 
-      const paymentIntent = await stripe.paymentIntents.capture(tx.stripe_payment_intent_id, {
-        amount_to_capture: amountToCapture,
-        // Re-assert the fee explicitly: it must never exceed the captured amount, and must
-        // stay in sync with the fee computed at checkout time regardless of what was stored
-        // on the PaymentIntent at authorization.
-        application_fee_amount: Number(order.service_fee_cents || 0),
-      })
-
-      const latestChargeId = typeof paymentIntent.latest_charge === "string" ? paymentIntent.latest_charge : null
-      let transferId: string | null = null
-
-      if (latestChargeId) {
-        const charge = await stripe.charges.retrieve(latestChargeId)
-        transferId = typeof charge.transfer === "string" ? charge.transfer : null
-      }
-
+      // Run the writes we control before the irreversible Stripe capture, not after: if a
+      // write is going to be blocked (rental_items/rental_orders are exactly the tables whose
+      // owner-side RLS policies have silently 0-rowed before - migrations 005/007), the renter
+      // must not already have been charged when we find out.
       const itemUpdated = await requireUpdate(
         supabase
           .schema("rentals_domain")
@@ -309,6 +297,22 @@ export async function POST(request: NextRequest, { params }: PageParams) {
       )
       if (!orderUpdated) return permissionErrorResponse()
 
+      const paymentIntent = await stripe.paymentIntents.capture(tx.stripe_payment_intent_id, {
+        amount_to_capture: amountToCapture,
+        // Re-assert the fee explicitly: it must never exceed the captured amount, and must
+        // stay in sync with the fee computed at checkout time regardless of what was stored
+        // on the PaymentIntent at authorization.
+        application_fee_amount: Number(order.service_fee_cents || 0),
+      })
+
+      const latestChargeId = typeof paymentIntent.latest_charge === "string" ? paymentIntent.latest_charge : null
+      let transferId: string | null = null
+
+      if (latestChargeId) {
+        const charge = await stripe.charges.retrieve(latestChargeId)
+        transferId = typeof charge.transfer === "string" ? charge.transfer : null
+      }
+
       const txUpdated = await requireUpdate(
         supabase
           .schema("rentals_domain")
@@ -324,7 +328,17 @@ export async function POST(request: NextRequest, { params }: PageParams) {
           .single(),
         "transactions.mark_returned_ok"
       )
-      if (!txUpdated) return permissionErrorResponse()
+      if (!txUpdated) {
+        // The item/order are already correctly marked returned/completed and the charge has
+        // gone through - this write only lags the internal bookkeeping row (transfer id,
+        // captured status). Don't fail the request or withhold the renter's confirmation for
+        // it; just flag it loudly for manual reconciliation.
+        console.error(
+          "Booking transition: cattura Stripe riuscita ma aggiornamento transactions fallito",
+          orderId,
+          tx.id
+        )
+      }
 
       await createNotification({
         recipientId: order.renter_id,

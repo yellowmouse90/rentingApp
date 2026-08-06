@@ -105,14 +105,14 @@ async function setTransactionStatusFromPaymentIntent(paymentIntent: Stripe.Payme
   }
 }
 
-// No account.updated webhook was configured before this - onboarding
-// completion was only ever detected by polling (see
-// syncStripeOnboardingStatus in lib/stripe.ts, called from dashboard pages).
-// Reuses that exact same completion predicate (charges_enabled &&
-// payouts_enabled) so the webhook and the polling fallback never disagree,
-// and only notifies/writes on the incomplete -> complete transition so a
-// resent event (Stripe can redeliver account.updated many times) doesn't
-// produce duplicate notifications.
+// Onboarding completion is also detected by polling (see syncStripeOnboardingStatus in
+// lib/stripe.ts, called from dashboard pages right after the user returns from Stripe
+// onboarding), which usually wins the race against this webhook since it fires first. Reuses
+// the exact same completion predicate (charges_enabled && payouts_enabled) so the two paths
+// never disagree about the end state, and the update below is guarded on
+// stripe_onboarding_complete still being false so only whichever path actually flips the row
+// sends the notification - this both de-dupes a resent account.updated event (Stripe can
+// redeliver it many times) and avoids a second notification when the polling path already won.
 async function handleAccountUpdated(account: Stripe.Account) {
   const supabase = createAdminClient()
 
@@ -128,11 +128,16 @@ async function handleAccountUpdated(account: Stripe.Account) {
   const onboardingComplete = Boolean(account.charges_enabled && account.payouts_enabled)
   if (!onboardingComplete) return
 
-  await supabase
+  const { data: updated } = await supabase
     .schema("users_domain")
     .from("profiles")
     .update({ stripe_onboarding_complete: true })
     .eq("id", profile.id)
+    .eq("stripe_onboarding_complete", false)
+    .select("id")
+    .maybeSingle()
+
+  if (!updated) return
 
   await createNotification({
     recipientId: profile.id,
