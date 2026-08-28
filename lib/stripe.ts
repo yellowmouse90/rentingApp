@@ -3,6 +3,8 @@ import "server-only"
 import Stripe from "stripe"
 import type { SupabaseClient } from "@supabase/supabase-js"
 import { createAdminClient } from "@/lib/supabase/admin"
+import { createNotification } from "@/lib/notifications/create"
+import { getServerLanguage } from "@/lib/i18n/server"
 
 let stripeInstance: Stripe | null = null
 
@@ -148,9 +150,14 @@ export async function upsertAuthorizedTransaction(
 }
 
 // Re-checks a Connect account's live status with Stripe and updates the cached
-// `stripe_onboarding_complete` flag if it drifted. Pages must call this after the user comes
-// back from Stripe onboarding, since nothing else keeps that flag in sync (no `account.updated`
-// webhook is configured).
+// `stripe_onboarding_complete` flag if it drifted. Pages call this after the user comes back
+// from Stripe onboarding (the fastest of the two paths that keep this flag in sync - see the
+// `account.updated` webhook handler for the other one), so it also races the webhook for the
+// same false->true transition. The update is guarded on the value we actually read
+// (`.eq("stripe_onboarding_complete", currentOnboardingComplete)`) so whichever of the two
+// paths gets there first is the only one that both flips the row and sends the notification -
+// the loser sees 0 rows affected and skips it, instead of the previous behavior where this
+// path never sent a notification at all.
 export async function syncStripeOnboardingStatus(
   supabase: SupabaseClient,
   userId: string,
@@ -162,11 +169,24 @@ export async function syncStripeOnboardingStatus(
     const onboardingComplete = Boolean(account.charges_enabled && account.payouts_enabled)
 
     if (onboardingComplete !== currentOnboardingComplete) {
-      await supabase
+      const { data: updated } = await supabase
         .schema("users_domain")
         .from("profiles")
         .update({ stripe_onboarding_complete: onboardingComplete })
         .eq("id", userId)
+        .eq("stripe_onboarding_complete", currentOnboardingComplete)
+        .select("id")
+        .maybeSingle()
+
+      if (updated && !currentOnboardingComplete && onboardingComplete) {
+        const language = await getServerLanguage()
+        await createNotification({
+          recipientId: userId,
+          actorId: null,
+          type: "stripe_onboarding_complete",
+          language,
+        })
+      }
     }
 
     return {
