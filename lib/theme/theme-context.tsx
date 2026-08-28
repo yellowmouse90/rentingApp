@@ -10,7 +10,7 @@ interface ThemeContextType {
   setTheme: (theme: ThemeMode) => void
 }
 
-const STORAGE_KEY = "toolshare_theme"
+const STORAGE_KEY = "pietro_theme"
 
 function getSystemTheme(): "light" | "dark" {
   if (typeof window === "undefined") return "light"

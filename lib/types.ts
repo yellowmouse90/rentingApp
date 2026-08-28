@@ -1,4 +1,4 @@
-// Database types for ToolShare
+// Database types for Pietro
 export interface Profile {
   id: string
   email: string

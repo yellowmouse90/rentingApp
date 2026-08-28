@@ -70,7 +70,9 @@
       "Bash(node -e \"require\\('pg'\\)\")",
       "Bash(npm init *)",
       "Bash(PG_CONN='postgres://postgres.ddosczkxolgphqgxjreh:2yj3eVGvPN4ETENk@aws-1-us-east-1.pooler.supabase.com:5432/postgres?sslmode=require' node check_grants.js)",
-      "Bash(PG_CONN='postgres://postgres.ddosczkxolgphqgxjreh:2yj3eVGvPN4ETENk@aws-1-us-east-1.pooler.supabase.com:5432/postgres' node check_grants.js)"
+      "Bash(PG_CONN='postgres://postgres.ddosczkxolgphqgxjreh:2yj3eVGvPN4ETENk@aws-1-us-east-1.pooler.supabase.com:5432/postgres' node check_grants.js)",
+      "Bash(node --env-file=.env.local scripts/_seed2/check.mjs)",
+      "Bash(node --env-file=.env.local scripts/_seed2/seed_more.mjs)"
     ],
     "additionalDirectories": [
       "C:\\Users\\Ricky\\AppData\\Local\\Temp\\claude\\c--GitHub-rentingApp\\2b51d868-a60e-49ba-b1dd-4a658c1c9003\\scratchpad\\node_modules"

@@ -1,4 +1,4 @@
-# ToolShare
+# Pietro
 
 A peer-to-peer tool rental platform. A Vinted-style marketplace where individuals can rent out their tools to others.
 

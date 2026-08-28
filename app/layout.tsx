@@ -17,7 +17,7 @@ const sora = Sora({ subsets: ["latin"], weight: ["600", "700"], variable: "--fon
 const NO_FLASH_THEME_SCRIPT = `
 (function () {
   try {
-    var stored = localStorage.getItem('toolshare_theme');
+    var stored = localStorage.getItem('pietro_theme');
     var isDark = stored === 'dark' || (stored !== 'light' && window.matchMedia('(prefers-color-scheme: dark)').matches);
     document.documentElement.classList.toggle('dark', isDark);
   } catch (e) {}
@@ -25,7 +25,7 @@ const NO_FLASH_THEME_SCRIPT = `
 `
 
 export const metadata: Metadata = {
-  title: "ToolShare - Noleggio Attrezzi tra Privati",
+  title: "Pietro - Noleggio Attrezzi tra Privati",
   description:
     "La piattaforma di sharing economy per noleggiare attrezzi da lavoro tra privati. Trova l'attrezzo che ti serve o metti a reddito i tuoi.",
   keywords: [

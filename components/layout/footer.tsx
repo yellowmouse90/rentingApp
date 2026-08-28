@@ -17,7 +17,7 @@ export function Footer() {
               <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
                 <Wrench className="h-4 w-4 text-primary-foreground" />
               </div>
-              <span className="text-lg font-bold text-foreground">ToolShare</span>
+              <span className="text-lg font-bold text-foreground">Pietro</span>
             </Link>
             <p className="mt-3 text-sm text-muted-foreground">
               {t("footer.description")}
@@ -91,7 +91,7 @@ export function Footer() {
 
         <div className="mt-8 border-t border-border pt-8">
           <p className="text-center text-sm text-muted-foreground">
-            &copy; {new Date().getFullYear()} ToolShare. {t("footer.rights")}
+            &copy; {new Date().getFullYear()} Pietro. {t("footer.rights")}
           </p>
         </div>
       </div>

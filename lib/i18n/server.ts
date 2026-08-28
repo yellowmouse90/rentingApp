@@ -423,7 +423,7 @@ const serverTranslations: Record<Language, Record<string, string>> = {
 
 export async function getServerLanguage(): Promise<Language> {
   const cookieStore = await cookies()
-  const lang = cookieStore.get("toolshare_language")?.value
+  const lang = cookieStore.get("pietro_language")?.value
 
   if (lang === "it" || lang === "en") {
     return lang

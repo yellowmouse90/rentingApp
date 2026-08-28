@@ -267,7 +267,7 @@ const translations: Record<Language, Record<string, string>> = {
     "how_it_works.steps.rent.detail3": "Restituiscilo in perfette condizioni e ricevi il rimborso della cauzione",
     
     // Benefits
-    "how_it_works.benefits.title": "Perché Scegliere Toolshare",
+    "how_it_works.benefits.title": "Perché Scegliere Pietro",
     "how_it_works.benefits.subtitle": "I vantaggi di noleggiare e prestare attrezzi",
     "how_it_works.benefits.save_money.title": "Risparmia Denaro",
     "how_it_works.benefits.save_money.description": "Noleggia attrezzi costosi a frazione del prezzo di acquisto. Perfetto per progetti occasionali.",
@@ -300,7 +300,7 @@ const translations: Record<Language, Record<string, string>> = {
     
     // CTA
     "how_it_works.cta.title": "Pronto a Iniziare?",
-    "how_it_works.cta.subtitle": "Unisciti a migliaia di utenti che stanno già risparmiando denaro e guadagnando con Toolshare.",
+    "how_it_works.cta.subtitle": "Unisciti a migliaia di utenti che stanno già risparmiando denaro e guadagnando con Pietro.",
     "how_it_works.cta.browse_button": "Sfoglia Annunci",
     "how_it_works.cta.publish_button": "Pubblica un Annuncio",
 
@@ -752,7 +752,7 @@ const translations: Record<Language, Record<string, string>> = {
     "how_it_works.steps.rent.detail3": "Return it in perfect condition and receive your deposit refund",
     
     // Benefits
-    "how_it_works.benefits.title": "Why Choose Toolshare",
+    "how_it_works.benefits.title": "Why Choose Pietro",
     "how_it_works.benefits.subtitle": "The benefits of renting and lending tools",
     "how_it_works.benefits.save_money.title": "Save Money",
     "how_it_works.benefits.save_money.description": "Rent expensive tools at a fraction of the purchase price. Perfect for occasional projects.",
@@ -785,7 +785,7 @@ const translations: Record<Language, Record<string, string>> = {
     
     // CTA
     "how_it_works.cta.title": "Ready to Get Started?",
-    "how_it_works.cta.subtitle": "Join thousands of users who are already saving money and earning with Toolshare.",
+    "how_it_works.cta.subtitle": "Join thousands of users who are already saving money and earning with Pietro.",
     "how_it_works.cta.browse_button": "Browse Listings",
     "how_it_works.cta.publish_button": "Publish a Listing",
 
@@ -993,7 +993,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     // Load language from localStorage
-    const savedLang = localStorage.getItem("toolshare_language") as Language
+    const savedLang = localStorage.getItem("pietro_language") as Language
     if (savedLang && (savedLang === "it" || savedLang === "en")) {
       setLanguageState(savedLang)
     } else {
@@ -1030,8 +1030,8 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
 
   const setLanguage = (lang: Language) => {
     setLanguageState(lang)
-    localStorage.setItem("toolshare_language", lang)
-    document.cookie = `toolshare_language=${lang}; path=/; max-age=31536000; samesite=lax`
+    localStorage.setItem("pietro_language", lang)
+    document.cookie = `pietro_language=${lang}; path=/; max-age=31536000; samesite=lax`
   }
 
   const t = (key: string): string => {
