@@ -1,4 +1,5 @@
 import Link from "next/link"
+import Image from "next/image"
 import type { Listing } from "@/lib/types"
 import { formatPrice, getConditionLabel } from "@/lib/utils"
 import { useLanguage } from "@/lib/i18n/language-context"
@@ -47,10 +48,12 @@ function ListingCard({ listing }: { listing: Listing }) {
       {/* Image */}
       <div className="relative aspect-[4/3] overflow-hidden bg-muted">
         {mainImage ? (
-          <img
+          <Image
             src={mainImage.image_url}
             alt={listing.title}
-            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+            fill
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+            className="object-cover transition-transform duration-300 group-hover:scale-105"
           />
         ) : (
           <div className="flex h-full items-center justify-center">
@@ -88,9 +91,11 @@ function ListingCard({ listing }: { listing: Listing }) {
         {owner && (
           <div className="mt-3 flex items-center gap-2 border-t border-border pt-3">
             {owner.avatar_url ? (
-              <img
+              <Image
                 src={owner.avatar_url}
                 alt={owner.display_name || "Utente"}
+                width={24}
+                height={24}
                 className="h-6 w-6 rounded-full object-cover"
               />
             ) : (

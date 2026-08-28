@@ -1,4 +1,5 @@
 import Link from "next/link"
+import Image from "next/image"
 import type { Listing } from "@/lib/types"
 import { formatPrice, getConditionLabel } from "@/lib/utils"
 import { useLanguage } from "@/lib/i18n/language-context"
@@ -48,10 +49,12 @@ function ListingCard({ listing }: { listing: Listing }) {
       {/* Image */}
       <div className="relative aspect-[4/3] overflow-hidden bg-muted">
         {mainImage ? (
-          <img
+          <Image
             src={mainImage.image_url}
             alt={listing.title}
-            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+            fill
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+            className="object-cover transition-transform duration-300 group-hover:scale-105"
           />
         ) : (
           <div className="flex h-full items-center justify-center">

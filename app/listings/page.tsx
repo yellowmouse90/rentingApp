@@ -1,8 +1,10 @@
+import type { Metadata } from "next"
 import { Suspense } from "react"
 import { createClient } from "@/lib/supabase/server"
 import { getServerI18n } from "@/lib/i18n/server"
 import { ListingsGridWithLocation } from "@/components/listings/listings-grid-location"
 import { DbErrorNotice } from "@/components/ui/db-error-notice"
+import { SITE_NAME } from "@/lib/seo"
 import { Search } from "lucide-react"
 
 interface ListingsPageProps {
@@ -17,6 +19,32 @@ interface ListingsPageProps {
     lng?: string
     radius?: string
   }>
+}
+
+export async function generateMetadata({ searchParams }: ListingsPageProps): Promise<Metadata> {
+  const params = await searchParams
+
+  if (!params.category) {
+    return {
+      title: "Tutti gli annunci",
+      description: `Sfoglia centinaia di attrezzi da lavoro disponibili per il noleggio tra privati vicino a te su ${SITE_NAME}.`,
+    }
+  }
+
+  const supabase = await createClient()
+  const { data: category } = await supabase
+    .schema("inventory_domain")
+    .from("categories")
+    .select("name")
+    .eq("slug", params.category)
+    .maybeSingle()
+
+  const categoryName = category?.name || params.category
+
+  return {
+    title: `Noleggio ${categoryName}`,
+    description: `Trova ${categoryName} da noleggiare tra privati vicino a te su ${SITE_NAME}.`,
+  }
 }
 
 export default async function ListingsPage({ searchParams }: ListingsPageProps) {

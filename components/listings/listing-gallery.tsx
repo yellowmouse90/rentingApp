@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import Image from "next/image"
 import { ImageIcon, ChevronLeft, ChevronRight, X } from "lucide-react"
 import { useLanguage } from "@/lib/i18n/language-context"
 
@@ -38,13 +39,16 @@ export function ListingGallery({ images, title }: ListingGalleryProps) {
       {/* Main Gallery */}
       <div className="relative overflow-hidden rounded-xl bg-muted">
         <div
-          className="aspect-[16/9] cursor-pointer"
+          className="relative aspect-[16/9] cursor-pointer"
           onClick={() => setIsFullscreen(true)}
         >
-          <img
+          <Image
             src={images[currentIndex].image_url}
             alt={`${title} - ${t("listing_gallery.image_alt")} ${currentIndex + 1}`}
-            className="h-full w-full object-cover"
+            fill
+            sizes="(max-width: 1024px) 100vw, 66vw"
+            priority={currentIndex === 0}
+            className="object-cover"
           />
         </div>
 
@@ -108,10 +112,12 @@ export function ListingGallery({ images, title }: ListingGalleryProps) {
                   : "border-transparent opacity-70 hover:opacity-100"
               }`}
             >
-              <img
+              <Image
                 src={image.image_url}
                 alt={`${title} - ${t("listing_gallery.thumbnail_alt")} ${index + 1}`}
-                className="h-full w-full object-cover"
+                fill
+                sizes="80px"
+                className="object-cover"
               />
             </button>
           ))}

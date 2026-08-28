@@ -1,16 +1,18 @@
+import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 import Link from "next/link"
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { getServerI18n } from "@/lib/i18n/server"
 import { formatPrice, getConditionLabel } from "@/lib/utils"
+import { getSiteUrl, SITE_NAME } from "@/lib/seo"
 import { ListingGallery } from "@/components/listings/listing-gallery"
 import { BookingCard } from "@/components/listings/booking-card"
 import { DbErrorNotice } from "@/components/ui/db-error-notice"
 import {
-  Star, 
-  Shield, 
-  Calendar, 
+  Star,
+  Shield,
+  Calendar,
   ChevronLeft,
   MessageSquare,
   Share2,
@@ -22,6 +24,43 @@ import {
 
 interface ListingDetailPageProps {
   params: Promise<{ id: string }>
+}
+
+export async function generateMetadata({ params }: ListingDetailPageProps): Promise<Metadata> {
+  const { id } = await params
+  const supabase = await createClient()
+
+  const { data: listing } = await supabase
+    .schema("inventory_domain")
+    .from("listings")
+    .select("title, description, price_per_day_cents, currency_code, images:listing_images(image_url, display_order)")
+    .eq("id", id)
+    .eq("is_active", true)
+    .single()
+
+  if (!listing) return {}
+
+  const price = formatPrice(listing.price_per_day_cents, listing.currency_code)
+  const description = listing.description
+    ? listing.description.slice(0, 155)
+    : `Noleggia "${listing.title}" da un privato a ${price}/giorno su ${SITE_NAME}.`
+  const image = (listing.images as { image_url: string; display_order: number }[] | null)
+    ?.sort((a, b) => a.display_order - b.display_order)[0]?.image_url
+
+  return {
+    title: listing.title,
+    description,
+    openGraph: {
+      title: listing.title,
+      description,
+      images: image ? [{ url: image }] : undefined,
+    },
+    twitter: {
+      card: image ? "summary_large_image" : "summary",
+      title: listing.title,
+      description,
+    },
+  }
 }
 
 export default async function ListingDetailPage({ params }: ListingDetailPageProps) {
@@ -139,8 +178,30 @@ export default async function ListingDetailPage({ params }: ListingDetailPagePro
     (a, b) => a.display_order - b.display_order
   ) || []
 
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: listing.title,
+    description: listing.description || undefined,
+    image: images.map((image) => image.image_url),
+    offers: {
+      "@type": "Offer",
+      price: (listing.price_per_day_cents / 100).toFixed(2),
+      priceCurrency: listing.currency_code,
+      availability: listing.is_available
+        ? "https://schema.org/InStock"
+        : "https://schema.org/OutOfStock",
+      url: `${getSiteUrl()}/listings/${listing.id}`,
+    },
+  }
+
   return (
     <div className="min-h-screen bg-background">
+      <script
+        type="application/ld+json"
+        // eslint-disable-next-line react/no-danger
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }}
+      />
       <DbErrorNotice message={dbErrors.length ? dbErrors.join(" | ") : null} />
       <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
         {/* Back button */}

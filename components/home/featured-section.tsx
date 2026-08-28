@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import Image from "next/image"
 import { ArrowRight } from "lucide-react"
 import { useLanguage } from "@/lib/i18n/language-context"
 
@@ -56,12 +57,14 @@ export function FeaturedSection({ listings }: FeaturedSectionProps) {
               href={`/listings/${listing.id}`}
               className="group overflow-hidden rounded-2xl border border-border bg-card transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-primary/5"
             >
-              <div className="aspect-[4/3] overflow-hidden bg-muted">
+              <div className="relative aspect-[4/3] overflow-hidden bg-muted">
                 {listing.images?.[0]?.image_url ? (
-                  <img
+                  <Image
                     src={listing.images[0].image_url}
                     alt={listing.title}
-                    className="h-full w-full object-cover transition-transform group-hover:scale-105"
+                    fill
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                    className="object-cover transition-transform group-hover:scale-105"
                   />
                 ) : (
                   <div className="flex h-full items-center justify-center text-4xl">🔧</div>

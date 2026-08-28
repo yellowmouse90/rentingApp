@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo, useRef } from "react"
 import Link from "next/link"
+import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
 import { useAuth } from "@/lib/auth/context"
@@ -430,10 +431,12 @@ function ListingCard({ listing, showDistance }: { listing: ListingWithDistance; 
       {/* Image */}
       <div className="relative aspect-[4/3] overflow-hidden bg-muted">
         {listing.first_image_url ? (
-          <img
+          <Image
             src={listing.first_image_url}
             alt={listing.title}
-            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+            fill
+            sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 33vw"
+            className="object-cover transition-transform duration-300 group-hover:scale-105"
           />
         ) : (
           <div className="flex h-full items-center justify-center">

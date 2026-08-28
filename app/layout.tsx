@@ -10,6 +10,7 @@ import { AuthProvider } from "@/lib/auth/context"
 import { ThemeProvider } from "@/lib/theme/theme-context"
 import { ToastProvider } from "@/components/ui/toast-provider"
 import { QueryErrorToast } from "@/components/ui/query-error-toast"
+import { getSiteUrl, SITE_NAME, DEFAULT_DESCRIPTION } from "@/lib/seo"
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" })
 const sora = Sora({ subsets: ["latin"], weight: ["600", "700"], variable: "--font-sora" })
@@ -24,10 +25,15 @@ const NO_FLASH_THEME_SCRIPT = `
 })();
 `
 
+const DEFAULT_TITLE = `${SITE_NAME} - Noleggio Attrezzi tra Privati`
+
 export const metadata: Metadata = {
-  title: "Pietro - Noleggio Attrezzi tra Privati",
-  description:
-    "La piattaforma di sharing economy per noleggiare attrezzi da lavoro tra privati. Trova l'attrezzo che ti serve o metti a reddito i tuoi.",
+  metadataBase: new URL(getSiteUrl()),
+  title: {
+    default: DEFAULT_TITLE,
+    template: `%s | ${SITE_NAME}`,
+  },
+  description: DEFAULT_DESCRIPTION,
   keywords: [
     "noleggio attrezzi",
     "sharing economy",
@@ -35,6 +41,18 @@ export const metadata: Metadata = {
     "attrezzi da lavoro",
     "tool rental",
   ],
+  openGraph: {
+    type: "website",
+    locale: "it_IT",
+    siteName: SITE_NAME,
+    title: DEFAULT_TITLE,
+    description: DEFAULT_DESCRIPTION,
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: DEFAULT_TITLE,
+    description: DEFAULT_DESCRIPTION,
+  },
 }
 
 export const viewport: Viewport = {
