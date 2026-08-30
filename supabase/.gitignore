@@ -1,0 +1,12 @@
+# Supabase
+.branches
+.temp
+
+# Generated: scripts/setup-test-db.mjs copies db/migrations/*.sql here so `supabase start`/
+# `db reset` pick them up. db/migrations/ (not this folder) is the source of truth.
+migrations
+
+# dotenvx
+.env.keys
+.env.local
+.env.*.local

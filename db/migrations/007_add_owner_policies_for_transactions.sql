@@ -13,16 +13,31 @@
 -- Reuses the existing rentals_domain.bypass_is_order_owner(order_uuid,
 -- user_uuid) SECURITY DEFINER helper, already used by rental_orders/
 -- rental_items policies, for consistency.
+--
+-- Wrapped in DO blocks (matching 005) so re-running this after a policy of
+-- the same name already exists is a no-op instead of an error.
 
-CREATE POLICY transactions_owner_select_policy ON rentals_domain.transactions
-  FOR SELECT USING (
-    rentals_domain.bypass_is_order_owner(order_id, auth.uid())
-  );
+DO $$
+BEGIN
+  CREATE POLICY transactions_owner_select_policy ON rentals_domain.transactions
+    FOR SELECT USING (
+      rentals_domain.bypass_is_order_owner(order_id, auth.uid())
+    );
+EXCEPTION
+  WHEN duplicate_object THEN
+    RAISE NOTICE 'transactions_owner_select_policy already exists, skipping';
+END $$;
 
-CREATE POLICY transactions_owner_update_policy ON rentals_domain.transactions
-  FOR UPDATE USING (
-    rentals_domain.bypass_is_order_owner(order_id, auth.uid())
-  )
-  WITH CHECK (
-    rentals_domain.bypass_is_order_owner(order_id, auth.uid())
-  );
+DO $$
+BEGIN
+  CREATE POLICY transactions_owner_update_policy ON rentals_domain.transactions
+    FOR UPDATE USING (
+      rentals_domain.bypass_is_order_owner(order_id, auth.uid())
+    )
+    WITH CHECK (
+      rentals_domain.bypass_is_order_owner(order_id, auth.uid())
+    );
+EXCEPTION
+  WHEN duplicate_object THEN
+    RAISE NOTICE 'transactions_owner_update_policy already exists, skipping';
+END $$;

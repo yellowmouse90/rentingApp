@@ -5,9 +5,21 @@
 -- existed. Add exclude_owner_id and apply it in the WHERE clause, before LIMIT/OFFSET, so pages
 -- are filled correctly.
 
-DROP FUNCTION IF EXISTS inventory_domain.search_listings_nearby(
-  double precision, double precision, double precision, text, text, integer, integer, text, integer, integer
-);
+-- Drop whatever signature currently exists (rather than hardcoding the pre-migration one) so
+-- this stays replayable regardless of starting state - e.g. against a freshly-dumped baseline
+-- that already has a later signature (see db/migrations/000_baseline.sql).
+DO $$
+DECLARE
+  sig text;
+BEGIN
+  FOR sig IN
+    SELECT p.oid::regprocedure::text
+    FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace
+    WHERE n.nspname = 'inventory_domain' AND p.proname = 'search_listings_nearby'
+  LOOP
+    EXECUTE format('DROP FUNCTION %s', sig);
+  END LOOP;
+END $$;
 
 CREATE OR REPLACE FUNCTION inventory_domain.search_listings_nearby(
   user_lat double precision,
