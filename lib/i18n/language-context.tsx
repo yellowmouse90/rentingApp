@@ -68,7 +68,6 @@ const translations: Record<Language, Record<string, string>> = {
     "listings.distance": "km di distanza",
     
     // Listing Detail
-    "listing.contact_owner": "Contatta il Proprietario",
     "listing.book_now": "Prenota Ora",
     "listing.description": "Descrizione",
     "listing.condition": "Condizione",
@@ -553,7 +552,6 @@ const translations: Record<Language, Record<string, string>> = {
     "listings.distance": "km away",
     
     // Listing Detail
-    "listing.contact_owner": "Contact Owner",
     "listing.book_now": "Book Now",
     "listing.description": "Description",
     "listing.condition": "Condition",

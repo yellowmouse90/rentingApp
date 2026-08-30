@@ -53,6 +53,7 @@ interface ListingWithDistance {
   category_name: string
   category_icon: string
   first_image_url: string | null
+  total_count?: number
 }
 
 export function ListingsGridWithLocation({
@@ -220,12 +221,12 @@ export function ListingsGridWithLocation({
         item_condition: initialParams.condition || null,
         page_limit: PAGE_SIZE,
         page_offset: pageNum * PAGE_SIZE,
+        exclude_owner_id: user?.id || null,
       })
 
     if (!error && data) {
-      const filtered = user?.id ? data.filter((listing: any) => listing.owner_id !== user.id) : data
-      setListings((prev) => (append ? [...prev, ...filtered] : filtered))
-      setTotalCount((prev) => (append ? prev + filtered.length : filtered.length))
+      setListings((prev) => (append ? [...prev, ...data] : data))
+      setTotalCount(data[0]?.total_count ?? 0)
       setHasMore(data.length === PAGE_SIZE)
       setPage(pageNum)
     } else {

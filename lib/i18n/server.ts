@@ -86,8 +86,6 @@ const serverTranslations: Record<Language, Record<string, string>> = {
     "listing_detail.owner": "Proprietario",
     "listing_detail.reviews": "recensioni",
     "listing_detail.member_since": "Membro dal",
-    "listing_detail.contact_owner": "Contatta",
-    "listing_detail.contact_owner_fallback": "il proprietario",
     "listing_detail.safe_rental": "Noleggio sicuro",
     "listing_detail.safe_rental_desc": "Tutti i pagamenti sono protetti. La cauzione viene trattenuta e rilasciata dopo il ritorno dell'attrezzo.",
 
@@ -293,8 +291,6 @@ const serverTranslations: Record<Language, Record<string, string>> = {
     "listing_detail.owner": "Owner",
     "listing_detail.reviews": "reviews",
     "listing_detail.member_since": "Member since",
-    "listing_detail.contact_owner": "Contact",
-    "listing_detail.contact_owner_fallback": "owner",
     "listing_detail.safe_rental": "Safe rental",
     "listing_detail.safe_rental_desc": "All payments are protected. The deposit is held and released after the tool is returned.",
 

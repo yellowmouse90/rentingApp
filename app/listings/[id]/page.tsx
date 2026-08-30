@@ -14,7 +14,6 @@ import {
   Shield,
   Calendar,
   ChevronLeft,
-  MessageSquare,
   Share2,
   Heart,
   Settings,
@@ -351,15 +350,6 @@ export default async function ListingDetailPage({ params }: ListingDetailPagePro
                   )}
                 </div>
               </div>
-              {!isOwner && (
-                <Link
-                  href={`/messages?listing=${listing.id}&user=${owner.id}`}
-                  className="mt-4 flex w-full items-center justify-center gap-2 rounded-lg border border-border py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-muted"
-                >
-                  <MessageSquare className="h-4 w-4" />
-                  {t("listing_detail.contact_owner")} {ownerDisplayName.split(" ")[0] || t("listing_detail.contact_owner_fallback")}
-                </Link>
-              )}
             </div>
 
             {/* Trust & Safety */}
