@@ -7,6 +7,7 @@ import { DEFAULT_PREFERENCES, type AlertType, type NotificationPreference } from
 type PreferencesMap = Record<AlertType, NotificationPreference>
 
 const BOOKING_TYPES: AlertType[] = [
+  "booking_requested",
   "booking_accepted",
   "booking_rejected",
   "booking_cancelled_by_renter",

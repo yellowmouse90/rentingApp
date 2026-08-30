@@ -1,4 +1,5 @@
 export const ALERT_TYPES = [
+  "booking_requested",
   "booking_accepted",
   "booking_rejected",
   "booking_cancelled_by_renter",
@@ -21,6 +22,7 @@ export interface NotificationPreference {
 // exists anywhere in this repo) - a missing row for a given alert type just
 // falls back to this default.
 export const DEFAULT_PREFERENCES: Record<AlertType, NotificationPreference> = {
+  booking_requested: { inApp: true, email: true },
   booking_accepted: { inApp: true, email: true },
   booking_rejected: { inApp: true, email: true },
   booking_cancelled_by_renter: { inApp: true, email: true },

@@ -21,6 +21,16 @@ function shortId(orderId?: string) {
 type CopyFn = (params: CopyParams) => { title: string; body: string }
 
 const COPY: Record<AlertType, Record<Language, CopyFn>> = {
+  booking_requested: {
+    it: (p) => ({
+      title: "Nuova richiesta di noleggio",
+      body: `${p.actorName ?? "Un utente"} ha inviato una richiesta di noleggio #${shortId(p.orderId)} per un tuo annuncio.`,
+    }),
+    en: (p) => ({
+      title: "New rental request",
+      body: `${p.actorName ?? "A user"} sent a rental request #${shortId(p.orderId)} for one of your listings.`,
+    }),
+  },
   booking_accepted: {
     it: (p) => ({
       title: "Prenotazione accettata",

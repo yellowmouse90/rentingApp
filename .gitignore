@@ -3,6 +3,9 @@ node_modules
 .vercel
 .env.local
 .env*.local
+# Holds real test-mode credentials (Stripe secret key, etc.) copied in from .env.local for
+# running tests against the local Supabase stack - see .env.test.example for the template.
+.env.test
 
 # Android (Capacitor)
 android/.gradle/
@@ -20,3 +23,4 @@ dist/
 # Playwright
 /test-results/
 /playwright-report/
+/.test-artifacts/

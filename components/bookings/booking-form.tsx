@@ -130,6 +130,12 @@ export function BookingForm({
         throw itemError
       }
 
+      // Best-effort: the owner's "new request" notification is never allowed to block getting
+      // the renter to their booking page, same posture as every other notification in this app.
+      fetch(`/api/bookings/${order.id}/notify-request`, { method: "POST" }).catch((notifyErr) => {
+        console.error("Booking notify-request error:", notifyErr)
+      })
+
       // Phase 1: request created, payment starts only after owner acceptance.
       router.push(`/bookings/${order.id}`)
     } catch (err) {
