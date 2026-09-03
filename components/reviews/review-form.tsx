@@ -65,16 +65,12 @@ export function ReviewForm({ bookingId, targetRole, context, onSubmitted }: Revi
   }
 
   return (
-    <div className="rounded-xl border border-border bg-card p-6">
-      <h2 className="text-lg font-semibold text-foreground">
-        {targetRole === "lender" ? t("reviews.review_lender_cta") : t("reviews.review_renter_cta")}
-      </h2>
-
+    <div>
       {error && (
-        <div className="mt-4 rounded-lg bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
+        <div className="mb-4 rounded-lg bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
       )}
 
-      <div className="mt-4">
+      <div>
         <p className="text-sm font-medium text-foreground">{t("reviews.overall_rating_label")}</p>
         <div className="mt-2">
           <StarRating value={overall} onChange={setOverall} size="lg" />

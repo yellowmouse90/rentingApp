@@ -6,6 +6,9 @@ import { format } from "date-fns"
 import type { Locale } from "date-fns"
 import { Calendar, Package, ChevronRight, ImageIcon } from "lucide-react"
 import { DbErrorNotice } from "@/components/ui/db-error-notice"
+import { ReviewButton } from "@/components/reviews/review-button"
+import { deriveReviewContext, isWithinReviewWindow } from "@/lib/reviews/rules"
+import type { ReviewContext } from "@/lib/types"
 
 export default async function BookingsPage() {
   const { t, dateLocale } = await getServerI18n()
@@ -28,7 +31,7 @@ export default async function BookingsPage() {
     ? await supabase
         .schema("rentals_domain")
         .from("rental_items")
-        .select("id, order_id, listing_id, start_date, end_date, status")
+        .select("id, order_id, listing_id, owner_id, start_date, end_date, status")
         .in("order_id", orderIds)
     : { data: [] as any[], error: null }
   if (orderItemsError) dbErrors.push(`${t("bookings.errors.order_items")}: ${orderItemsError.message}`)
@@ -44,6 +47,45 @@ export default async function BookingsPage() {
     : { data: [] as any[], error: null }
   if (listingsFromOrdersError) dbErrors.push(`${t("bookings.errors.listings_from_orders")}: ${listingsFromOrdersError.message}`)
 
+  // Review CTA eligibility (spec: show "Lascia una recensione" on a
+  // completed order's row once it's reviewable) - derive context per order
+  // from its lender's account_type (see lib/reviews/rules.ts,
+  // deriveReviewContext) rather than assuming p2p, and check which
+  // completed orders this renter already reviewed so the button only
+  // shows where it's actually actionable.
+  const completedOrderIds = (orders || [])
+    .filter((order) => order.status === "completed")
+    .map((order) => order.id)
+
+  const lenderOwnerIds = Array.from(
+    new Set(
+      (orderItems || [])
+        .filter((item) => completedOrderIds.includes(item.order_id))
+        .map((item) => item.owner_id)
+    )
+  )
+
+  const [{ data: lenderProfiles, error: lenderProfilesError }, { data: myLenderReviews, error: myReviewsError }] =
+    await Promise.all([
+      lenderOwnerIds.length
+        ? supabase.schema("users_domain").from("profiles").select("id, account_type").in("id", lenderOwnerIds)
+        : Promise.resolve({ data: [] as any[], error: null }),
+      completedOrderIds.length
+        ? supabase
+            .schema("reviews_domain")
+            .from("reviews")
+            .select("booking_id")
+            .eq("author_user_id", user.id)
+            .eq("target_role", "lender")
+            .in("booking_id", completedOrderIds)
+        : Promise.resolve({ data: [] as any[], error: null }),
+    ])
+  if (lenderProfilesError) dbErrors.push(`${t("bookings.errors.orders")}: ${lenderProfilesError.message}`)
+  if (myReviewsError) dbErrors.push(`${t("bookings.errors.orders")}: ${myReviewsError.message}`)
+
+  const accountTypeByOwnerId = new Map((lenderProfiles || []).map((p) => [p.id, p.account_type]))
+  const reviewedOrderIds = new Set((myLenderReviews || []).map((r) => r.booking_id))
+
   const itemsByOrderId = new Map((orderItems || []).map((item) => [item.order_id, item]))
   const listingsById = new Map((listingsFromOrders || []).map((listing) => [listing.id, listing]))
 
@@ -51,10 +93,20 @@ export default async function BookingsPage() {
     const item = itemsByOrderId.get(order.id)
     const listing = item ? listingsById.get(item.listing_id) : null
 
+    const canReview =
+      order.status === "completed" &&
+      !reviewedOrderIds.has(order.id) &&
+      isWithinReviewWindow(order.updated_at)
+    const reviewContext: ReviewContext | null = canReview
+      ? deriveReviewContext((item ? accountTypeByOwnerId.get(item.owner_id) : undefined) ?? "individual")
+      : null
+
     return {
       ...order,
       item,
       listing,
+      canReview,
+      reviewContext,
     }
   })
 
@@ -193,43 +245,48 @@ function OrderCard({
   const mainImage = listing?.images?.sort((a: any, b: any) => a.display_order - b.display_order)[0]
 
   return (
-    <Link
-      href={`/bookings/${order.id}`}
-      className="flex items-center gap-4 rounded-xl border border-border bg-card p-4 transition-colors hover:border-primary/50"
-    >
-      {mainImage ? (
-        <img
-          src={mainImage.image_url}
-          alt={listing?.title || t("bookings.removed_listing")}
-          className="h-20 w-20 rounded-lg object-cover"
-        />
-      ) : (
-        <div className="flex h-20 w-20 items-center justify-center rounded-lg bg-muted">
-          <ImageIcon className="h-8 w-8 text-muted-foreground/50" />
+    <div className="flex items-center gap-4 rounded-xl border border-border bg-card p-4 transition-colors hover:border-primary/50">
+      <Link href={`/bookings/${order.id}`} className="flex min-w-0 flex-1 items-center gap-4">
+        {mainImage ? (
+          <img
+            src={mainImage.image_url}
+            alt={listing?.title || t("bookings.removed_listing")}
+            className="h-20 w-20 rounded-lg object-cover"
+          />
+        ) : (
+          <div className="flex h-20 w-20 items-center justify-center rounded-lg bg-muted">
+            <ImageIcon className="h-8 w-8 text-muted-foreground/50" />
+          </div>
+        )}
+
+        <div className="min-w-0 flex-1">
+          <h3 className="font-semibold text-foreground truncate">
+            {listing?.title || t("bookings.removed_listing")}
+          </h3>
+          <div className="mt-1 flex items-center gap-2 text-sm text-muted-foreground">
+            <Calendar className="h-4 w-4" />
+            {item?.start_date ? format(new Date(item.start_date), "d MMM", { locale: dateLocale }) : "-"} -{" "}
+            {item?.end_date ? format(new Date(item.end_date), "d MMM yyyy", { locale: dateLocale }) : "-"}
+          </div>
+          <div className="mt-2 flex flex-wrap items-center gap-3">
+            <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${getRentalStatusColor(order.status)}`}>
+              {getRentalStatusLabel(order.status, t)}
+            </span>
+            <span className="text-sm font-medium text-foreground">
+              {formatPrice(order.grand_total_cents, order.currency_code)}
+            </span>
+          </div>
         </div>
+      </Link>
+
+      {order.canReview && order.reviewContext && (
+        <ReviewButton bookingId={order.id} targetRole="lender" context={order.reviewContext} variant="compact" />
       )}
 
-      <div className="flex-1 min-w-0">
-        <h3 className="font-semibold text-foreground truncate">
-          {listing?.title || t("bookings.removed_listing")}
-        </h3>
-        <div className="mt-1 flex items-center gap-2 text-sm text-muted-foreground">
-          <Calendar className="h-4 w-4" />
-          {item?.start_date ? format(new Date(item.start_date), "d MMM", { locale: dateLocale }) : "-"} -{" "}
-          {item?.end_date ? format(new Date(item.end_date), "d MMM yyyy", { locale: dateLocale }) : "-"}
-        </div>
-        <div className="mt-2 flex items-center gap-3">
-          <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${getRentalStatusColor(order.status)}`}>
-            {getRentalStatusLabel(order.status, t)}
-          </span>
-          <span className="text-sm font-medium text-foreground">
-            {formatPrice(order.grand_total_cents, order.currency_code)}
-          </span>
-        </div>
-      </div>
-
-      <ChevronRight className="h-5 w-5 text-muted-foreground" />
-    </Link>
+      <Link href={`/bookings/${order.id}`} aria-label={listing?.title || t("bookings.removed_listing")}>
+        <ChevronRight className="h-5 w-5 text-muted-foreground" />
+      </Link>
+    </div>
   )
 }
 
