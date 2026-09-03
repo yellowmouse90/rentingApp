@@ -44,6 +44,9 @@ test.describe("booking_requested (new request notification)", () => {
       expect(notification?.type).toBe("booking_requested")
       expect(notification?.title).toBe("Nuova richiesta di noleggio")
       expect(notification?.actor_id).toBe(scenario.renter.id)
+      // Regression guard: createNotification() used to drop the top-level orderId when building
+      // copy params, so every notification body rendered a bare "#" instead of the order number.
+      expect(notification?.body).toContain(`#${scenario.orderId.slice(0, 8)}`)
 
       // No real RESEND_API_KEY in .env.test (by design - see conversation history): this is the
       // only observable proof the email channel was actually attempted, not skipped because

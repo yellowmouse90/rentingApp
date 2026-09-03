@@ -30,7 +30,10 @@ export async function createNotification(params: CreateNotificationParams): Prom
 
     if (!preference.inApp && !preference.email) return
 
-    const { title, body } = getNotificationCopy(params.type, params.language, params.copyParams ?? {})
+    const { title, body } = getNotificationCopy(params.type, params.language, {
+      ...params.copyParams,
+      orderId: params.orderId,
+    })
     const linkUrl = getNotificationLinkUrl(params.type, params.orderId)
 
     if (preference.inApp) {
