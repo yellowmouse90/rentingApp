@@ -294,21 +294,23 @@ export default async function BookingDetailPage({ params }: BookingDetailPagePro
               {isRenter ? t("booking_detail.owner") : t("booking_detail.renter")}
             </h2>
             <div className="mt-4 flex items-center gap-4">
-              {otherParty?.avatar_url ? (
-                <img
-                  src={otherParty.avatar_url}
-                  alt={otherParty.display_name || t("booking_detail.default_user")}
-                  className="h-12 w-12 rounded-full object-cover"
-                />
-              ) : (
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary text-lg font-medium text-primary-foreground">
-                  {(otherParty?.display_name || "U").slice(0, 2).toUpperCase()}
-                </div>
-              )}
+              <Link href={`/users/${otherParty.id}`}>
+                {otherParty?.avatar_url ? (
+                  <img
+                    src={otherParty.avatar_url}
+                    alt={otherParty.display_name || t("booking_detail.default_user")}
+                    className="h-12 w-12 rounded-full object-cover"
+                  />
+                ) : (
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary text-lg font-medium text-primary-foreground">
+                    {(otherParty?.display_name || "U").slice(0, 2).toUpperCase()}
+                  </div>
+                )}
+              </Link>
               <div>
-                <p className="font-medium text-foreground">
+                <Link href={`/users/${otherParty.id}`} className="font-medium text-foreground hover:underline">
                   {otherParty?.display_name || t("booking_detail.default_user")}
-                </p>
+                </Link>
                 <p className="text-sm text-muted-foreground">{otherParty?.email}</p>
               </div>
             </div>
