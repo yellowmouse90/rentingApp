@@ -98,7 +98,9 @@ export async function createTestOrder(supabase: SupabaseClient, opts: CreateOrde
   const subtotal = dailyRate * totalDays
   const serviceFee = Math.round(subtotal * 0.1)
   const deposit = 0
-  const grandTotal = subtotal + serviceFee + deposit
+  // The renter is charged the subtotal (+ deposit) only - the service fee is deducted from the
+  // owner's payout instead, matching app/bookings/new/page.tsx and create-checkout/transition.
+  const grandTotal = subtotal + deposit
 
   const { data: order, error: orderError } = await supabase
     .schema("rentals_domain")

@@ -267,10 +267,12 @@ export default async function BookingDetailPage({ params }: BookingDetailPagePro
                 <span className="text-muted-foreground">{t("booking_detail.subtotal")}</span>
                 <span className="text-foreground">{formatPrice(order.subtotal_cents, order.currency_code)}</span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">{t("booking_detail.service_fee")}</span>
-                <span className="text-foreground">{formatPrice(order.service_fee_cents, order.currency_code)}</span>
-              </div>
+              {isOwner && (
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">{t("booking_detail.service_fee")}</span>
+                  <span className="text-foreground">{formatPrice(order.service_fee_cents, order.currency_code)}</span>
+                </div>
+              )}
               {order.total_deposit_cents > 0 && (
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">{t("booking_detail.deposit")}</span>

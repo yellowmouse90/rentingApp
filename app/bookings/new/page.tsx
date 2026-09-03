@@ -57,10 +57,13 @@ export default async function NewBookingPage({ searchParams }: NewBookingPagePro
   // Calculate pricing
   const totalDays = calculateDays(startDate, endDate)
   const subtotal = calculateRentalPrice(listing.price_per_day_cents, listing.price_per_week_cents, totalDays)
+  // The platform's commission is deducted from the owner's payout at capture time (see
+  // app/api/bookings/[id]/transition/route.ts), not added on top of what the renter pays -
+  // it's still computed here so it can be stored on the order for that later deduction.
   const serviceFee = calculateServiceFee(subtotal)
   const deposit = listing.deposit_cents
-  const totalToPayNow = subtotal + serviceFee
-  const grandTotal = subtotal + serviceFee + deposit
+  const totalToPayNow = subtotal
+  const grandTotal = subtotal + deposit
 
   const { data: ownerProfile, error: ownerProfileError } = await supabase
     .schema("users_domain")
@@ -163,10 +166,6 @@ export default async function NewBookingPage({ searchParams }: NewBookingPagePro
                     {formatPrice(listing.price_per_day_cents, listing.currency_code)} x {totalDays} {t("booking_new.days")}
                   </span>
                   <span className="text-foreground">{formatPrice(subtotal, listing.currency_code)}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">{t("booking_new.service_fee")}</span>
-                  <span className="text-foreground">{formatPrice(serviceFee, listing.currency_code)}</span>
                 </div>
                 {deposit > 0 && (
                   <div className="flex justify-between text-sm">
