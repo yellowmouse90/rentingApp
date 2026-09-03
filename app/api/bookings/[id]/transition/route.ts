@@ -263,7 +263,11 @@ export async function POST(request: NextRequest, { params }: PageParams) {
         return NextResponse.json({ error: "Transazione autorizzata non trovata" }, { status: 400 })
       }
 
-      const amountToCapture = Number(order.subtotal_cents || 0) + Number(order.service_fee_cents || 0)
+      // The renter was only ever authorized for the subtotal (+ deposit, released separately -
+      // see create-checkout), never the service fee, so only the subtotal is captured here. The
+      // platform's commission comes out of the owner's payout via application_fee_amount below,
+      // rather than being charged to the renter on top.
+      const amountToCapture = Number(order.subtotal_cents || 0)
 
       if (!Number.isFinite(amountToCapture) || amountToCapture <= 0) {
         return NextResponse.json({ error: "Importo di cattura non valido" }, { status: 400 })

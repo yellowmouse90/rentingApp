@@ -7,8 +7,8 @@ import { useLanguage } from "@/lib/i18n/language-context"
 import { format, addDays, eachDayOfInterval, isSameDay, isAfter, isBefore, startOfDay } from "date-fns"
 import { it, enUS } from "date-fns/locale"
 import type { Listing } from "@/lib/types"
-import { formatPrice, calculateDays, calculateRentalPrice, calculateServiceFee } from "@/lib/utils"
-import { Calendar, ChevronLeft, ChevronRight, Info, Settings, Package } from "lucide-react"
+import { formatPrice, calculateDays, calculateRentalPrice } from "@/lib/utils"
+import { Calendar, ChevronLeft, ChevronRight, Settings, Package } from "lucide-react"
 
 interface BookingCardProps {
   listing: Listing
@@ -93,9 +93,11 @@ export function BookingCard({ listing, bookings, exceptions, isOwner, isLoggedIn
   const subtotal = startDate && endDate
     ? calculateRentalPrice(listing.price_per_day_cents, listing.price_per_week_cents, totalDays)
     : 0
-  const serviceFee = calculateServiceFee(subtotal)
   const deposit = listing.deposit_cents
-  const totalToPayNow = subtotal + serviceFee
+  // No service fee is shown to the renter - the platform's cut comes out of the owner's
+  // payout instead (see calculateServiceFee/app/api/bookings/[id]/transition/route.ts), so
+  // what the renter pays now is just the rental subtotal.
+  const totalToPayNow = subtotal
   const totalAuthorization = totalToPayNow + deposit
 
   // Generate calendar days
@@ -276,13 +278,6 @@ export function BookingCard({ listing, bookings, exceptions, isOwner, isLoggedIn
               {formatPrice(listing.price_per_day_cents, listing.currency_code)} x {totalDays} {t("booking.days")}
             </span>
             <span className="text-foreground">{formatPrice(subtotal, listing.currency_code)}</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="flex items-center gap-1 text-muted-foreground">
-              {t("booking.service_fee")}
-              <Info className="h-3 w-3" />
-            </span>
-            <span className="text-foreground">{formatPrice(serviceFee, listing.currency_code)}</span>
           </div>
           {deposit > 0 && (
             <div className="flex justify-between">

@@ -66,9 +66,11 @@ export async function POST(request: NextRequest) {
 
     const amount = order.grand_total_cents
     const currency = String(order.currency_code || "EUR").trim().toLowerCase()
-    // Only subtotal + service fee are captured at handover (the deposit is authorized but
-    // released, never captured), so the platform fee must be based on that same amount -
-    // otherwise the fee could exceed the captured amount and the later capture would fail.
+    // The renter is never charged the service fee directly - only the subtotal is captured at
+    // handover (the deposit is authorized but released, never captured; see mark_returned_ok in
+    // app/api/bookings/[id]/transition/route.ts). The platform's commission instead comes out of
+    // the owner's payout via application_fee_amount, which Stripe subtracts from the captured
+    // amount before transferring the remainder to the connected account.
     const platformFee = Number(order.service_fee_cents || 0)
 
     // Create checkout session with manual capture: funds are authorized, not captured.
