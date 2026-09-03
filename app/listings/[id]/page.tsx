@@ -64,7 +64,7 @@ export async function generateMetadata({ params }: ListingDetailPageProps): Prom
 
 export default async function ListingDetailPage({ params }: ListingDetailPageProps) {
   const { id } = await params
-  const { t, intlLocale } = await getServerI18n()
+  const { t, language, intlLocale } = await getServerI18n()
   const supabase = await createClient()
 
   // Get current user
@@ -76,7 +76,7 @@ export default async function ListingDetailPage({ params }: ListingDetailPagePro
     .from("listings")
     .select(`
       *,
-      category:categories(id, name, slug),
+      category:categories(id, name, slug, translations:category_translations(language_code, name)),
       images:listing_images(id, image_url, display_order)
     `)
     .eq("id", id)
@@ -85,6 +85,12 @@ export default async function ListingDetailPage({ params }: ListingDetailPagePro
   if (error || !listing) {
     notFound()
   }
+
+  const category = listing.category as
+    | { id: string; name: string; slug: string; translations: { language_code: string; name: string }[] | null }
+    | null
+  const categoryName =
+    category?.translations?.find((tr) => tr.language_code === language)?.name || category?.name
 
   const isOwner = user?.id === listing.owner_id
 
@@ -231,12 +237,12 @@ export default async function ListingDetailPage({ params }: ListingDetailPagePro
                   <h1 className="font-heading text-2xl font-bold tracking-[-0.01em] text-foreground sm:text-3xl">
                     {listing.title}
                   </h1>
-                  {listing.category && (
+                  {category && (
                     <Link
-                      href={`/listings?category=${(listing.category as { slug: string }).slug}`}
+                      href={`/listings?category=${category.slug}`}
                       className="mt-1 text-sm text-primary hover:underline"
                     >
-                      {(listing.category as { name: string }).name}
+                      {categoryName}
                     </Link>
                   )}
                 </div>
