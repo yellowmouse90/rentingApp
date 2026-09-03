@@ -504,6 +504,7 @@ const translations: Record<Language, Record<string, string>> = {
     "notifications.types.review_received": "Nuova recensione ricevuta",
 
     "reviews.leave_review_title": "Lascia una recensione",
+    "reviews.leave_review_cta": "Lascia una recensione",
     "reviews.review_lender_cta": "Recensisci il prestatore",
     "reviews.review_renter_cta": "Recensisci il noleggiatore",
     "reviews.overall_rating_label": "Valutazione complessiva",
@@ -1027,6 +1028,7 @@ const translations: Record<Language, Record<string, string>> = {
     "notifications.types.review_received": "New review received",
 
     "reviews.leave_review_title": "Leave a review",
+    "reviews.leave_review_cta": "Leave a review",
     "reviews.review_lender_cta": "Review the lender",
     "reviews.review_renter_cta": "Review the renter",
     "reviews.overall_rating_label": "Overall rating",

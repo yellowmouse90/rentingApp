@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react"
 import { Check, Clock } from "lucide-react"
 import { useLanguage } from "@/lib/i18n/language-context"
 import type { ReviewContext, ReviewTargetRole } from "@/lib/types"
-import { ReviewForm } from "./review-form"
+import { ReviewButton } from "./review-button"
 
 interface RoleStatus {
   target_role: ReviewTargetRole
@@ -52,20 +52,23 @@ export function BookingReviewSection({ bookingId }: BookingReviewSectionProps) {
 
   return (
     <div className="space-y-6">
-      {status.roles.map((role) =>
-        role.can_submit ? (
-          <ReviewForm
-            key={role.target_role}
-            bookingId={bookingId}
-            targetRole={role.target_role}
-            context={status.context}
-            onSubmitted={load}
-          />
-        ) : (
-          <div key={role.target_role} className="rounded-xl border border-border bg-card p-6">
-            <h2 className="text-lg font-semibold text-foreground">
-              {role.target_role === "lender" ? t("reviews.review_lender_cta") : t("reviews.review_renter_cta")}
-            </h2>
+      {status.roles.map((role) => (
+        <div key={role.target_role} className="rounded-xl border border-border bg-card p-6">
+          <h2 className="text-lg font-semibold text-foreground">
+            {role.target_role === "lender" ? t("reviews.review_lender_cta") : t("reviews.review_renter_cta")}
+          </h2>
+
+          {role.can_submit ? (
+            <div className="mt-4">
+              <ReviewButton
+                bookingId={bookingId}
+                targetRole={role.target_role}
+                context={status.context}
+                onSubmitted={load}
+                variant="card"
+              />
+            </div>
+          ) : (
             <p className="mt-2 flex items-center gap-2 text-sm text-muted-foreground">
               {role.reviewed ? (
                 <>
@@ -80,9 +83,9 @@ export function BookingReviewSection({ bookingId }: BookingReviewSectionProps) {
                 </>
               )}
             </p>
-          </div>
-        )
-      )}
+          )}
+        </div>
+      ))}
     </div>
   )
 }
