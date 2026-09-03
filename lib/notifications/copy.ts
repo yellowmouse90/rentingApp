@@ -131,6 +131,16 @@ const COPY: Record<AlertType, Record<Language, CopyFn>> = {
       body: "Your Stripe account is ready: you can now receive payments for your rentals.",
     }),
   },
+  review_received: {
+    it: (p) => ({
+      title: "Nuova recensione ricevuta",
+      body: `${p.actorName ?? "Un utente"} ti ha lasciato una recensione per il noleggio #${shortId(p.orderId)}.`,
+    }),
+    en: (p) => ({
+      title: "New review received",
+      body: `${p.actorName ?? "A user"} left you a review for rental #${shortId(p.orderId)}.`,
+    }),
+  },
 }
 
 export function getNotificationCopy(type: AlertType, language: Language, params: CopyParams) {

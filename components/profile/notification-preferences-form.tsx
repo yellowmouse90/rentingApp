@@ -19,6 +19,8 @@ const BOOKING_TYPES: AlertType[] = [
 
 const PAYMENT_TYPES: AlertType[] = ["payment_succeeded", "payment_failed", "stripe_onboarding_complete"]
 
+const REVIEW_TYPES: AlertType[] = ["review_received"]
+
 interface ChannelSelectorProps {
   preference: NotificationPreference
   onChange: (next: NotificationPreference) => void
@@ -133,6 +135,7 @@ export function NotificationPreferencesForm() {
       {error && <p className="text-sm text-destructive">{error}</p>}
       {renderGroup(t("notifications.prefs.section_bookings"), BOOKING_TYPES)}
       {renderGroup(t("notifications.prefs.section_payments"), PAYMENT_TYPES)}
+      {renderGroup(t("notifications.prefs.section_reviews"), REVIEW_TYPES)}
     </div>
   )
 }

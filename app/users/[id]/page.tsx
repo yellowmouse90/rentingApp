@@ -7,6 +7,8 @@ import { getServerI18n } from "@/lib/i18n/server"
 import { formatPrice, getConditionLabel } from "@/lib/utils"
 import { SITE_NAME } from "@/lib/seo"
 import { DbErrorNotice } from "@/components/ui/db-error-notice"
+import { ReviewsSection } from "@/components/reviews/reviews-section"
+import { deriveReviewContext } from "@/lib/reviews/rules"
 import { Star, Calendar, ChevronLeft, ImageIcon, Package } from "lucide-react"
 import type { Listing } from "@/lib/types"
 
@@ -53,7 +55,7 @@ export default async function UserProfilePage({ params }: UserProfilePageProps) 
     .schema("users_domain")
     .from("profiles")
     .select(
-      "id, display_name, email, avatar_url, bio, average_rating_as_owner, total_reviews_as_owner, created_at"
+      "id, display_name, email, avatar_url, bio, account_type, average_rating_as_owner, total_reviews_as_owner, created_at"
     )
     .eq("id", id)
     .maybeSingle()
@@ -154,6 +156,21 @@ export default async function UserProfilePage({ params }: UserProfilePageProps) 
             </div>
           </div>
         </div>
+
+        {/* Reviews - context follows this profile's own account_type
+            (business -> ferramenta, individual -> p2p, see
+            lib/reviews/rules.ts) rather than being hardcoded, since the
+            platform currently runs pure P2P (no ferramenta accounts) and
+            hardcoding 'ferramenta' here would leave this list empty
+            forever. average_rating_as_owner above already aggregates
+            across every context; this section shows the individual
+            reviews and tag breakdown behind it for whichever channel this
+            profile actually reviews on as a lender. */}
+        <ReviewsSection
+          userId={profile.id}
+          role="lender"
+          context={deriveReviewContext((profile.account_type as "individual" | "business") ?? "individual")}
+        />
 
         {/* Listings */}
         <div className="mt-8">

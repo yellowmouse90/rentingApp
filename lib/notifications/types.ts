@@ -10,6 +10,7 @@ export const ALERT_TYPES = [
   "payment_succeeded",
   "payment_failed",
   "stripe_onboarding_complete",
+  "review_received",
 ] as const
 
 export type AlertType = (typeof ALERT_TYPES)[number]
@@ -34,4 +35,5 @@ export const DEFAULT_PREFERENCES: Record<AlertType, NotificationPreference> = {
   payment_succeeded: { inApp: true, email: true },
   payment_failed: { inApp: true, email: true },
   stripe_onboarding_complete: { inApp: true, email: true },
+  review_received: { inApp: true, email: true },
 }

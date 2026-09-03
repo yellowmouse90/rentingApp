@@ -11,6 +11,9 @@ export interface Profile {
   stripe_customer_id: string | null
   stripe_account_id: string | null
   stripe_onboarding_complete: boolean
+  // "business" = account ferramenta (agisce solo come lender, mai come
+  // renter - vedi lib/reviews/rules.ts). Aggiunto in migration 012.
+  account_type: "individual" | "business"
   average_rating_as_owner: number
   average_rating_as_renter: number
   total_reviews_as_owner: number
@@ -132,17 +135,38 @@ export interface RentalItem {
   owner?: Profile
 }
 
+// See lib/reviews/rules.ts for the business rules governing these roles/
+// contexts (window, sub-rating keys, visibility) and db/migrations/012_*.
+export type ReviewTargetRole = "lender" | "renter"
+export type ReviewContext = "ferramenta" | "p2p"
+
 export interface Review {
   id: string
-  rental_item_id: string
-  reviewer_id: string
-  reviewee_id: string
-  review_type: "owner" | "renter"
-  rating: number
+  booking_id: string
+  author_user_id: string
+  target_user_id: string
+  target_role: ReviewTargetRole
+  context: ReviewContext
+  overall_rating: number
+  sub_ratings: Record<string, number>
   comment: string | null
+  tags: string[]
+  visible: boolean
+  visible_at: string | null
   created_at: string
+  updated_at: string
   // Joined fields
-  reviewer?: Profile
+  author?: Profile
+}
+
+export interface UserRatingSummary {
+  user_id: string
+  role: ReviewTargetRole
+  context: ReviewContext
+  average_rating: number
+  review_count: number
+  tag_frequency: Record<string, number>
+  updated_at: string
 }
 
 export interface Conversation {
