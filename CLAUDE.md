@@ -30,8 +30,9 @@ All tables live in dedicated schemas, always accessed via `.schema("...")` on th
 - `rentals_domain` — `rental_orders`, `rental_items`, `transactions`
 - `interactions_domain` — `conversations`, `messages`
 - `notifications_domain` — `notifications`
+- `reviews_domain` — `reviews`, `user_rating_summaries`
 
-Migrations are plain numbered SQL files in `db/migrations/` (001…008), applied by hand against Supabase — there is no migration runner/CLI wired up in this repo. Shared TS types for these tables are hand-maintained in `lib/types.ts` (core rows) and `lib/types/chat.ts` (chat-specific) — keep them in sync manually when a migration changes a table shape.
+Migrations are plain numbered SQL files in `db/migrations/` (001…012), applied by hand against Supabase — there is no migration runner/CLI wired up in this repo. Shared TS types for these tables are hand-maintained in `lib/types.ts` (core rows) and `lib/types/chat.ts` (chat-specific) — keep them in sync manually when a migration changes a table shape.
 
 ### Two Supabase clients — this distinction is the source of most subtle bugs in this codebase
 
@@ -69,6 +70,16 @@ One conversation per `rental_order_id` (unique constraint), between the two `ren
 Always written by trusted server code via the admin client (`lib/notifications/create.ts`) — there is deliberately no `authenticated`-role INSERT policy, since a user's own session has no legitimate reason to write into someone else's inbox. Copy/i18n for notification types lives in `lib/notifications/copy.ts`; email sending in `lib/notifications/email.ts` (Resend).
 
 Realtime `postgres_changes` events are **not** actually scoped by RLS on the wire in this project (confirmed the hard way in `lib/chat/realtime.ts`'s `useRealtimeConversations`, which has to guard client-side because `messages` has no column to filter on) — do not assume a bare `recipient_id = auth.uid()` SELECT policy is enough to keep a channel private. Because `notifications` *does* have a `recipient_id` column, `lib/notifications/use-unread-count.tsx` subscribes with an explicit `filter: recipient_id=eq.<userId>` rather than relying on RLS; keep using a server-side filter (same pattern as `useRealtimeMessages`'s `conversation_id` filter) for any new subscription on this table, and fall back to the client-side-guard pattern only for tables that genuinely have no column to filter on.
+
+### Reviews (`reviews_domain`)
+
+Bidirectional and role-aware, not a single "user rating": a review has a `target_role` (`lender` = chi presta, `renter` = chi noleggia) and a `context` (`ferramenta` = business-account lender, one-way publish; `p2p` = two private users, double-blind publish), derived server-side from the booking — never trusted from the request body (`app/api/bookings/[id]/reviews/route.ts`, and re-enforced at the DB level by `reviews_domain.can_submit_review`, the *actual* RLS authorization boundary for `INSERT` since PostgREST is reachable directly with the caller's own session). `context` is derived from whether the booking's lender is a `business` account (`profiles.account_type`, added in migration 012) — a "ferramenta" account by convention. A completed booking can carry up to two independent review rows (one per direction); they never block on each other to be *written*, only to become *visible*.
+
+Only `rentals_domain.rental_orders.status = 'completed'` bookings are reviewable, within a 14-day window from `updated_at` (the order's completion timestamp, since nothing updates a completed order afterwards) — see `REVIEW_WINDOW_DAYS` in `lib/reviews/rules.ts`, mirrored in the DB function.
+
+Visibility (`reviews_domain.apply_visibility_rules`, a `BEFORE INSERT` trigger): `ferramenta`+`lender` reviews publish immediately (no retaliation risk, one-way channel). `p2p` reviews start hidden and flip to visible — both sides at once — the instant a matching counterpart review exists for the same booking; a lone `p2p` review that's still hidden 14 days after booking closure is force-revealed by the `app/api/cron/reveal-expired-reviews` route (Vercel Cron, see `vercel.json`, guarded by `CRON_SECRET`), which — like notification creation — has no request-scoped session and legitimately uses the admin client for that cross-user write. `ferramenta`+`renter` reviews (an owner's internal note on a customer, spec'd as phase-1-optional "controllo qualità clienti") never go visible at all in this iteration — there is no staff UI reading them yet.
+
+`reviews_domain.user_rating_summaries` (one row per `user_id`/`role`/`context`) is kept fresh by an `AFTER INSERT OR UPDATE` trigger rather than a materialized view, to avoid refresh-lag on top of the cron job already needed for visibility. The same trigger also updates the pre-existing `profiles.average_rating_as_owner`/`average_rating_as_renter`/`total_reviews_as_owner`/`total_reviews_as_renter` columns (aggregated across context) so `app/users/[id]/page.tsx` and `search_listings_nearby` keep working unchanged. Phase 1 UI only surfaces the `lender`/`ferramenta` combination publicly (`components/reviews/reviews-section.tsx`); the full `p2p` schema exists already so enabling it later is a UI/flag flip, not a migration.
 
 ### Auth
 

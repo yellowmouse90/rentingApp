@@ -5,6 +5,7 @@ import { getServerI18n } from "@/lib/i18n/server"
 import { formatPrice, getRentalStatusLabel, getRentalStatusColor } from "@/lib/utils"
 import { format } from "date-fns"
 import { BookingActions } from "@/components/bookings/booking-actions"
+import { BookingReviewSection } from "@/components/reviews/booking-review-section"
 import { InitiateChat } from "@/components/chat/initiate-chat"
 import { DbErrorNotice } from "@/components/ui/db-error-notice"
 import {
@@ -347,6 +348,8 @@ export default async function BookingDetailPage({ params }: BookingDetailPagePro
               </p>
             </div>
           )}
+
+          {order.status === "completed" && <BookingReviewSection bookingId={order.id} />}
         </div>
       </div>
     </div>

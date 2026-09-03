@@ -7,6 +7,7 @@ import { getServerI18n } from "@/lib/i18n/server"
 import { formatPrice, getConditionLabel } from "@/lib/utils"
 import { SITE_NAME } from "@/lib/seo"
 import { DbErrorNotice } from "@/components/ui/db-error-notice"
+import { ReviewsSection } from "@/components/reviews/reviews-section"
 import { Star, Calendar, ChevronLeft, ImageIcon, Package } from "lucide-react"
 import type { Listing } from "@/lib/types"
 
@@ -154,6 +155,12 @@ export default async function UserProfilePage({ params }: UserProfilePageProps) 
             </div>
           </div>
         </div>
+
+        {/* Reviews - phase 1 only surfaces the public ferramenta-lender
+            channel (spec sez. 6); average_rating_as_owner above already
+            aggregates across every context, this section shows the
+            individual reviews and tag breakdown behind it. */}
+        <ReviewsSection userId={profile.id} role="lender" context="ferramenta" />
 
         {/* Listings */}
         <div className="mt-8">
