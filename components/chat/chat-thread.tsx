@@ -7,7 +7,7 @@ import { useRealtimeMessages } from "@/lib/chat/realtime"
 import { Conversation, Profile, Message } from "@/lib/types"
 import { MessageList } from "./message-list"
 import { MessageInput } from "./message-input"
-import { ChevronLeft, Loader2 } from "lucide-react"
+import { ChevronLeft, Loader2, Package } from "lucide-react"
 import { ChatMessage } from "@/lib/types/chat"
 
 interface ChatThreadProps {
@@ -52,6 +52,13 @@ export function ChatThread({
       avatar_url: null,
       email: null,
     } as unknown as Profile)
+
+  const orderItems = conversation.rental_order?.items || []
+  const firstListing = orderItems[0]?.listing as
+    | { title?: string; image_url?: string | null }
+    | undefined
+  const orderTitle = firstListing?.title || t("chat.order_fallback")
+  const orderImageUrl = firstListing?.image_url || null
 
   // Fetches the most recent page of messages. Used for the initial load and
   // as a fallback refresh; merges into (rather than replaces) local state so
@@ -237,9 +244,23 @@ export function ChatThread({
               <ChevronLeft className="h-5 w-5" />
             </button>
           )}
-          <div>
-            <p className="font-semibold text-foreground">
-              {otherUser.display_name}
+          {orderImageUrl ? (
+            <img
+              src={orderImageUrl}
+              alt={orderTitle}
+              className="h-9 w-9 shrink-0 rounded-md object-cover"
+            />
+          ) : (
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-muted">
+              <Package className="h-4 w-4 text-muted-foreground/50" />
+            </div>
+          )}
+          <div className="min-w-0">
+            <p className="truncate font-semibold text-foreground">
+              {orderTitle}
+            </p>
+            <p className="truncate text-xs text-muted-foreground">
+              {t("chat.with")} {otherUser.display_name}
             </p>
           </div>
         </div>

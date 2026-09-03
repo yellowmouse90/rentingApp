@@ -87,11 +87,57 @@ export async function GET() {
       )
     }
 
+    const listingIds = new Set<string>()
+    ;(items || []).forEach((item: any) => {
+      if (item.listing_id) listingIds.add(item.listing_id)
+    })
+
+    const [{ data: listings, error: listingsError }, { data: listingImages, error: listingImagesError }] =
+      await Promise.all([
+        listingIds.size
+          ? supabase
+              .schema("inventory_domain")
+              .from("listings")
+              .select("id, title, description")
+              .in("id", [...listingIds])
+          : Promise.resolve({ data: [], error: null }),
+        listingIds.size
+          ? supabase
+              .schema("inventory_domain")
+              .from("listing_images")
+              .select("id, listing_id, image_url, display_order")
+              .in("listing_id", [...listingIds])
+              .order("display_order", { ascending: true })
+          : Promise.resolve({ data: [], error: null }),
+      ])
+
+    if (listingsError || listingImagesError) {
+      console.error("Conversations enrichment error:", listingsError || listingImagesError)
+      return NextResponse.json(
+        { error: "Failed to enrich conversations" },
+        { status: 500 }
+      )
+    }
+
+    const firstImageByListingId = new Map<string, string>()
+    ;(listingImages || []).forEach((image: any) => {
+      if (!firstImageByListingId.has(image.listing_id)) {
+        firstImageByListingId.set(image.listing_id, image.image_url)
+      }
+    })
+
+    const listingById = new Map(
+      (listings || []).map((listing: any) => [
+        listing.id,
+        { ...listing, image_url: firstImageByListingId.get(listing.id) || null },
+      ])
+    )
+
     const profileById = new Map((profiles || []).map((profile: any) => [profile.id, profile]))
     const orderItemsByOrderId = new Map<string, any[]>()
     ;(items || []).forEach((item: any) => {
       const orderItems = orderItemsByOrderId.get(item.order_id) || []
-      orderItems.push(item)
+      orderItems.push({ ...item, listing: listingById.get(item.listing_id) || null })
       orderItemsByOrderId.set(item.order_id, orderItems)
     })
 

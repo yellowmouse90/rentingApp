@@ -433,6 +433,8 @@ const translations: Record<Language, Record<string, string>> = {
     "chat.load_older_messages": "Carica messaggi precedenti",
     "chat.loading_older_messages": "Caricamento...",
     "chat.deleted_user": "Utente eliminato",
+    "chat.with": "con",
+    "chat.order_fallback": "Ordine",
 
     // Misc
     "auth.invalid_credentials": "Email o password non corretti",
@@ -919,6 +921,8 @@ const translations: Record<Language, Record<string, string>> = {
     "chat.load_older_messages": "Load older messages",
     "chat.loading_older_messages": "Loading...",
     "chat.deleted_user": "Deleted user",
+    "chat.with": "with",
+    "chat.order_fallback": "Order",
 
     // Misc
     "auth.invalid_credentials": "Incorrect email or password",

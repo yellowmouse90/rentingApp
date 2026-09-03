@@ -3,7 +3,7 @@
 import { Conversation, Profile } from "@/lib/types"
 import { formatDistanceToNow } from "date-fns"
 import { it, enUS } from "date-fns/locale"
-import { MessageCircle } from "lucide-react"
+import { MessageCircle, Package } from "lucide-react"
 import { useLanguage } from "@/lib/i18n/language-context"
 
 interface ConversationListProps {
@@ -54,7 +54,13 @@ export function ConversationList({
       {conversations.map((conversation) => {
         const otherUserDisplayName =
           conversation.other_participant_details?.display_name || t("chat.default_user")
-        const countItem = conversation.rental_order?.items?.length;
+        const orderItems = conversation.rental_order?.items || []
+        const countItem = orderItems.length
+        const firstListing = orderItems[0]?.listing as
+          | { title?: string; image_url?: string | null }
+          | undefined
+        const orderTitle = firstListing?.title || t("chat.order_fallback")
+        const orderImageUrl = firstListing?.image_url || null
         return (
           <button
             key={conversation.id}
@@ -66,15 +72,28 @@ export function ConversationList({
             }`}
           >
             <div className="flex items-start justify-between gap-3">
+              <div className="shrink-0">
+                {orderImageUrl ? (
+                  <img
+                    src={orderImageUrl}
+                    alt={orderTitle}
+                    className="h-12 w-12 rounded-md object-cover"
+                  />
+                ) : (
+                  <div className="flex h-12 w-12 items-center justify-center rounded-md bg-muted">
+                    <Package className="h-5 w-5 text-muted-foreground/50" />
+                  </div>
+                )}
+              </div>
               <div className="min-w-0 flex-1">
                 <p className="font-medium text-foreground truncate">
-                  {otherUserDisplayName}
+                  {orderTitle}
                 </p>
                 <p className="text-xs text-muted-foreground truncate">
-                  {countItem} {t("chat.items_count")}
+                  {t("chat.with")} {otherUserDisplayName}
                 </p>
                 <p className="text-xs text-muted-foreground truncate">
-                  {conversation.last_message?.content || t("chat.no_messages_short")}
+                  {countItem} {t("chat.items_count")} · {conversation.last_message?.content || t("chat.no_messages_short")}
                 </p>
               </div>
               <div className="shrink-0 text-right">
