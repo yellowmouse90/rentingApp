@@ -130,13 +130,7 @@ export function ListingsGridWithLocation({
       .from("listings")
       .select(`
         *,
-        category:categories(
-          id,
-          slug,
-          translated:category_translations(
-            name
-          )
-        ),
+        category:categories(id, name, slug, icon_name),
         images:listing_images(id, image_url, display_order)
       `)
       .eq("is_active", true)
@@ -423,7 +417,8 @@ export function ListingsGridWithLocation({
 }
 
 function ListingCard({ listing, showDistance }: { listing: ListingWithDistance; showDistance: boolean }) {
-  const { t } = useLanguage()
+  const { t, tCategory } = useLanguage()
+  const categoryName = listing.category_id ? tCategory(listing.category_id, listing.category_name) : listing.category_name
   return (
     <Link
       href={`/listings/${listing.id}`}
@@ -467,9 +462,9 @@ function ListingCard({ listing, showDistance }: { listing: ListingWithDistance; 
           {listing.title}
         </h3>
 
-        {listing.category_name && (
+        {categoryName && (
           <p className="mt-1 text-xs text-muted-foreground">
-            {listing.category_name}
+            {categoryName}
           </p>
         )}
 

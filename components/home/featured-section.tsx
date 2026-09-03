@@ -12,7 +12,7 @@ interface Listing {
   currency_code: string
   images?: { image_url: string }[]
   owner?: { display_name: string; avatar_url?: string }
-  category?: { name: string }
+  category?: { id: string; name: string }
 }
 
 interface FeaturedSectionProps {
@@ -20,7 +20,7 @@ interface FeaturedSectionProps {
 }
 
 export function FeaturedSection({ listings }: FeaturedSectionProps) {
-  const { t } = useLanguage()
+  const { t, tCategory } = useLanguage()
 
   const formatPrice = (cents: number, currency: string) => {
     return new Intl.NumberFormat("it-IT", {
@@ -72,7 +72,9 @@ export function FeaturedSection({ listings }: FeaturedSectionProps) {
               </div>
               <div className="p-4">
                 <h3 className="font-medium text-foreground line-clamp-1">{listing.title}</h3>
-                <p className="mt-1 text-sm text-muted-foreground">{listing.category?.name}</p>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  {listing.category && tCategory(listing.category.id, listing.category.name)}
+                </p>
                 <p className="mt-2 font-semibold text-primary">
                   {formatPrice(listing.price_per_day_cents, listing.currency_code)}{t("listings.per_day")}
                 </p>

@@ -22,7 +22,7 @@ export default async function HomePage() {
     .from("listings")
     .select(`
       *,
-      category:categories(name, slug),
+      category:categories(id, name, slug),
       images:listing_images(id, image_url, display_order)
     `)
     .eq("is_active", true)

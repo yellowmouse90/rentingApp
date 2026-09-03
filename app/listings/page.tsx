@@ -50,16 +50,19 @@ export async function generateMetadata({ searchParams }: ListingsPageProps): Pro
 export default async function ListingsPage({ searchParams }: ListingsPageProps) {
   const params = await searchParams
   const supabase = await createClient()
-  const { t } = await getServerI18n()
+  const { t, language } = await getServerI18n()
 
   // Fetch categories for filter
   const { data: categories, error: categoriesError } = await supabase
     .schema('inventory_domain')
     .from("categories")
-    .select("*")
+    .select("*, translations:category_translations(language_code, name)")
     .order("name")
 
   const activeCategory = categories?.find((c) => c.slug === params.category)
+  const activeCategoryName =
+    activeCategory?.translations?.find((tr: { language_code: string; name: string }) => tr.language_code === language)?.name ||
+    activeCategory?.name
 
   return (
     <div className="min-h-screen bg-muted/30">
@@ -68,7 +71,7 @@ export default async function ListingsPage({ searchParams }: ListingsPageProps) 
         {/* Header */}
         <div className="mb-8">
           <h1 className="font-heading text-3xl font-bold tracking-[-0.01em] text-foreground">
-            {activeCategory ? activeCategory.name : t("listings_page.all_tools")}
+            {activeCategory ? activeCategoryName : t("listings_page.all_tools")}
           </h1>
           <p className="mt-2 text-muted-foreground">
             {t("listings_page.subtitle")}
