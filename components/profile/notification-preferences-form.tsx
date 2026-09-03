@@ -11,6 +11,7 @@ const BOOKING_TYPES: AlertType[] = [
   "booking_accepted",
   "booking_rejected",
   "booking_cancelled_by_renter",
+  "booking_paid",
   "booking_handover_confirmed",
   "booking_returned_ok",
   "booking_damage_reported",

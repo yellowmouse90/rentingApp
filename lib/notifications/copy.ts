@@ -61,6 +61,16 @@ const COPY: Record<AlertType, Record<Language, CopyFn>> = {
       body: `${p.actorName ?? "The renter"} cancelled the rental request #${shortId(p.orderId)}.`,
     }),
   },
+  booking_paid: {
+    it: (p) => ({
+      title: "Pagamento ricevuto",
+      body: `Il pagamento per il noleggio #${shortId(p.orderId)} è stato autorizzato: puoi procedere con la consegna.`,
+    }),
+    en: (p) => ({
+      title: "Payment received",
+      body: `The payment for rental #${shortId(p.orderId)} has been authorized: you can proceed with the handover.`,
+    }),
+  },
   booking_handover_confirmed: {
     it: () => ({
       title: "Consegna confermata",

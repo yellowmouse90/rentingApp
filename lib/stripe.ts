@@ -144,6 +144,24 @@ export async function upsertAuthorizedTransaction(
   if (order.status === "accepted" || order.status === "pending") {
     await supabase.schema("rentals_domain").from("rental_orders").update({ status: "paid", updated_at: now }).eq("id", orderId)
     await supabase.schema("rentals_domain").from("rental_items").update({ status: "paid", updated_at: now }).eq("order_id", orderId)
+
+    const { data: item } = await supabase
+      .schema("rentals_domain")
+      .from("rental_items")
+      .select("owner_id")
+      .eq("order_id", orderId)
+      .maybeSingle()
+
+    if (item?.owner_id) {
+      const language = await getServerLanguage()
+      await createNotification({
+        recipientId: item.owner_id,
+        actorId: null,
+        type: "booking_paid",
+        language,
+        orderId,
+      })
+    }
   }
 
   return "ok"
