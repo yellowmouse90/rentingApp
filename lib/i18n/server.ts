@@ -109,6 +109,15 @@ const serverTranslations: Record<Language, Record<string, string>> = {
     "listing_detail.owner_profile_error": "Profilo proprietario",
     "listing_detail.availability_error": "Disponibilita",
     "listing_detail.exceptions_error": "Eccezioni disponibilita",
+    "listing_detail.view_owner_profile": "Vedi profilo e tutti gli annunci",
+
+    "public_profile.back": "Torna all'annuncio",
+    "public_profile.profile_error": "Profilo",
+    "public_profile.listings_error": "Annunci",
+    "public_profile.tools_count": "Attrezzi in noleggio",
+    "public_profile.avg_rating": "Valutazione media",
+    "public_profile.tools_heading": "Attrezzi in noleggio",
+    "public_profile.no_tools": "Questo utente non ha ancora annunci attivi.",
 
     "booking_new.total_to_pay": "Totale noleggio da pagare",
     "booking_new.deposit_separate": "Caparra separata:",
@@ -314,6 +323,15 @@ const serverTranslations: Record<Language, Record<string, string>> = {
     "listing_detail.owner_profile_error": "Owner profile",
     "listing_detail.availability_error": "Availability",
     "listing_detail.exceptions_error": "Availability exceptions",
+    "listing_detail.view_owner_profile": "View profile and all listings",
+
+    "public_profile.back": "Back to listing",
+    "public_profile.profile_error": "Profile",
+    "public_profile.listings_error": "Listings",
+    "public_profile.tools_count": "Tools for rent",
+    "public_profile.avg_rating": "Average rating",
+    "public_profile.tools_heading": "Tools for rent",
+    "public_profile.no_tools": "This user doesn't have any active listings yet.",
 
     "booking_new.total_to_pay": "Total to pay now",
     "booking_new.deposit_separate": "Separate deposit:",

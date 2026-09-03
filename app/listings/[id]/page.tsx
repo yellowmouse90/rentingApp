@@ -324,20 +324,24 @@ export default async function ListingDetailPage({ params }: ListingDetailPagePro
             <div className="mt-8 rounded-xl border border-border bg-card p-6">
               <h2 className="text-lg font-semibold text-foreground">{t("listing_detail.owner")}</h2>
               <div className="mt-4 flex items-start gap-4">
-                {owner.avatar_url ? (
-                  <img
-                    src={owner.avatar_url}
-                    alt={ownerDisplayName}
-                    className="h-14 w-14 rounded-full object-cover"
-                  />
-                ) : (
-                  <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary text-lg font-medium text-primary-foreground">
-                    {ownerDisplayName.slice(0, 2).toUpperCase()}
-                  </div>
-                )}
+                <Link href={`/users/${owner.id}`} className="shrink-0">
+                  {owner.avatar_url ? (
+                    <img
+                      src={owner.avatar_url}
+                      alt={ownerDisplayName}
+                      className="h-14 w-14 rounded-full object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary text-lg font-medium text-primary-foreground">
+                      {ownerDisplayName.slice(0, 2).toUpperCase()}
+                    </div>
+                  )}
+                </Link>
                 <div className="flex-1">
                   <h3 className="font-semibold text-foreground">
-                    {ownerDisplayName}
+                    <Link href={`/users/${owner.id}`} className="hover:text-primary hover:underline">
+                      {ownerDisplayName}
+                    </Link>
                   </h3>
                   <div className="mt-1 flex items-center gap-3 text-sm text-muted-foreground">
                     {owner.average_rating_as_owner > 0 && (
@@ -354,6 +358,13 @@ export default async function ListingDetailPage({ params }: ListingDetailPagePro
                   {owner.bio && (
                     <p className="mt-2 text-sm text-muted-foreground">{owner.bio}</p>
                   )}
+                  <Link
+                    href={`/users/${owner.id}`}
+                    className="mt-3 inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
+                  >
+                    <Package className="h-4 w-4" />
+                    {t("listing_detail.view_owner_profile")}
+                  </Link>
                 </div>
               </div>
             </div>
