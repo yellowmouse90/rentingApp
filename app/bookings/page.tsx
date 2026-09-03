@@ -126,21 +126,46 @@ export default async function BookingsPage() {
     ? await supabase
         .schema("rentals_domain")
         .from("rental_orders")
-        .select("id, renter_id")
+        .select("id, renter_id, status, updated_at")
         .in("id", ownerOrderIds)
     : { data: [] as any[], error: null }
   if (ownerOrdersError) dbErrors.push(`${t("bookings.errors.owner_orders")}: ${ownerOrdersError.message}`)
 
   const renterIds = Array.from(new Set((ownerOrders || []).map((order) => order.renter_id)))
 
-  const { data: renterProfiles, error: renterProfilesError } = renterIds.length
-    ? await supabase
-        .schema("users_domain")
-        .from("profiles")
-        .select("id, display_name, avatar_url")
-        .in("id", renterIds)
-    : { data: [] as any[], error: null }
+  // Review CTA eligibility, mirrored from the renter section above but for
+  // the owner reviewing the renter (target_role="renter") - context still
+  // derives from the lender's own account_type, which here is always this
+  // user's own profile since they're the owner on every row in this list.
+  const completedOwnerOrderIds = (ownerOrders || [])
+    .filter((order) => order.status === "completed")
+    .map((order) => order.id)
+
+  const [
+    { data: renterProfiles, error: renterProfilesError },
+    { data: myProfile, error: myProfileError },
+    { data: myRenterReviews, error: myRenterReviewsError },
+  ] = await Promise.all([
+    renterIds.length
+      ? supabase.schema("users_domain").from("profiles").select("id, display_name, avatar_url").in("id", renterIds)
+      : Promise.resolve({ data: [] as any[], error: null }),
+    supabase.schema("users_domain").from("profiles").select("account_type").eq("id", user.id).single(),
+    completedOwnerOrderIds.length
+      ? supabase
+          .schema("reviews_domain")
+          .from("reviews")
+          .select("booking_id")
+          .eq("author_user_id", user.id)
+          .eq("target_role", "renter")
+          .in("booking_id", completedOwnerOrderIds)
+      : Promise.resolve({ data: [] as any[], error: null }),
+  ])
   if (renterProfilesError) dbErrors.push(`${t("bookings.errors.renter_profiles")}: ${renterProfilesError.message}`)
+  if (myProfileError) dbErrors.push(`${t("bookings.errors.owner_orders")}: ${myProfileError.message}`)
+  if (myRenterReviewsError) dbErrors.push(`${t("bookings.errors.owner_orders")}: ${myRenterReviewsError.message}`)
+
+  const myAccountType = (myProfile?.account_type as "individual" | "business") ?? "individual"
+  const reviewedRenterOrderIds = new Set((myRenterReviews || []).map((r) => r.booking_id))
 
   const { data: ownerListings, error: ownerListingsError } = ownerListingIds.length
     ? await supabase
@@ -160,10 +185,18 @@ export default async function BookingsPage() {
     const renter = order ? profilesById.get(order.renter_id) : null
     const listing = ownerListingsById.get(item.listing_id)
 
+    const canReview =
+      order?.status === "completed" &&
+      !reviewedRenterOrderIds.has(item.order_id) &&
+      isWithinReviewWindow(order.updated_at)
+    const reviewContext: ReviewContext | null = canReview ? deriveReviewContext(myAccountType) : null
+
     return {
       ...item,
       listing,
       renter,
+      canReview,
+      reviewContext,
     }
   })
 
@@ -304,43 +337,60 @@ function OwnerItemCard({
   const mainImage = listing?.images?.sort((a: any, b: any) => a.display_order - b.display_order)[0]
 
   return (
-    <Link
-      href={`/bookings/${item.order_id}`}
-      className="flex items-center gap-4 rounded-xl border border-border bg-card p-4 transition-colors hover:border-primary/50"
-    >
-      {mainImage ? (
-        <img
-          src={mainImage.image_url}
-          alt={listing?.title || t("bookings.removed_listing")}
-          className="h-20 w-20 rounded-lg object-cover"
-        />
-      ) : (
-        <div className="flex h-20 w-20 items-center justify-center rounded-lg bg-muted">
-          <ImageIcon className="h-8 w-8 text-muted-foreground/50" />
-        </div>
-      )}
+    <div className="rounded-xl border border-border bg-card p-4 transition-colors hover:border-primary/50">
+      <div className="flex items-center gap-4">
+        <Link href={`/bookings/${item.order_id}`} className="flex min-w-0 flex-1 items-center gap-4">
+          {mainImage ? (
+            <img
+              src={mainImage.image_url}
+              alt={listing?.title || t("bookings.removed_listing")}
+              className="h-20 w-20 rounded-lg object-cover"
+            />
+          ) : (
+            <div className="flex h-20 w-20 items-center justify-center rounded-lg bg-muted">
+              <ImageIcon className="h-8 w-8 text-muted-foreground/50" />
+            </div>
+          )}
 
-      <div className="flex-1 min-w-0">
-        <h3 className="font-semibold text-foreground truncate">
-          {listing?.title || t("bookings.removed_listing")}
-        </h3>
-        <div className="mt-1 text-sm text-muted-foreground">
-          {t("bookings.request_from")} {renter?.display_name || t("bookings.default_user")}
-        </div>
-        <div className="mt-1 flex items-center gap-2 text-sm text-muted-foreground">
-          <Calendar className="h-4 w-4" />
-          {format(new Date(item.start_date), "d MMM", { locale: dateLocale })} -{" "}
-          {format(new Date(item.end_date), "d MMM yyyy", { locale: dateLocale })}
-        </div>
-        <div className="mt-2">
-          <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${getRentalStatusColor(item.status)}`}>
-            {getRentalStatusLabel(item.status, t)}
-          </span>
-        </div>
+          <div className="min-w-0 flex-1">
+            <h3 className="font-semibold text-foreground truncate">
+              {listing?.title || t("bookings.removed_listing")}
+            </h3>
+            <div className="mt-1 flex items-center gap-2 text-sm text-muted-foreground">
+              <Calendar className="h-4 w-4" />
+              {format(new Date(item.start_date), "d MMM", { locale: dateLocale })} -{" "}
+              {format(new Date(item.end_date), "d MMM yyyy", { locale: dateLocale })}
+            </div>
+            <div className="mt-2">
+              <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${getRentalStatusColor(item.status)}`}>
+                {getRentalStatusLabel(item.status, t)}
+              </span>
+            </div>
+          </div>
+        </Link>
+
+        <Link href={`/bookings/${item.order_id}`} aria-label={listing?.title || t("bookings.removed_listing")}>
+          <ChevronRight className="h-5 w-5 text-muted-foreground" />
+        </Link>
       </div>
 
-      <ChevronRight className="h-5 w-5 text-muted-foreground" />
-    </Link>
+      <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-border pt-3">
+        <p className="text-sm text-muted-foreground">
+          {t("bookings.request_from")}{" "}
+          {renter?.id ? (
+            <Link href={`/users/${renter.id}`} className="font-medium text-foreground hover:underline">
+              {renter?.display_name || t("bookings.default_user")}
+            </Link>
+          ) : (
+            <span className="font-medium text-foreground">{renter?.display_name || t("bookings.default_user")}</span>
+          )}
+        </p>
+
+        {item.canReview && item.reviewContext && (
+          <ReviewButton bookingId={item.order_id} targetRole="renter" context={item.reviewContext} variant="compact" />
+        )}
+      </div>
+    </div>
   )
 }
 

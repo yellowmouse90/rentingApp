@@ -1,6 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useState } from "react"
+import Link from "next/link"
 import { format } from "date-fns"
 import { enUS, it } from "date-fns/locale"
 import { useLanguage } from "@/lib/i18n/language-context"
@@ -123,22 +124,31 @@ export function ReviewsSection({ userId, role, context }: ReviewsSectionProps) {
         {reviews.map((review) => (
           <div key={review.id} className="rounded-xl border border-border bg-card p-4">
             <div className="flex items-center justify-between gap-3">
-              <div className="flex items-center gap-3">
-                {review.author?.avatar_url ? (
-                  <img
-                    src={review.author.avatar_url}
-                    alt={review.author.display_name || ""}
-                    className="h-8 w-8 rounded-full object-cover"
-                  />
-                ) : (
+              {review.author?.id ? (
+                <Link href={`/users/${review.author.id}`} className="flex items-center gap-3 hover:underline">
+                  {review.author.avatar_url ? (
+                    <img
+                      src={review.author.avatar_url}
+                      alt={review.author.display_name || ""}
+                      className="h-8 w-8 rounded-full object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-xs font-medium text-primary-foreground">
+                      {(review.author.display_name || "U").slice(0, 2).toUpperCase()}
+                    </div>
+                  )}
+                  <span className="text-sm font-medium text-foreground">
+                    {review.author.display_name || "Utente"}
+                  </span>
+                </Link>
+              ) : (
+                <div className="flex items-center gap-3">
                   <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-xs font-medium text-primary-foreground">
-                    {(review.author?.display_name || "U").slice(0, 2).toUpperCase()}
+                    U
                   </div>
-                )}
-                <span className="text-sm font-medium text-foreground">
-                  {review.author?.display_name || "Utente"}
-                </span>
-              </div>
+                  <span className="text-sm font-medium text-foreground">Utente</span>
+                </div>
+              )}
               <StarRating value={review.overall_rating} size="sm" />
             </div>
             {review.comment && <p className="mt-2 text-sm text-muted-foreground">{review.comment}</p>}

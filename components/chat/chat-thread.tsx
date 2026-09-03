@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState, useCallback } from "react"
+import Link from "next/link"
 import { useAuth } from "@/lib/auth/context"
 import { useLanguage } from "@/lib/i18n/language-context"
 import { useRealtimeMessages } from "@/lib/chat/realtime"
@@ -260,7 +261,17 @@ export function ChatThread({
               {orderTitle}
             </p>
             <p className="truncate text-xs text-muted-foreground">
-              {t("chat.with")} {otherUser.display_name}
+              {t("chat.with")}{" "}
+              {conversation.other_participant_details?.id ? (
+                <Link
+                  href={`/users/${conversation.other_participant_details.id}`}
+                  className="hover:text-primary hover:underline"
+                >
+                  {otherUser.display_name}
+                </Link>
+              ) : (
+                otherUser.display_name
+              )}
             </p>
           </div>
         </div>

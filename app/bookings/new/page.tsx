@@ -141,7 +141,10 @@ export default async function NewBookingPage({ searchParams }: NewBookingPagePro
                     {listing.title}
                   </h3>
                   <p className="mt-1 text-sm text-muted-foreground">
-                    {t("booking_new.by")} {owner.display_name || t("booking_new.default_user")}
+                    {t("booking_new.by")}{" "}
+                    <Link href={`/users/${owner.id}`} className="hover:text-primary hover:underline">
+                      {owner.display_name || t("booking_new.default_user")}
+                    </Link>
                   </p>
                 </div>
               </div>
