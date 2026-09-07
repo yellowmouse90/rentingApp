@@ -1,6 +1,67 @@
 import { requireApiUser } from "@/lib/auth/api"
 import { NextResponse } from "next/server"
 
+/**
+ * @swagger
+ * /chat/start-conversation:
+ *   post:
+ *     tags: [Chat]
+ *     summary: Crea (o recupera) la conversazione per un ordine di noleggio
+ *     description: >
+ *       Una sola conversazione per rental_order_id. Verifica che chiamante e destinatario siano
+ *       effettivamente le due controparti dell'ordine prima di creare la riga.
+ *     security:
+ *       - supabaseSessionCookie: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [rentalOrderId, participantTwoId]
+ *             properties:
+ *               rentalOrderId: { type: string, format: uuid }
+ *               participantTwoId: { type: string, format: uuid }
+ *     responses:
+ *       200:
+ *         description: Conversazione già esistente, restituita
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 conversation: { $ref: '#/components/schemas/Conversation' }
+ *       201:
+ *         description: Conversazione creata
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 conversation: { $ref: '#/components/schemas/Conversation' }
+ *       400:
+ *         description: Campi mancanti o partecipanti non validi
+ *         content:
+ *           application/json:
+ *             schema: { $ref: '#/components/schemas/Error' }
+ *       401:
+ *         description: Non autenticato
+ *       403:
+ *         description: Il chiamante o il destinatario non sono le controparti di questo ordine
+ *         content:
+ *           application/json:
+ *             schema: { $ref: '#/components/schemas/Error' }
+ *       404:
+ *         description: Ordine non trovato
+ *         content:
+ *           application/json:
+ *             schema: { $ref: '#/components/schemas/Error' }
+ *       500:
+ *         description: Errore interno
+ *         content:
+ *           application/json:
+ *             schema: { $ref: '#/components/schemas/Error' }
+ */
 export async function POST(request: Request) {
   try {
     const { supabase, user, unauthorizedResponse } = await requireApiUser()

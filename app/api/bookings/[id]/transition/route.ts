@@ -34,6 +34,67 @@ async function requireUpdate(
   return true
 }
 
+/**
+ * @swagger
+ * /bookings/{id}/transition:
+ *   post:
+ *     tags: [Bookings]
+ *     summary: Esegue una transizione di stato su un ordine di noleggio
+ *     description: >
+ *       Unico entry point del ciclo di vita booking. Verifica l'identità del chiamante contro
+ *       owner_id/renter_id prima di applicare la transizione. `mark_returned_ok` cattura il
+ *       pagamento Stripe DOPO aver scritto gli update guardati su rental_items/rental_orders,
+ *       non prima, così un blocco RLS blocca la richiesta prima che il renter venga addebitato.
+ *     security:
+ *       - supabaseSessionCookie: []
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         schema: { type: string, format: uuid }
+ *         description: rental_orders.id
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [action]
+ *             properties:
+ *               action:
+ *                 $ref: '#/components/schemas/TransitionAction'
+ *               notes:
+ *                 type: string
+ *                 description: Usato solo da report_damage (condition_notes).
+ *     responses:
+ *       200:
+ *         description: Transizione applicata
+ *         content:
+ *           application/json:
+ *             schema: { $ref: '#/components/schemas/Ok' }
+ *       400:
+ *         description: Azione mancante/non supportata o stato corrente non valido
+ *         content:
+ *           application/json:
+ *             schema: { $ref: '#/components/schemas/Error' }
+ *       401:
+ *         description: Non autenticato
+ *       403:
+ *         description: Chiamante non è owner/renter dell'ordine per l'azione richiesta
+ *         content:
+ *           application/json:
+ *             schema: { $ref: '#/components/schemas/Error' }
+ *       404:
+ *         description: Ordine o dettaglio noleggio non trovato
+ *         content:
+ *           application/json:
+ *             schema: { $ref: '#/components/schemas/Error' }
+ *       500:
+ *         description: Scrittura bloccata da RLS o errore Stripe
+ *         content:
+ *           application/json:
+ *             schema: { $ref: '#/components/schemas/Error' }
+ */
 export async function POST(request: NextRequest, { params }: PageParams) {
   try {
     const { id: orderId } = await params

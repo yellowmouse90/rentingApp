@@ -12,6 +12,73 @@ const PAGE_SIZE = 10
 // anonymous reads to visible rows, but the explicit filter here also keeps
 // a logged-in caller from seeing their own not-yet-published review of
 // this target mixed into what is supposed to be the public list.
+/**
+ * @swagger
+ * /users/{id}/reviews:
+ *   get:
+ *     tags: [Users]
+ *     summary: Recensioni pubbliche visibili ricevute da un utente, paginate
+ *     description: >
+ *       Endpoint pubblico. Restituisce solo visible=true, filtrato esplicitamente per role e
+ *       context (obbligatori).
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         schema: { type: string, format: uuid }
+ *       - name: role
+ *         in: query
+ *         required: true
+ *         schema: { $ref: '#/components/schemas/ReviewTargetRole' }
+ *       - name: context
+ *         in: query
+ *         required: true
+ *         schema: { $ref: '#/components/schemas/ReviewContext' }
+ *       - name: page
+ *         in: query
+ *         required: false
+ *         schema: { type: integer, default: 1, minimum: 1 }
+ *     responses:
+ *       200:
+ *         description: Pagina di recensioni (page size 10)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 reviews:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id: { type: string, format: uuid }
+ *                       overall_rating: { type: integer }
+ *                       sub_ratings: { type: object }
+ *                       comment: { type: string, nullable: true }
+ *                       tags: { type: array, items: { type: string } }
+ *                       created_at: { type: string, format: date-time }
+ *                       visible_at: { type: string, format: date-time, nullable: true }
+ *                       author:
+ *                         type: object
+ *                         nullable: true
+ *                         properties:
+ *                           id: { type: string }
+ *                           display_name: { type: string, nullable: true }
+ *                           avatar_url: { type: string, nullable: true }
+ *                 total: { type: integer }
+ *                 page: { type: integer }
+ *                 page_size: { type: integer, enum: [10] }
+ *       400:
+ *         description: role o context mancante/non valido
+ *         content:
+ *           application/json:
+ *             schema: { $ref: '#/components/schemas/Error' }
+ *       500:
+ *         description: Errore interno
+ *         content:
+ *           application/json:
+ *             schema: { $ref: '#/components/schemas/Error' }
+ */
 export async function GET(request: NextRequest, { params }: PageParams) {
   try {
     const { id: userId } = await params

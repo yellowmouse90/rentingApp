@@ -14,6 +14,38 @@ import { REVIEW_WINDOW_DAYS } from "@/lib/reviews/rules"
 // synchronously by the reviews_domain.apply_visibility_rules DB trigger at
 // insert time - this job only ever deals with a review that is still
 // alone after its booking's 14-day window has lapsed.
+/**
+ * @swagger
+ * /cron/reveal-expired-reviews:
+ *   get:
+ *     tags: [Cron]
+ *     summary: Rende visibili le recensioni p2p rimaste sole oltre la finestra di 14 giorni
+ *     description: >
+ *       Job Vercel Cron giornaliero. Il reveal "double-blind" immediato quando esistono entrambe
+ *       le recensioni è gestito dal trigger DB reviews_domain.apply_visibility_rules; questo job
+ *       copre solo il caso di una recensione ancora sola dopo 14 giorni dalla chiusura booking.
+ *     security:
+ *       - cronSecret: []
+ *     responses:
+ *       200:
+ *         description: Numero di recensioni rese visibili
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 revealed: { type: integer }
+ *       401:
+ *         description: CRON_SECRET mancante/non corrispondente
+ *         content:
+ *           application/json:
+ *             schema: { $ref: '#/components/schemas/Error' }
+ *       500:
+ *         description: Errore interno
+ *         content:
+ *           application/json:
+ *             schema: { $ref: '#/components/schemas/Error' }
+ */
 export async function GET(request: NextRequest) {
   const cronSecret = process.env.CRON_SECRET
   if (cronSecret) {

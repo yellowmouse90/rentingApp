@@ -5,6 +5,33 @@ interface PageParams {
   params: Promise<{ id: string }>
 }
 
+/**
+ * @swagger
+ * /notifications/{id}/read:
+ *   post:
+ *     tags: [Notifications]
+ *     summary: Segna una notifica come letta
+ *     security:
+ *       - supabaseSessionCookie: []
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         schema: { type: string, format: uuid }
+ *     responses:
+ *       200:
+ *         description: Aggiornata
+ *         content:
+ *           application/json:
+ *             schema: { $ref: '#/components/schemas/Ok' }
+ *       401:
+ *         description: Non autenticato
+ *       404:
+ *         description: Notifica non trovata o non appartenente al chiamante
+ *         content:
+ *           application/json:
+ *             schema: { $ref: '#/components/schemas/Error' }
+ */
 export async function POST(_request: NextRequest, { params }: PageParams) {
   const { id } = await params
   const { supabase, user, unauthorizedResponse } = await requireApiUser()

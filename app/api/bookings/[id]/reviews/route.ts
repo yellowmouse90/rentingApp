@@ -26,6 +26,68 @@ interface PageParams {
 // the actual authorization boundary since PostgREST is reachable directly
 // with the caller's own session, this route only exists to give specific,
 // friendly error messages before that boundary is hit.
+/**
+ * @swagger
+ * /bookings/{id}/reviews:
+ *   post:
+ *     tags: [Reviews]
+ *     summary: Crea una recensione per una prenotazione conclusa
+ *     description: >
+ *       context e target_user_id sono derivati server-side dalla booking, mai fidati dal body.
+ *       Riapplicato a livello DB da reviews_domain.can_submit_review, il vero confine di
+ *       autorizzazione (PostgREST è raggiungibile direttamente con la sessione del chiamante).
+ *     security:
+ *       - supabaseSessionCookie: []
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         schema: { type: string, format: uuid }
+ *         description: rental_orders.id (booking_id)
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema: { $ref: '#/components/schemas/ReviewInput' }
+ *     responses:
+ *       200:
+ *         description: Recensione creata
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 ok: { type: boolean }
+ *                 id: { type: string, format: uuid }
+ *                 visible: { type: boolean }
+ *       400:
+ *         description: Payload non valido, prenotazione non completata, o finestra 14gg scaduta
+ *         content:
+ *           application/json:
+ *             schema: { $ref: '#/components/schemas/Error' }
+ *       401:
+ *         description: Non autenticato
+ *       403:
+ *         description: Il chiamante non ha il ruolo giusto per recensire questo target_role
+ *         content:
+ *           application/json:
+ *             schema: { $ref: '#/components/schemas/Error' }
+ *       404:
+ *         description: Prenotazione, dettaglio o profilo del prestatore non trovato
+ *         content:
+ *           application/json:
+ *             schema: { $ref: '#/components/schemas/Error' }
+ *       409:
+ *         description: Recensione già presente per questa prenotazione/ruolo
+ *         content:
+ *           application/json:
+ *             schema: { $ref: '#/components/schemas/Error' }
+ *       500:
+ *         description: Errore interno
+ *         content:
+ *           application/json:
+ *             schema: { $ref: '#/components/schemas/Error' }
+ */
 export async function POST(request: NextRequest, { params }: PageParams) {
   try {
     const { id: bookingId } = await params

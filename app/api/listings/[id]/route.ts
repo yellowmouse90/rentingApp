@@ -6,6 +6,52 @@ interface RouteContext {
   params: Promise<{ id: string }>
 }
 
+/**
+ * @swagger
+ * /listings/{id}:
+ *   delete:
+ *     tags: [Listings]
+ *     summary: Disattiva (soft-delete) un annuncio
+ *     description: >
+ *       Imposta is_active=false, is_available=false. Non elimina la riga. Idempotente: se già
+ *       inattivo restituisce success senza riscrivere.
+ *     security:
+ *       - supabaseSessionCookie: []
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         schema: { type: string, format: uuid }
+ *     responses:
+ *       200:
+ *         description: Disattivato
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success: { type: boolean }
+ *       401:
+ *         description: Non autenticato
+ *         content:
+ *           application/json:
+ *             schema: { $ref: '#/components/schemas/Error' }
+ *       403:
+ *         description: Il chiamante non è il proprietario dell'annuncio
+ *         content:
+ *           application/json:
+ *             schema: { $ref: '#/components/schemas/Error' }
+ *       404:
+ *         description: Annuncio non trovato
+ *         content:
+ *           application/json:
+ *             schema: { $ref: '#/components/schemas/Error' }
+ *       500:
+ *         description: Errore interno
+ *         content:
+ *           application/json:
+ *             schema: { $ref: '#/components/schemas/Error' }
+ */
 export async function DELETE(_: Request, { params }: RouteContext) {
   try {
     const { t } = await getServerI18n()

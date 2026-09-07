@@ -12,6 +12,62 @@ interface PageParams {
 // counterpart's review content before it's meant to be visible - the
 // underlying query relies on reviews_domain's RLS (visible=true OR
 // author_user_id = me) to only ever surface rows this caller may see.
+/**
+ * @swagger
+ * /bookings/{id}/reviews/status:
+ *   get:
+ *     tags: [Reviews]
+ *     summary: Stato delle recensioni (proprie e ricevute) per una prenotazione
+ *     description: >
+ *       Guida la UI "hai già recensito / in attesa della controparte / pubblicata" senza
+ *       esporre mai il contenuto della recensione della controparte prima che sia visibile.
+ *     security:
+ *       - supabaseSessionCookie: []
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         schema: { type: string, format: uuid }
+ *     responses:
+ *       200:
+ *         description: Stato corrente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 booking_status: { type: string }
+ *                 context: { $ref: '#/components/schemas/ReviewContext' }
+ *                 window_open: { type: boolean }
+ *                 window_expires_at: { type: string, format: date-time, nullable: true }
+ *                 received_review_visible: { type: boolean }
+ *                 roles:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       target_role: { $ref: '#/components/schemas/ReviewTargetRole' }
+ *                       reviewed: { type: boolean }
+ *                       visible: { type: boolean }
+ *                       can_submit: { type: boolean }
+ *       401:
+ *         description: Non autenticato
+ *       403:
+ *         description: Il chiamante non è owner né renter di questa prenotazione
+ *         content:
+ *           application/json:
+ *             schema: { $ref: '#/components/schemas/Error' }
+ *       404:
+ *         description: Prenotazione o dettaglio non trovato
+ *         content:
+ *           application/json:
+ *             schema: { $ref: '#/components/schemas/Error' }
+ *       500:
+ *         description: Errore interno
+ *         content:
+ *           application/json:
+ *             schema: { $ref: '#/components/schemas/Error' }
+ */
 export async function GET(_request: NextRequest, { params }: PageParams) {
   try {
     const { id: bookingId } = await params

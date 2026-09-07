@@ -2,6 +2,63 @@ import { NextRequest, NextResponse } from "next/server"
 import { requireApiUser } from "@/lib/auth/api"
 import { stripe, upsertAuthorizedTransaction } from "@/lib/stripe"
 
+/**
+ * @swagger
+ * /stripe/confirm-checkout:
+ *   post:
+ *     tags: [Stripe]
+ *     summary: Conferma lato server il completamento di una sessione Checkout
+ *     description: >
+ *       session.payment_status resta "unpaid" con capture_method manual: il successo si rileva
+ *       da session.status === "complete" e paymentIntent.status in (requires_capture, succeeded).
+ *       Scrive tramite upsertAuthorizedTransaction (client admin) perché la sessione del renter
+ *       non ha UPDATE su rental_items.
+ *     security:
+ *       - supabaseSessionCookie: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [orderId, sessionId]
+ *             properties:
+ *               orderId: { type: string, format: uuid }
+ *               sessionId: { type: string }
+ *     responses:
+ *       200:
+ *         description: Transazione confermata/registrata
+ *         content:
+ *           application/json:
+ *             schema: { $ref: '#/components/schemas/Ok' }
+ *       400:
+ *         description: Parametri mancanti, sessione non valida o pagamento non completato
+ *         content:
+ *           application/json:
+ *             schema: { $ref: '#/components/schemas/Error' }
+ *       401:
+ *         description: Non autenticato
+ *       403:
+ *         description: Il chiamante non è il renter dell'ordine
+ *         content:
+ *           application/json:
+ *             schema: { $ref: '#/components/schemas/Error' }
+ *       404:
+ *         description: Ordine non trovato
+ *         content:
+ *           application/json:
+ *             schema: { $ref: '#/components/schemas/Error' }
+ *       409:
+ *         description: Ordine annullato, pagamento a sua volta annullato
+ *         content:
+ *           application/json:
+ *             schema: { $ref: '#/components/schemas/Error' }
+ *       500:
+ *         description: Errore interno
+ *         content:
+ *           application/json:
+ *             schema: { $ref: '#/components/schemas/Error' }
+ */
 export async function POST(request: NextRequest) {
   try {
     const { supabase, user, unauthorizedResponse } = await requireApiUser()
