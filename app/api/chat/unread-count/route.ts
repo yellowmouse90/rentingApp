@@ -1,6 +1,34 @@
 import { requireApiUser } from "@/lib/auth/api"
 import { NextResponse } from "next/server"
 
+/**
+ * @swagger
+ * /chat/unread-count:
+ *   get:
+ *     tags: [Chat]
+ *     summary: Conteggio totale messaggi non letti dell'utente autenticato
+ *     description: >
+ *       Include esplicitamente i messaggi con sender_id NULL (mittente con profilo eliminato),
+ *       che un semplice .neq() escluderebbe silenziosamente.
+ *     security:
+ *       - supabaseSessionCookie: []
+ *     responses:
+ *       200:
+ *         description: Conteggio
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 unread_count: { type: integer }
+ *       401:
+ *         description: Non autenticato
+ *       500:
+ *         description: Errore interno
+ *         content:
+ *           application/json:
+ *             schema: { $ref: '#/components/schemas/Error' }
+ */
 export async function GET() {
   const { supabase, user, unauthorizedResponse } = await requireApiUser()
   if (unauthorizedResponse) {

@@ -13,6 +13,47 @@ interface PageParams {
 // which is why the owner never got notified (in-app or by email) that a request came in: nothing
 // ever called createNotification() for it. This route is that missing entry point - the client
 // calls it right after its own insert succeeds (see booking-form.tsx).
+/**
+ * @swagger
+ * /bookings/{id}/notify-request:
+ *   post:
+ *     tags: [Bookings]
+ *     summary: Notifica al proprietario che una nuova richiesta di noleggio è stata creata
+ *     description: >
+ *       Chiamata dal client subito dopo che l'inserimento di rental_orders/rental_items (fatto
+ *       direttamente dal client con la propria sessione RLS) va a buon fine - non è una
+ *       transizione di stato, solo il trigger della notifica "nuova richiesta".
+ *     security:
+ *       - supabaseSessionCookie: []
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         schema: { type: string, format: uuid }
+ *     responses:
+ *       200:
+ *         description: Notifica inviata
+ *         content:
+ *           application/json:
+ *             schema: { $ref: '#/components/schemas/Ok' }
+ *       401:
+ *         description: Non autenticato
+ *       403:
+ *         description: Il chiamante non è il renter di questo ordine
+ *         content:
+ *           application/json:
+ *             schema: { $ref: '#/components/schemas/Error' }
+ *       404:
+ *         description: Ordine o dettaglio non trovato
+ *         content:
+ *           application/json:
+ *             schema: { $ref: '#/components/schemas/Error' }
+ *       500:
+ *         description: Errore interno
+ *         content:
+ *           application/json:
+ *             schema: { $ref: '#/components/schemas/Error' }
+ */
 export async function POST(_request: NextRequest, { params }: PageParams) {
   try {
     const { id: orderId } = await params

@@ -1,6 +1,36 @@
 import { requireApiUser } from "@/lib/auth/api"
 import { NextResponse } from "next/server"
 
+/**
+ * @swagger
+ * /chat/conversations:
+ *   get:
+ *     tags: [Chat]
+ *     summary: Elenca le conversazioni dell'utente autenticato
+ *     description: >
+ *       Arricchisce ogni conversazione con il profilo della controparte, l'ordine/gli item di
+ *       noleggio collegati e il conteggio dei messaggi non letti.
+ *     security:
+ *       - supabaseSessionCookie: []
+ *     responses:
+ *       200:
+ *         description: Elenco conversazioni
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 conversations:
+ *                   type: array
+ *                   items: { $ref: '#/components/schemas/Conversation' }
+ *       401:
+ *         description: Non autenticato
+ *       500:
+ *         description: Errore interno
+ *         content:
+ *           application/json:
+ *             schema: { $ref: '#/components/schemas/Error' }
+ */
 export async function GET() {
   try {
     const { supabase, user, unauthorizedResponse } = await requireApiUser()

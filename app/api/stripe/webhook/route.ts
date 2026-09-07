@@ -147,6 +147,46 @@ async function handleAccountUpdated(account: Stripe.Account) {
   })
 }
 
+/**
+ * @swagger
+ * /stripe/webhook:
+ *   post:
+ *     tags: [Stripe]
+ *     summary: Webhook Stripe (server-to-server, non chiamato dal client dell'app)
+ *     description: >
+ *       Gestisce checkout.session.completed, payment_intent.amount_capturable_updated/succeeded
+ *       /canceled/payment_failed, account.updated. Usa il client admin (nessuna sessione utente
+ *       disponibile). Idempotente rispetto a redelivery grazie ai controlli di stato prima di
+ *       ogni update.
+ *     security:
+ *       - stripeSignature: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             description: Payload raw dell'evento Stripe
+ *     responses:
+ *       200:
+ *         description: Evento elaborato
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 received: { type: boolean }
+ *       400:
+ *         description: Firma mancante o non valida
+ *         content:
+ *           application/json:
+ *             schema: { $ref: '#/components/schemas/Error' }
+ *       500:
+ *         description: Secret non configurato o errore durante l'elaborazione
+ *         content:
+ *           application/json:
+ *             schema: { $ref: '#/components/schemas/Error' }
+ */
 export async function POST(request: NextRequest) {
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET
 

@@ -2,6 +2,16 @@ import { NextRequest, NextResponse } from "next/server"
 import { requireApiUser } from "@/lib/auth/api"
 import { stripe } from "@/lib/stripe"
 
+/**
+ * @swagger
+ * /stripe/connect:
+ *   get:
+ *     tags: [Stripe]
+ *     summary: Non supportato su questa route (solo POST)
+ *     responses:
+ *       405:
+ *         description: Metodo non permesso, usare POST
+ */
 export async function GET(request: NextRequest) {
   return NextResponse.json(
     { message: "Stripe connect endpoint. Use POST to start onboarding." },
@@ -9,6 +19,39 @@ export async function GET(request: NextRequest) {
   )
 }
 
+/**
+ * @swagger
+ * /stripe/connect:
+ *   post:
+ *     tags: [Stripe]
+ *     summary: Avvia (o riprende) l'onboarding Stripe Connect Express del chiamante
+ *     description: >
+ *       Crea il profilo utente se mancante, crea l'account Stripe Connect Express se non esiste
+ *       ancora, e restituisce un account link di onboarding.
+ *     security:
+ *       - supabaseSessionCookie: []
+ *     responses:
+ *       200:
+ *         description: Link di onboarding creato
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 url: { type: string, format: uri }
+ *       401:
+ *         description: Non autenticato
+ *       404:
+ *         description: Impossibile creare/leggere il profilo
+ *         content:
+ *           application/json:
+ *             schema: { $ref: '#/components/schemas/Error' }
+ *       500:
+ *         description: Errore Stripe o database
+ *         content:
+ *           application/json:
+ *             schema: { $ref: '#/components/schemas/Error' }
+ */
 export async function POST(request: NextRequest) {
   try {
     const { supabase, user, unauthorizedResponse } = await requireApiUser()

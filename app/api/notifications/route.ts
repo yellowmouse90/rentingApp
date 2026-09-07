@@ -4,6 +4,43 @@ import { requireApiUser } from "@/lib/auth/api"
 const DEFAULT_PAGE_SIZE = 20
 const MAX_PAGE_SIZE = 50
 
+/**
+ * @swagger
+ * /notifications:
+ *   get:
+ *     tags: [Notifications]
+ *     summary: Elenca le notifiche dell'utente autenticato (cursor-based)
+ *     security:
+ *       - supabaseSessionCookie: []
+ *     parameters:
+ *       - name: before
+ *         in: query
+ *         required: false
+ *         schema: { type: string, format: date-time }
+ *       - name: limit
+ *         in: query
+ *         required: false
+ *         schema: { type: integer, default: 20, maximum: 50 }
+ *     responses:
+ *       200:
+ *         description: Pagina di notifiche
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 notifications:
+ *                   type: array
+ *                   items: { $ref: '#/components/schemas/Notification' }
+ *                 hasMore: { type: boolean }
+ *       401:
+ *         description: Non autenticato
+ *       500:
+ *         description: Errore interno
+ *         content:
+ *           application/json:
+ *             schema: { $ref: '#/components/schemas/Error' }
+ */
 export async function GET(request: Request) {
   const { supabase, user, unauthorizedResponse } = await requireApiUser()
   if (unauthorizedResponse) {

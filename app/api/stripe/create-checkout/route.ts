@@ -2,6 +2,60 @@ import { NextRequest, NextResponse } from "next/server"
 import { requireApiUser } from "@/lib/auth/api"
 import { stripe } from "@/lib/stripe"
 
+/**
+ * @swagger
+ * /stripe/create-checkout:
+ *   post:
+ *     tags: [Stripe]
+ *     summary: Crea una sessione Stripe Checkout per un ordine accettato
+ *     description: >
+ *       capture_method manual (autorizza ora, cattura solo a mark_returned_ok). Il renter è
+ *       addebitato solo del subtotale a cattura; la commissione piattaforma è
+ *       application_fee_amount sul payout del proprietario. Idempotency key basata sull'orderId
+ *       per evitare doppie autorizzazioni.
+ *     security:
+ *       - supabaseSessionCookie: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [orderId]
+ *             properties:
+ *               orderId: { type: string, format: uuid }
+ *     responses:
+ *       200:
+ *         description: URL della sessione Stripe Checkout
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 url: { type: string, format: uri }
+ *       400:
+ *         description: Parametri mancanti, ordine non in stato "accepted", o proprietario non abilitato ai pagamenti
+ *         content:
+ *           application/json:
+ *             schema: { $ref: '#/components/schemas/Error' }
+ *       401:
+ *         description: Non autenticato
+ *       403:
+ *         description: Il chiamante non è il renter dell'ordine
+ *         content:
+ *           application/json:
+ *             schema: { $ref: '#/components/schemas/Error' }
+ *       404:
+ *         description: Ordine o dettaglio non trovato
+ *         content:
+ *           application/json:
+ *             schema: { $ref: '#/components/schemas/Error' }
+ *       500:
+ *         description: Errore Stripe
+ *         content:
+ *           application/json:
+ *             schema: { $ref: '#/components/schemas/Error' }
+ */
 export async function POST(request: NextRequest) {
   try {
     const { supabase, user, unauthorizedResponse } = await requireApiUser()

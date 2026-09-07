@@ -1,6 +1,47 @@
 import { createClient } from "@/lib/supabase/server"
 import { NextResponse } from "next/server"
 
+/**
+ * @swagger
+ * /chat/messages/read:
+ *   post:
+ *     tags: [Chat]
+ *     summary: Segna una lista di messaggi come letti
+ *     security:
+ *       - supabaseSessionCookie: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [conversationId, messageIds]
+ *             properties:
+ *               conversationId: { type: string, format: uuid }
+ *               messageIds:
+ *                 type: array
+ *                 items: { type: string, format: uuid }
+ *                 minItems: 1
+ *     responses:
+ *       200:
+ *         description: Aggiornati
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success: { type: boolean }
+ *       400:
+ *         description: Campi mancanti
+ *         content:
+ *           application/json:
+ *             schema: { $ref: '#/components/schemas/Error' }
+ *       500:
+ *         description: Errore interno
+ *         content:
+ *           application/json:
+ *             schema: { $ref: '#/components/schemas/Error' }
+ */
 export async function POST(request: Request) {
   try {
     const { conversationId, messageIds } = await request.json()

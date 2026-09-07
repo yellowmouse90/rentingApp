@@ -1,6 +1,28 @@
 import { NextResponse } from "next/server"
 import { requireApiUser } from "@/lib/auth/api"
 
+/**
+ * @swagger
+ * /notifications/read-all:
+ *   post:
+ *     tags: [Notifications]
+ *     summary: Segna tutte le notifiche non lette del chiamante come lette
+ *     security:
+ *       - supabaseSessionCookie: []
+ *     responses:
+ *       200:
+ *         description: Aggiornate
+ *         content:
+ *           application/json:
+ *             schema: { $ref: '#/components/schemas/Ok' }
+ *       401:
+ *         description: Non autenticato
+ *       500:
+ *         description: Errore interno
+ *         content:
+ *           application/json:
+ *             schema: { $ref: '#/components/schemas/Error' }
+ */
 export async function POST() {
   const { supabase, user, unauthorizedResponse } = await requireApiUser()
   if (unauthorizedResponse) {
