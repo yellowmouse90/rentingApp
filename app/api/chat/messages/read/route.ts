@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server"
+import { requireApiUser } from "@/lib/auth/api"
 import { NextResponse } from "next/server"
 
 /**
@@ -44,6 +44,11 @@ import { NextResponse } from "next/server"
  */
 export async function POST(request: Request) {
   try {
+    const { supabase, unauthorizedResponse } = await requireApiUser()
+    if (unauthorizedResponse) {
+      return unauthorizedResponse
+    }
+
     const { conversationId, messageIds } = await request.json()
 
     if (!conversationId || !messageIds || messageIds.length === 0) {
@@ -52,8 +57,6 @@ export async function POST(request: Request) {
         { status: 400 }
       )
     }
-
-    const supabase = await createClient()
 
     // Mark messages as read
     const { error } = await supabase

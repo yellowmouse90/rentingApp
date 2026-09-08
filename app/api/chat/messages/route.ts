@@ -1,4 +1,3 @@
-import { createClient } from "@/lib/supabase/server"
 import { requireApiUser } from "@/lib/auth/api"
 import {
   MAX_MESSAGE_LENGTH,
@@ -58,6 +57,11 @@ const MAX_PAGE_SIZE = 100
  */
 export async function GET(request: Request) {
   try {
+    const { supabase, unauthorizedResponse } = await requireApiUser()
+    if (unauthorizedResponse) {
+      return unauthorizedResponse
+    }
+
     const { searchParams } = new URL(request.url)
     const conversationId = searchParams.get("conversation_id")
     const before = searchParams.get("before")
@@ -72,8 +76,6 @@ export async function GET(request: Request) {
         { status: 400 }
       )
     }
-
-    const supabase = await createClient()
 
     // Fetch the most recent page of messages (or the page right before
     // `before`), newest first, then reverse for chronological display.
