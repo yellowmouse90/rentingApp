@@ -1,15 +1,18 @@
--- Fixes 3 Supabase linter errors:
+-- Fixes Supabase linter errors:
 -- 1/2. inventory_domain.categories has the "categories_select_all" policy from
 --      000_baseline.sql but RLS was never enabled on the table, so the policy
 --      has no effect (Postgres ignores policies when RLS is off).
--- 3. public.spatial_ref_sys (PostGIS system table, SRID reference data) is
---    reachable via PostgREST like every table in an exposed schema, but has
---    no RLS. It's read-only reference data used internally by PostGIS
---    functions (e.g. search_listings_nearby), so we enable RLS and add an
---    explicit "select for everyone" policy rather than leaving it unreadable.
+--
+-- NOTE on the 3rd linter error (public.spatial_ref_sys "RLS not enabled"):
+-- this table is created and owned by the PostGIS extension (owned by a
+-- Supabase-managed system role, not the "postgres" role used in the SQL
+-- editor / migrations), so `ALTER TABLE public.spatial_ref_sys ENABLE ROW
+-- LEVEL SECURITY` fails with "must be owner of table spatial_ref_sys" even
+-- for the project owner. This cannot be fixed with a plain SQL migration.
+-- It only holds public, non-sensitive SRID reference data (no user data),
+-- so the standard remediation is to dismiss/acknowledge this specific
+-- finding in the Supabase Dashboard's Security Advisor rather than "fixing"
+-- it — see https://supabase.com/docs/guides/database/database-linter#rls-disabled-in-public
+-- (spatial_ref_sys is called out there as a known PostGIS exception).
 
 ALTER TABLE "inventory_domain"."categories" ENABLE ROW LEVEL SECURITY;
-
-ALTER TABLE "public"."spatial_ref_sys" ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "spatial_ref_sys_select_all" ON "public"."spatial_ref_sys" FOR SELECT USING (true);
