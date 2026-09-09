@@ -41,7 +41,7 @@ export async function GET(request: NextRequest) {
               total_reviews_as_owner: 0,
               total_reviews_as_renter: 0,
             },
-            { onConflict: "id" }
+            { onConflict: "id", ignoreDuplicates: true }
           )
 
         if (upsertError) {
