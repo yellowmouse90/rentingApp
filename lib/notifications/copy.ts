@@ -163,3 +163,65 @@ export function getNotificationLinkUrl(type: AlertType, orderId?: string, conver
   if (type === "new_message") return conversationId ? `/messages?conversation=${conversationId}` : null
   return orderId ? `/bookings/${orderId}` : null
 }
+
+// Label for the CTA button in notification emails - a "sensible reference" (the order/booking,
+// the conversation) rather than a generic "click here", pointing at the same target as
+// getNotificationLinkUrl above.
+const CTA_LABEL: Record<AlertType, Record<Language, (orderId?: string) => string>> = {
+  booking_requested: {
+    it: (id) => `Vedi la richiesta #${shortId(id)}`,
+    en: (id) => `View request #${shortId(id)}`,
+  },
+  booking_accepted: {
+    it: (id) => `Vedi il noleggio #${shortId(id)}`,
+    en: (id) => `View rental #${shortId(id)}`,
+  },
+  booking_rejected: {
+    it: (id) => `Vedi il noleggio #${shortId(id)}`,
+    en: (id) => `View rental #${shortId(id)}`,
+  },
+  booking_cancelled_by_renter: {
+    it: (id) => `Vedi il noleggio #${shortId(id)}`,
+    en: (id) => `View rental #${shortId(id)}`,
+  },
+  booking_paid: {
+    it: (id) => `Vedi il noleggio #${shortId(id)}`,
+    en: (id) => `View rental #${shortId(id)}`,
+  },
+  booking_handover_confirmed: {
+    it: (id) => `Vedi il noleggio #${shortId(id)}`,
+    en: (id) => `View rental #${shortId(id)}`,
+  },
+  booking_returned_ok: {
+    it: (id) => `Vedi il noleggio #${shortId(id)}`,
+    en: (id) => `View rental #${shortId(id)}`,
+  },
+  booking_damage_reported: {
+    it: (id) => `Vedi il noleggio #${shortId(id)}`,
+    en: (id) => `View rental #${shortId(id)}`,
+  },
+  payment_succeeded: {
+    it: (id) => `Vedi il noleggio #${shortId(id)}`,
+    en: (id) => `View rental #${shortId(id)}`,
+  },
+  payment_failed: {
+    it: (id) => `Vedi il noleggio #${shortId(id)}`,
+    en: (id) => `View rental #${shortId(id)}`,
+  },
+  stripe_onboarding_complete: {
+    it: () => "Vai ai pagamenti",
+    en: () => "Go to payments",
+  },
+  review_received: {
+    it: (id) => `Vedi la recensione #${shortId(id)}`,
+    en: (id) => `View review #${shortId(id)}`,
+  },
+  new_message: {
+    it: () => "Vedi il messaggio",
+    en: () => "View message",
+  },
+}
+
+export function getNotificationCtaLabel(type: AlertType, language: Language, orderId?: string): string {
+  return CTA_LABEL[type][language](orderId)
+}

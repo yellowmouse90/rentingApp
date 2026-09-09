@@ -5,7 +5,9 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import { getEffectivePreference } from "./preferences"
 import { sendNotificationEmail } from "./email"
 import { sendPushNotification } from "./push"
-import { getNotificationCopy, getNotificationLinkUrl, type CopyParams } from "./copy"
+import { getNotificationCopy, getNotificationLinkUrl, getNotificationCtaLabel, type CopyParams } from "./copy"
+import { renderNotificationEmail } from "./email-template"
+import { SITE_NAME } from "@/lib/seo"
 import type { AlertType } from "./types"
 
 interface CreateNotificationParams {
@@ -75,10 +77,17 @@ export async function createNotification(params: CreateNotificationParams): Prom
         .maybeSingle()
 
       if (recipientProfile?.email) {
+        const html = renderNotificationEmail({
+          title,
+          body,
+          language: params.language,
+          linkUrl,
+          ctaLabel: linkUrl ? getNotificationCtaLabel(params.type, params.language, params.orderId) : undefined,
+        })
         // Non-blocking: schedule the outbound email after the response is
         // sent instead of holding up the caller's API response on it (first
         // use of next/server's after() in this codebase).
-        after(() => sendNotificationEmail(recipientProfile.email, title, `<p>${body}</p>`))
+        after(() => sendNotificationEmail(recipientProfile.email, `${SITE_NAME} · ${title}`, html))
       } else {
         console.warn("Notifiche: email destinatario non trovata, invio saltato", params.recipientId)
       }
