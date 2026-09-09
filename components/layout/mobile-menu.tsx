@@ -116,6 +116,14 @@ export function MobileMenu({ user, profile }: MobileMenuProps) {
                   <Package className="h-4 w-4" />
                   {t("nav.my_rentals")}
                 </Link>
+                <Link
+                  href="/profile/edit"
+                  onClick={() => setIsOpen(false)}
+                  className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted"
+                >
+                  <Settings className="h-4 w-4" />
+                  {t("nav.settings")}
+                </Link>
                 <button
                   onClick={handleSignOut}
                   className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-destructive transition-colors hover:bg-destructive/10"
