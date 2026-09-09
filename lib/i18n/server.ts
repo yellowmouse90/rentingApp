@@ -214,10 +214,12 @@ const serverTranslations: Record<Language, Record<string, string>> = {
     "rental_status.returned_ok": "Restituito integro",
     "rental_status.damaged": "Danneggiato",
 
-    "profile_edit.title": "Impostazioni",
-    "profile_edit.subtitle": "Gestisci le tue preferenze di notifica.",
+    "profile_edit.title": "Modifica profilo",
+    "profile_edit.subtitle": "Aggiorna le informazioni del tuo profilo e le tue preferenze.",
+    "profile_edit.section_title": "Dati personali",
+    "profile_edit.section_subtitle": "Queste informazioni sono visibili agli altri utenti sul tuo profilo pubblico.",
     "notifications.prefs.title": "Notifiche",
-    "notifications.prefs.subtitle": "Scegli come vuoi essere avvisato per ogni tipo di evento.",
+    "notifications.prefs.subtitle": "Scegli come vuoi essere avvisato per ogni tipo di attivita.",
   },
   en: {
     "dashboard.welcome": "Welcome",
@@ -428,10 +430,12 @@ const serverTranslations: Record<Language, Record<string, string>> = {
     "rental_status.returned_ok": "Returned in good condition",
     "rental_status.damaged": "Damaged",
 
-    "profile_edit.title": "Settings",
-    "profile_edit.subtitle": "Manage your notification preferences.",
+    "profile_edit.title": "Edit profile",
+    "profile_edit.subtitle": "Update your profile information and preferences.",
+    "profile_edit.section_title": "Personal details",
+    "profile_edit.section_subtitle": "This information is visible to other users on your public profile.",
     "notifications.prefs.title": "Notifications",
-    "notifications.prefs.subtitle": "Choose how you want to be notified for each type of event.",
+    "notifications.prefs.subtitle": "Choose how you want to be alerted for each type of activity.",
   },
 }
 
