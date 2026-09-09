@@ -5,6 +5,7 @@ import type { AlertType } from "./types"
 export interface CopyParams {
   actorName?: string
   orderId?: string
+  conversationId?: string
 }
 
 type Language = "it" | "en"
@@ -141,13 +142,24 @@ const COPY: Record<AlertType, Record<Language, CopyFn>> = {
       body: `${p.actorName ?? "A user"} left you a review for rental #${shortId(p.orderId)}.`,
     }),
   },
+  new_message: {
+    it: (p) => ({
+      title: "Nuovo messaggio",
+      body: `${p.actorName ?? "Un utente"} ti ha scritto un nuovo messaggio nella chat del noleggio #${shortId(p.orderId)}.`,
+    }),
+    en: (p) => ({
+      title: "New message",
+      body: `${p.actorName ?? "A user"} sent you a new message in the rental #${shortId(p.orderId)} chat.`,
+    }),
+  },
 }
 
 export function getNotificationCopy(type: AlertType, language: Language, params: CopyParams) {
   return COPY[type][language](params)
 }
 
-export function getNotificationLinkUrl(type: AlertType, orderId?: string): string | null {
+export function getNotificationLinkUrl(type: AlertType, orderId?: string, conversationId?: string): string | null {
   if (type === "stripe_onboarding_complete") return "/dashboard/payments"
+  if (type === "new_message") return conversationId ? `/messages?conversation=${conversationId}` : null
   return orderId ? `/bookings/${orderId}` : null
 }
