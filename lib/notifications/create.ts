@@ -4,6 +4,7 @@ import { after } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { getEffectivePreference } from "./preferences"
 import { sendNotificationEmail } from "./email"
+import { sendPushNotification } from "./push"
 import { getNotificationCopy, getNotificationLinkUrl, type CopyParams } from "./copy"
 import type { AlertType } from "./types"
 
@@ -48,6 +49,10 @@ export async function createNotification(params: CreateNotificationParams): Prom
       })
       if (error) {
         console.error("Notifiche: inserimento riga fallito", params.type, error)
+      } else {
+        // Push mirrors the in-app toggle for now (no separate preference row/column yet) - after()
+        // for the same reason as the email send below: never hold up the caller's response on it.
+        after(() => sendPushNotification({ recipientId: params.recipientId, title, body, linkUrl }))
       }
     }
 
