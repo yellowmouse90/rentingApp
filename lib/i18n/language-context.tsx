@@ -492,7 +492,6 @@ const translations: Record<Language, Record<string, string>> = {
     "notifications.prefs.section_bookings": "Prenotazioni",
     "notifications.prefs.section_payments": "Pagamenti",
     "notifications.prefs.section_reviews": "Recensioni",
-    "notifications.prefs.section_messages": "Messaggi",
     "notifications.types.booking_requested": "Nuova richiesta di noleggio",
     "notifications.types.booking_accepted": "Prenotazione accettata",
     "notifications.types.booking_rejected": "Prenotazione rifiutata",
@@ -505,7 +504,6 @@ const translations: Record<Language, Record<string, string>> = {
     "notifications.types.payment_failed": "Pagamento non riuscito",
     "notifications.types.stripe_onboarding_complete": "Configurazione pagamenti completata",
     "notifications.types.review_received": "Nuova recensione ricevuta",
-    "notifications.types.new_message": "Nuovo messaggio in chat",
 
     "profile_edit.title": "Modifica profilo",
     "profile_edit.subtitle": "Aggiorna le informazioni del tuo profilo e le tue preferenze.",
@@ -1034,7 +1032,6 @@ const translations: Record<Language, Record<string, string>> = {
     "notifications.prefs.section_bookings": "Bookings",
     "notifications.prefs.section_payments": "Payments",
     "notifications.prefs.section_reviews": "Reviews",
-    "notifications.prefs.section_messages": "Messages",
     "notifications.types.booking_requested": "New rental request",
     "notifications.types.booking_accepted": "Booking accepted",
     "notifications.types.booking_rejected": "Booking rejected",
@@ -1047,7 +1044,6 @@ const translations: Record<Language, Record<string, string>> = {
     "notifications.types.payment_failed": "Payment failed",
     "notifications.types.stripe_onboarding_complete": "Payment setup complete",
     "notifications.types.review_received": "New review received",
-    "notifications.types.new_message": "New chat message",
 
     "profile_edit.title": "Edit profile",
     "profile_edit.subtitle": "Update your profile information and preferences.",
