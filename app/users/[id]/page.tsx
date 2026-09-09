@@ -46,7 +46,7 @@ export async function generateMetadata({ params }: UserProfilePageProps): Promis
 
 export default async function UserProfilePage({ params }: UserProfilePageProps) {
   const { id } = await params
-  const { t, intlLocale } = await getServerI18n()
+  const { t, intlLocale, language } = await getServerI18n()
   const supabase = await createClient()
 
   const dbErrors: string[] = []
@@ -72,7 +72,7 @@ export default async function UserProfilePage({ params }: UserProfilePageProps) 
     .select(
       `
       *,
-      category:categories(id, name, slug),
+      category:categories(id, name, slug, translations:category_translations(language_code, name)),
       images:listing_images(id, image_url, display_order)
     `
     )
@@ -186,7 +186,12 @@ export default async function UserProfilePage({ params }: UserProfilePageProps) 
                 const mainImage = listing.images
                   ?.slice()
                   .sort((a, b) => a.display_order - b.display_order)[0]
-                const categoryName = (listing.category as { name: string } | undefined)?.name
+                const category = listing.category as
+                  | { name: string; translations: { language_code: string; name: string }[] | null }
+                  | undefined
+                const categoryName =
+                  category?.translations?.find((tr) => tr.language_code === language)?.name ||
+                  category?.name
 
                 return (
                   <Link
