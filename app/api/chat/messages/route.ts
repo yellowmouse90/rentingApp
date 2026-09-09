@@ -256,6 +256,10 @@ export async function POST(request: Request) {
         copyParams: { actorName },
         orderId: conversation.rental_order_id ?? undefined,
         conversationId,
+        // Push only - a new message belongs in the chat itself, not duplicated into the generic
+        // in-app notifications bell (unlike bookings/payments/reviews, chat already has its own
+        // dedicated surface for this).
+        persist: false,
       })
     }
 

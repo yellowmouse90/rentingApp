@@ -16,6 +16,12 @@ interface CreateNotificationParams {
   copyParams?: CopyParams
   orderId?: string
   conversationId?: string
+  // When false, this only pushes (and emails, if that preference is on) - it never writes a row
+  // to notifications_domain.notifications, so it never shows up in the in-app bell list. For
+  // alert types that already have their own dedicated surface (new_message: the chat screen
+  // itself), the bell list would just be a duplicate the recipient can't act on from there.
+  // Defaults to true for every existing call site.
+  persist?: boolean
 }
 
 // Never lets a notification failure fail the caller's own action (a booking
@@ -39,7 +45,11 @@ export async function createNotification(params: CreateNotificationParams): Prom
     })
     const linkUrl = getNotificationLinkUrl(params.type, params.orderId, params.conversationId)
 
-    if (preference.inApp) {
+    if (preference.inApp && params.persist === false) {
+      // Push mirrors the in-app toggle for now (no separate preference row/column yet) - after()
+      // for the same reason as the email send below: never hold up the caller's response on it.
+      after(() => sendPushNotification({ recipientId: params.recipientId, title, body, linkUrl }))
+    } else if (preference.inApp) {
       const { error } = await supabase.schema("notifications_domain").from("notifications").insert({
         recipient_id: params.recipientId,
         actor_id: params.actorId,
@@ -52,8 +62,6 @@ export async function createNotification(params: CreateNotificationParams): Prom
       if (error) {
         console.error("Notifiche: inserimento riga fallito", params.type, error)
       } else {
-        // Push mirrors the in-app toggle for now (no separate preference row/column yet) - after()
-        // for the same reason as the email send below: never hold up the caller's response on it.
         after(() => sendPushNotification({ recipientId: params.recipientId, title, body, linkUrl }))
       }
     }
