@@ -91,6 +91,7 @@ export function getApiDocs() {
               "payment_failed",
               "stripe_onboarding_complete",
               "review_received",
+              "new_message",
             ],
           },
           Notification: {

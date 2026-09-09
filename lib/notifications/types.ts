@@ -11,6 +11,7 @@ export const ALERT_TYPES = [
   "payment_failed",
   "stripe_onboarding_complete",
   "review_received",
+  "new_message",
 ] as const
 
 export type AlertType = (typeof ALERT_TYPES)[number]
@@ -36,4 +37,7 @@ export const DEFAULT_PREFERENCES: Record<AlertType, NotificationPreference> = {
   payment_failed: { inApp: true, email: true },
   stripe_onboarding_complete: { inApp: true, email: true },
   review_received: { inApp: true, email: true },
+  // Email off by default - a per-message email would be too noisy; in-app + push (which mirrors
+  // the in-app toggle, see createNotification) is enough to surface a new chat message.
+  new_message: { inApp: true, email: false },
 }

@@ -15,6 +15,7 @@ interface CreateNotificationParams {
   language: "it" | "en"
   copyParams?: CopyParams
   orderId?: string
+  conversationId?: string
 }
 
 // Never lets a notification failure fail the caller's own action (a booking
@@ -34,8 +35,9 @@ export async function createNotification(params: CreateNotificationParams): Prom
     const { title, body } = getNotificationCopy(params.type, params.language, {
       ...params.copyParams,
       orderId: params.orderId,
+      conversationId: params.conversationId,
     })
-    const linkUrl = getNotificationLinkUrl(params.type, params.orderId)
+    const linkUrl = getNotificationLinkUrl(params.type, params.orderId, params.conversationId)
 
     if (preference.inApp) {
       const { error } = await supabase.schema("notifications_domain").from("notifications").insert({
