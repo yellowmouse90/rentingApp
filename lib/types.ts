@@ -20,6 +20,9 @@ export interface Profile {
   total_reviews_as_renter: number
   created_at: string
   updated_at: string
+  // Set by DELETE /api/account (soft delete, migration 015) instead of removing the row -
+  // personal data on the row has already been scrubbed once this is non-null.
+  deleted_at: string | null
 }
 
 export interface Category {
