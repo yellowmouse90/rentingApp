@@ -7,6 +7,7 @@ import { formatDistanceToNow } from "date-fns"
 import { it, enUS } from "date-fns/locale"
 import { useUnreadNotificationCount } from "@/lib/notifications/use-unread-count"
 import { useLanguage } from "@/lib/i18n/language-context"
+import { createClient } from "@/lib/supabase/client"
 
 interface NotificationItem {
   id: string
@@ -27,8 +28,11 @@ export function NotificationBell({ userId }: NotificationBellProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [notifications, setNotifications] = useState<NotificationItem[]>([])
   const [isLoading, setIsLoading] = useState(false)
+  const [isLoadingMore, setIsLoadingMore] = useState(false)
+  const [hasMore, setHasMore] = useState(false)
   const [hasLoaded, setHasLoaded] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
+  const hasLoadedRef = useRef(false)
   const { count, refresh } = useUnreadNotificationCount(userId)
   const { t, language } = useLanguage()
   const dateLocale = language === "en" ? enUS : it
@@ -43,6 +47,46 @@ export function NotificationBell({ userId }: NotificationBellProps) {
     return () => document.removeEventListener("mousedown", handleClickOutside)
   }, [])
 
+  useEffect(() => {
+    hasLoadedRef.current = hasLoaded
+  }, [hasLoaded])
+
+  // Keeps an already-loaded list fresh in the background, so a notification that arrives while
+  // the dropdown is closed (or open) is already there by the time the user clicks the bell -
+  // reopening used to skip loadNotifications entirely once hasLoaded was true, so a new
+  // notification created after the first open was never fetched.
+  useEffect(() => {
+    if (!userId) return
+
+    const supabase = createClient()
+    const channelName = `notification-bell-${userId}-${Math.random().toString(36).slice(2)}`
+    const channel = supabase.channel(channelName)
+
+    // Realtime postgres_changes events are not scoped by RLS on the wire (see
+    // lib/chat/realtime.ts / use-unread-count.tsx) - filter server-side on recipient_id.
+    channel
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "notifications_domain", table: "notifications", filter: `recipient_id=eq.${userId}` },
+        (payload) => {
+          if (!hasLoadedRef.current) return
+          const newNotification = payload.new as NotificationItem
+          setNotifications((prev) =>
+            prev.some((n) => n.id === newNotification.id) ? prev : [newNotification, ...prev]
+          )
+        }
+      )
+      .subscribe((status) => {
+        if (status === "CHANNEL_ERROR") {
+          console.error("Notification bell realtime channel error")
+        }
+      })
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [userId])
+
   const loadNotifications = useCallback(async () => {
     try {
       setIsLoading(true)
@@ -50,6 +94,7 @@ export function NotificationBell({ userId }: NotificationBellProps) {
       if (!response.ok) throw new Error("Failed to fetch notifications")
       const data = await response.json()
       setNotifications(data.notifications ?? [])
+      setHasMore(Boolean(data.hasMore))
       setHasLoaded(true)
     } catch (err) {
       console.error("Notifications fetch error:", err)
@@ -57,6 +102,34 @@ export function NotificationBell({ userId }: NotificationBellProps) {
       setIsLoading(false)
     }
   }, [])
+
+  const loadMoreNotifications = useCallback(async () => {
+    const oldest = notifications[notifications.length - 1]
+    if (!oldest) return
+    try {
+      setIsLoadingMore(true)
+      const response = await fetch(`/api/notifications?before=${encodeURIComponent(oldest.created_at)}`)
+      if (!response.ok) throw new Error("Failed to fetch notifications")
+      const data = await response.json()
+      setNotifications((current) => [...current, ...(data.notifications ?? [])])
+      setHasMore(Boolean(data.hasMore))
+    } catch (err) {
+      console.error("Notifications fetch error:", err)
+    } finally {
+      setIsLoadingMore(false)
+    }
+  }, [notifications])
+
+  const handleScroll = useCallback(
+    (event: React.UIEvent<HTMLDivElement>) => {
+      if (isLoadingMore || !hasMore) return
+      const el = event.currentTarget
+      if (el.scrollHeight - el.scrollTop - el.clientHeight < 48) {
+        loadMoreNotifications()
+      }
+    },
+    [hasMore, isLoadingMore, loadMoreNotifications]
+  )
 
   const handleToggle = () => {
     const next = !isOpen
@@ -120,7 +193,7 @@ export function NotificationBell({ userId }: NotificationBellProps) {
             )}
           </div>
 
-          <div className="max-h-96 overflow-y-auto py-1">
+          <div className="max-h-96 overflow-y-auto py-1" onScroll={handleScroll}>
             {isLoading && (
               <p className="px-3 py-4 text-center text-sm text-muted-foreground">{t("common.loading")}</p>
             )}
@@ -151,6 +224,10 @@ export function NotificationBell({ userId }: NotificationBellProps) {
                   </p>
                 </Link>
               ))}
+
+            {!isLoading && isLoadingMore && (
+              <p className="px-3 py-2 text-center text-xs text-muted-foreground">{t("common.loading")}</p>
+            )}
           </div>
         </div>
       )}
