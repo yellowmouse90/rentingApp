@@ -47,12 +47,16 @@ export function ChatThread({
   const [hasMoreMessages, setHasMoreMessages] = useState(false)
   const [isLoadingMore, setIsLoadingMore] = useState(false)
 
-  const otherUser =
-    conversation.other_participant_details || ({
-      display_name: t("chat.default_user"),
-      avatar_url: null,
-      email: null,
-    } as unknown as Profile)
+  // other_participant_details is a real (but possibly nameless) profile once a soft-deleted
+  // counterpart's account still resolves by id (DELETE /api/account, migration 015) - only a
+  // legacy hard-deleted profile (pre-migration-015 accounts, or migration 004's null
+  // participant_one/two) leaves the field absent entirely. Both cases read the same to the
+  // viewer, so both fall back to the same translated label - same fallback MessageList
+  // already uses for a null message.sender_id (see its "chat.deleted_user" case).
+  const otherUser = {
+    ...conversation.other_participant_details,
+    display_name: conversation.other_participant_details?.display_name || t("chat.deleted_user"),
+  } as unknown as Profile
 
   const orderItems = conversation.rental_order?.items || []
   const firstListing = orderItems[0]?.listing as

@@ -4,13 +4,6 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import { getServerI18n } from "@/lib/i18n/server"
 import { getBlockingOrderStatuses } from "@/lib/account/rules"
 
-// Baked directly into profiles.display_name (see below) rather than left null with a
-// per-viewer i18n fallback like the null-sender chat case (lib/i18n "chat.deleted_user") -
-// every other place that reads a profile's display_name (listings, reviews, bookings)
-// would otherwise need its own "was this account deleted" branch. The app's user-facing
-// copy is Italian-first (see CLAUDE.md), so this one baked string follows that convention.
-const DELETED_DISPLAY_NAME = "Utente eliminato"
-
 /**
  * @swagger
  * /account:
@@ -148,7 +141,14 @@ export async function DELETE() {
       .schema("users_domain")
       .from("profiles")
       .update({
-        display_name: DELETED_DISPLAY_NAME,
+        // Left null rather than baked to a fixed string: every place that renders another
+        // user's display_name already falls back to a properly localized (per-viewer)
+        // "chat.deleted_user"/"listing_detail.default_user" string when it's empty - same
+        // mechanism the app already used for a null message.sender_id. See the matching
+        // notes in chat-thread.tsx, conversation-list.tsx, reviews-section.tsx, and the two
+        // app/users/[id] and app/listings/[id] pages (which stop reading profile.email as an
+        // intermediate fallback, since it's a scrambled placeholder from here on).
+        display_name: null,
         bio: null,
         phone: null,
         avatar_url: null,

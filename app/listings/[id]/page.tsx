@@ -174,10 +174,9 @@ export default async function ListingDetailPage({ params }: ListingDetailPagePro
     created_at: string
   }
 
-  const ownerDisplayName =
-    owner.display_name?.trim() ||
-    owner.email?.split("@")[0]?.trim() ||
-    t("listing_detail.default_user")
+  // No email fallback (see the matching note in app/users/[id]/page.tsx) - display_name is
+  // only ever empty for a deleted account, whose email is a scrambled placeholder by then.
+  const ownerDisplayName = owner.display_name?.trim() || t("listing_detail.default_user")
 
   const images = (listing.images as { id: string; image_url: string; display_order: number }[])?.sort(
     (a, b) => a.display_order - b.display_order

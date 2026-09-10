@@ -82,8 +82,11 @@ export default async function UserProfilePage({ params }: UserProfilePageProps) 
 
   if (listingsError) dbErrors.push(`${t("public_profile.listings_error")}: ${listingsError.message}`)
 
-  const displayName =
-    profile.display_name?.trim() || profile.email?.split("@")[0]?.trim() || t("listing_detail.default_user")
+  // No email fallback here (unlike some other places that read profile.email as a last
+  // resort) - display_name is only ever empty for a deleted account (DELETE /api/account,
+  // migration 015), and its email column holds a scrambled deleted-<uuid>@deleted.invalid
+  // placeholder at that point, not something presentable.
+  const displayName = profile.display_name?.trim() || t("listing_detail.default_user")
 
   const items = (listings || []) as Listing[]
 
