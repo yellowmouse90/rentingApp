@@ -519,6 +519,14 @@ const translations: Record<Language, Record<string, string>> = {
     "profile_edit.save_success": "Profilo aggiornato con successo",
     "profile_edit.save_error": "Impossibile salvare il profilo",
 
+    "account_deletion.section_title": "Elimina account",
+    "account_deletion.section_subtitle": "Questa azione è irreversibile.",
+    "account_deletion.warning": "Eliminando l'account perderai in modo permanente il tuo profilo, i tuoi annunci, la cronologia degli ordini conclusi e le conversazioni associate. Puoi procedere solo se tutti i tuoi ordini (come noleggiatore o come proprietario) sono in uno stato finale: completato, annullato o in disputa.",
+    "account_deletion.button": "Elimina il mio account",
+    "account_deletion.confirm_prompt": "Sei sicuro di voler eliminare il tuo account? L'operazione è irreversibile.",
+    "account_deletion.deleting": "Eliminazione in corso...",
+    "account_deletion.error_generic": "Impossibile eliminare l'account. Riprova più tardi.",
+
     "reviews.leave_review_title": "Lascia una recensione",
     "reviews.leave_review_cta": "Lascia una recensione",
     "reviews.review_lender_cta": "Recensisci il prestatore",
@@ -1058,6 +1066,14 @@ const translations: Record<Language, Record<string, string>> = {
     "profile_edit.phone_placeholder": "E.g. +1 555 1234567",
     "profile_edit.save_success": "Profile updated successfully",
     "profile_edit.save_error": "Could not save profile",
+
+    "account_deletion.section_title": "Delete account",
+    "account_deletion.section_subtitle": "This action is irreversible.",
+    "account_deletion.warning": "Deleting your account will permanently remove your profile, your listings, the history of your completed orders and the related conversations. You can only proceed once every one of your orders (as renter or as owner) is in a final state: completed, cancelled or disputed.",
+    "account_deletion.button": "Delete my account",
+    "account_deletion.confirm_prompt": "Are you sure you want to delete your account? This cannot be undone.",
+    "account_deletion.deleting": "Deleting...",
+    "account_deletion.error_generic": "Could not delete your account. Please try again later.",
 
     "reviews.leave_review_title": "Leave a review",
     "reviews.leave_review_cta": "Leave a review",

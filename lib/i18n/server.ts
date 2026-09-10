@@ -94,6 +94,8 @@ const serverTranslations: Record<Language, Record<string, string>> = {
     "api.listings.forbidden": "Operazione non consentita",
     "api.listings.delete_error": "Errore durante l'eliminazione",
     "api.common.internal_error": "Errore interno",
+    "api.account.blocking_orders": "Non puoi eliminare l'account: hai ordini non ancora conclusi. Completa o annulla tutti i tuoi ordini prima di procedere.",
+    "api.account.delete_error": "Impossibile eliminare l'account",
 
     "header.profile_load_error": "Errore caricamento profilo",
 
@@ -218,6 +220,9 @@ const serverTranslations: Record<Language, Record<string, string>> = {
     "profile_edit.subtitle": "Aggiorna le informazioni del tuo profilo e le tue preferenze.",
     "profile_edit.section_title": "Dati personali",
     "profile_edit.section_subtitle": "Queste informazioni sono visibili agli altri utenti sul tuo profilo pubblico.",
+
+    "account_deletion.section_title": "Elimina account",
+    "account_deletion.section_subtitle": "Questa azione è irreversibile.",
     "notifications.prefs.title": "Notifiche",
     "notifications.prefs.subtitle": "Scegli come vuoi essere avvisato per ogni tipo di attivita.",
   },
@@ -310,6 +315,8 @@ const serverTranslations: Record<Language, Record<string, string>> = {
     "api.listings.forbidden": "Operation not allowed",
     "api.listings.delete_error": "Error while deleting",
     "api.common.internal_error": "Internal error",
+    "api.account.blocking_orders": "You can't delete your account: you still have orders that aren't finished. Complete or cancel all your orders first.",
+    "api.account.delete_error": "Could not delete account",
 
     "header.profile_load_error": "Error loading profile",
 
@@ -434,6 +441,10 @@ const serverTranslations: Record<Language, Record<string, string>> = {
     "profile_edit.subtitle": "Update your profile information and preferences.",
     "profile_edit.section_title": "Personal details",
     "profile_edit.section_subtitle": "This information is visible to other users on your public profile.",
+
+    "account_deletion.section_title": "Delete account",
+    "account_deletion.section_subtitle": "This action is irreversible.",
+
     "notifications.prefs.title": "Notifications",
     "notifications.prefs.subtitle": "Choose how you want to be alerted for each type of activity.",
   },
