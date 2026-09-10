@@ -11,7 +11,7 @@ export function HeroSection() {
     <section className="relative overflow-hidden py-20 sm:py-32">
       <div
         aria-hidden
-        className="bg-dot-grid absolute inset-0 -z-10 [mask-image:radial-gradient(ellipse_60%_80%_at_50%_0%,black_40%,transparent_100%)]"
+        className="absolute left-1/2 top-[-140px] -z-10 h-[560px] w-[900px] -translate-x-1/2 rounded-full bg-primary/10 blur-3xl"
       />
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-3xl text-center">
@@ -24,19 +24,23 @@ export function HeroSection() {
 
           {/* Search Bar */}
           <div className="mt-10">
-            <form action="/listings" method="GET" className="flex gap-2">
+            <form
+              action="/listings"
+              method="GET"
+              className="flex gap-2 rounded-full bg-card p-2 shadow-lg shadow-foreground/5"
+            >
               <div className="relative flex-1">
-                <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
+                <Search className="absolute left-5 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
                 <input
                   type="text"
                   name="q"
                   placeholder={t("home.hero.search_example")}
-                  className="w-full rounded-xl border border-input bg-background py-4 pl-12 pr-4 text-foreground shadow-sm placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  className="w-full rounded-full bg-transparent py-4 pl-12 pr-4 text-foreground placeholder:text-muted-foreground focus:outline-none"
                 />
               </div>
               <button
                 type="submit"
-                className="inline-flex items-center gap-2 rounded-xl bg-primary px-6 py-4 font-medium text-primary-foreground shadow-sm transition-colors hover:bg-primary/90"
+                className="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-4 font-medium text-primary-foreground shadow-md shadow-primary/30 transition-colors hover:bg-primary/90"
               >
                 {t("home.hero.search_button")}
                 <ArrowRight className="h-4 w-4" />

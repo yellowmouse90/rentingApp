@@ -55,7 +55,7 @@ export function FeaturedSection({ listings }: FeaturedSectionProps) {
             <Link
               key={listing.id}
               href={`/listings/${listing.id}`}
-              className="group overflow-hidden rounded-2xl border border-border bg-card transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-primary/5"
+              className="group overflow-hidden rounded-2xl bg-card shadow-sm shadow-foreground/5 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-foreground/10"
             >
               <div className="relative aspect-[4/3] overflow-hidden bg-muted">
                 {listing.images?.[0]?.image_url ? (

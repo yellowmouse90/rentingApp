@@ -38,7 +38,7 @@ export function CategorySection({ categories }: CategorySectionProps) {
             <Link
               key={category.id}
               href={`/listings?category=${category.slug}`}
-              className="group flex flex-col items-center rounded-2xl border border-border bg-card p-4 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary/5"
+              className="group flex flex-col items-center rounded-2xl bg-card p-4 shadow-sm shadow-foreground/5 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary/10"
             >
               <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10 text-2xl transition-colors group-hover:bg-primary/20">
                 {category.icon_name || "🔧"}

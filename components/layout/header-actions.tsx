@@ -26,7 +26,7 @@ export function HeaderActions({ user, profile }: HeaderActionsProps) {
         <ThemeSwitcher />
         <Link
           href="/listings/new"
-          className="inline-flex items-center gap-2 rounded-lg bg-accent px-4 py-2 text-sm font-medium text-accent-foreground transition-colors hover:bg-accent/90"
+          className="inline-flex items-center gap-2 rounded-full bg-accent px-4 py-2 text-sm font-medium text-accent-foreground transition-colors hover:bg-accent/90"
         >
           <Plus className="h-4 w-4" />
           {t("nav.publish_listing")}
@@ -50,7 +50,7 @@ export function HeaderActions({ user, profile }: HeaderActionsProps) {
       </Link>
       <Link
         href="/auth/sign-up"
-        className="inline-flex items-center rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+        className="inline-flex items-center rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-sm shadow-primary/30 transition-colors hover:bg-primary/90"
       >
         {t("nav.signup")}
       </Link>
