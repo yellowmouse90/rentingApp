@@ -7,6 +7,7 @@ import { formatDistanceToNow } from "date-fns"
 import { it, enUS } from "date-fns/locale"
 import { useUnreadNotificationCount } from "@/lib/notifications/use-unread-count"
 import { useLanguage } from "@/lib/i18n/language-context"
+import { createClient } from "@/lib/supabase/client"
 
 interface NotificationItem {
   id: string
@@ -31,6 +32,7 @@ export function NotificationBell({ userId }: NotificationBellProps) {
   const [hasMore, setHasMore] = useState(false)
   const [hasLoaded, setHasLoaded] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
+  const hasLoadedRef = useRef(false)
   const { count, refresh } = useUnreadNotificationCount(userId)
   const { t, language } = useLanguage()
   const dateLocale = language === "en" ? enUS : it
@@ -44,6 +46,46 @@ export function NotificationBell({ userId }: NotificationBellProps) {
     document.addEventListener("mousedown", handleClickOutside)
     return () => document.removeEventListener("mousedown", handleClickOutside)
   }, [])
+
+  useEffect(() => {
+    hasLoadedRef.current = hasLoaded
+  }, [hasLoaded])
+
+  // Keeps an already-loaded list fresh in the background, so a notification that arrives while
+  // the dropdown is closed (or open) is already there by the time the user clicks the bell -
+  // reopening used to skip loadNotifications entirely once hasLoaded was true, so a new
+  // notification created after the first open was never fetched.
+  useEffect(() => {
+    if (!userId) return
+
+    const supabase = createClient()
+    const channelName = `notification-bell-${userId}-${Math.random().toString(36).slice(2)}`
+    const channel = supabase.channel(channelName)
+
+    // Realtime postgres_changes events are not scoped by RLS on the wire (see
+    // lib/chat/realtime.ts / use-unread-count.tsx) - filter server-side on recipient_id.
+    channel
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "notifications_domain", table: "notifications", filter: `recipient_id=eq.${userId}` },
+        (payload) => {
+          if (!hasLoadedRef.current) return
+          const newNotification = payload.new as NotificationItem
+          setNotifications((prev) =>
+            prev.some((n) => n.id === newNotification.id) ? prev : [newNotification, ...prev]
+          )
+        }
+      )
+      .subscribe((status) => {
+        if (status === "CHANNEL_ERROR") {
+          console.error("Notification bell realtime channel error")
+        }
+      })
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [userId])
 
   const loadNotifications = useCallback(async () => {
     try {
