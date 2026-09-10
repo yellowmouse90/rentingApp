@@ -1,0 +1,16 @@
+{
+  "applinks": {
+    "details": [
+      {
+        "appIDs": ["REPLACE_WITH_APPLE_TEAM_ID.com.rentingapp.rentingappFlutter"],
+        "components": [
+          { "/": "/bookings/*" },
+          { "/": "/messages*" },
+          { "/": "/dashboard/payments" },
+          { "/": "/profile/edit" },
+          { "/": "/profile/notifications" }
+        ]
+      }
+    ]
+  }
+}
