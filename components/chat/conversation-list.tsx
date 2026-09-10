@@ -52,8 +52,11 @@ export function ConversationList({
   return (
     <div className="space-y-2 overflow-y-auto">
       {conversations.map((conversation) => {
+        // See the matching note in chat-thread.tsx: a present-but-nameless
+        // other_participant_details means a soft-deleted account, same as the field being
+        // absent entirely (legacy hard-delete) - both read the same translated label.
         const otherUserDisplayName =
-          conversation.other_participant_details?.display_name || t("chat.default_user")
+          conversation.other_participant_details?.display_name || t("chat.deleted_user")
         const orderItems = conversation.rental_order?.items || []
         const countItem = orderItems.length
         const firstListing = orderItems[0]?.listing as

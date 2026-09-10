@@ -9,16 +9,14 @@ import { getBlockingOrderStatuses } from "@/lib/account/rules"
  * /account:
  *   delete:
  *     tags: [Users]
- *     summary: Elimina l'account del chiamante
+ *     summary: Elimina (soft-delete) l'account del chiamante
  *     description: >
  *       Consentito solo se ogni rental_orders di cui l'utente è parte (come renter, o come owner
  *       tramite rental_items) è in uno stato finale - completed/cancelled/disputed, vedi
- *       lib/account/rules.ts. Elimina la riga auth.users via Admin API: è l'unico modo per farlo
- *       (l'Admin API non è un modo per bypassare una RLS bloccante - lo schema auth non è
- *       raggiungibile via PostgREST/RLS). profiles.id -> auth.users(id) è ON DELETE CASCADE
- *       (db/migrations/000_baseline.sql), quindi rimuove a cascata anche profilo, annunci,
- *       rental_items/rental_orders, indirizzi e metodi di pagamento; conversations/messages
- *       restano ma con participant_one/two e sender_id impostati a NULL (migration 004).
+ *       lib/account/rules.ts. Non è una hard delete: gli annunci vengono disattivati, il profilo
+ *       viene anonimizzato e marcato deleted_at (migration 015), e la riga auth.users viene
+ *       soft-eliminata via Admin API (sessioni/refresh token revocati, login bloccato). Righe
+ *       rental_orders/rental_items/transactions restano intatte come storico/audit trail.
  *     security:
  *       - supabaseSessionCookie: []
  *     responses:
@@ -97,11 +95,109 @@ export async function DELETE() {
       return NextResponse.json({ error: t("api.account.blocking_orders") }, { status: 409 })
     }
 
-    const admin = createAdminClient()
-    const { error: deleteError } = await admin.auth.admin.deleteUser(user.id)
+    const now = new Date().toISOString()
 
-    if (deleteError) {
-      console.error("Account deletion: eliminazione utente fallita", deleteError)
+    // Deactivate every active listing first - same is_active/is_available flip the manual
+    // "archive" route uses (app/api/listings/[id]/route.ts) - so the account looks and
+    // behaves fully deleted (nothing bookable, nothing in search) even though the rows
+    // themselves stay. Row-count check against the pre-read set catches an RLS no-op
+    // (CLAUDE.md: a blocked UPDATE returns success with 0 rows, not an error) rather than
+    // silently leaving listings live under a "deleted" account.
+    const { data: activeListings, error: activeListingsError } = await supabase
+      .schema("inventory_domain")
+      .from("listings")
+      .select("id")
+      .eq("owner_id", user.id)
+      .eq("is_active", true)
+
+    if (activeListingsError) {
+      console.error("Account deletion: lettura annunci attivi fallita", activeListingsError)
+      return NextResponse.json({ error: t("api.account.delete_error") }, { status: 500 })
+    }
+
+    if (activeListings && activeListings.length > 0) {
+      const { data: deactivated, error: deactivateError } = await supabase
+        .schema("inventory_domain")
+        .from("listings")
+        .update({ is_active: false, is_available: false, updated_at: now })
+        .eq("owner_id", user.id)
+        .eq("is_active", true)
+        .select("id")
+
+      if (deactivateError || !deactivated || deactivated.length !== activeListings.length) {
+        console.error(
+          "Account deletion: disattivazione annunci fallita (permessi insufficienti sul database)",
+          deactivateError
+        )
+        return NextResponse.json({ error: t("api.account.delete_error") }, { status: 500 })
+      }
+    }
+
+    // Scrub personal data and mark the row deleted before touching auth.users below - if
+    // this write is going to be blocked (RLS misconfiguration), the account must still be
+    // able to log in afterwards rather than ending up disabled with nothing scrubbed.
+    const scrubbedEmail = `deleted-${user.id}@deleted.invalid`
+    const profileUpdated = await supabase
+      .schema("users_domain")
+      .from("profiles")
+      .update({
+        // Left null rather than baked to a fixed string: every place that renders another
+        // user's display_name already falls back to a properly localized (per-viewer)
+        // "chat.deleted_user"/"listing_detail.default_user" string when it's empty - same
+        // mechanism the app already used for a null message.sender_id. See the matching
+        // notes in chat-thread.tsx, conversation-list.tsx, reviews-section.tsx, and the two
+        // app/users/[id] and app/listings/[id] pages (which stop reading profile.email as an
+        // intermediate fallback, since it's a scrambled placeholder from here on).
+        display_name: null,
+        bio: null,
+        phone: null,
+        avatar_url: null,
+        location_name: null,
+        location_coords: null,
+        email: scrubbedEmail,
+        stripe_customer_id: null,
+        stripe_account_id: null,
+        stripe_onboarding_complete: false,
+        deleted_at: now,
+        updated_at: now,
+      })
+      .eq("id", user.id)
+      .select("id")
+      .single()
+
+    if (profileUpdated.error || !profileUpdated.data) {
+      console.error(
+        "Account deletion: anonimizzazione profilo fallita (permessi insufficienti sul database)",
+        profileUpdated.error
+      )
+      return NextResponse.json({ error: t("api.account.delete_error") }, { status: 500 })
+    }
+
+    // Admin API from here on - deleting/editing auth.users isn't reachable through
+    // PostgREST/RLS at all (the auth schema isn't exposed), so this isn't a "bypass a
+    // blocked write" shortcut, it's the only way to touch that table. Free the real email
+    // up for reuse first (soft-deleting the auth user on its own leaves auth.users.email
+    // as-is, permanently blocking re-signup with the same address), then soft-delete -
+    // `shouldSoftDelete: true` keeps the auth.users row (unlike profiles, there's no
+    // completed-order audit trail reason to keep it, but the row itself is tiny and this
+    // avoids reintroducing the CASCADE-driven hard delete this migration moved away from)
+    // while purging sessions/refresh tokens, which blocks further login immediately.
+    const admin = createAdminClient()
+
+    const { error: emailUpdateError } = await admin.auth.admin.updateUserById(user.id, {
+      email: scrubbedEmail,
+    })
+    if (emailUpdateError) {
+      console.error("Account deletion: liberazione email fallita", emailUpdateError)
+      return NextResponse.json({ error: t("api.account.delete_error") }, { status: 500 })
+    }
+
+    const { error: softDeleteError } = await admin.auth.admin.deleteUser(user.id, true)
+    if (softDeleteError) {
+      // The profile is already scrubbed and the login email already changed to a value the
+      // user doesn't know, so the account is practically inaccessible even though this last
+      // step failed - log loudly for manual reconciliation rather than leaving it silent.
+      console.error("Account deletion: soft-delete auth.users fallito", softDeleteError)
       return NextResponse.json({ error: t("api.account.delete_error") }, { status: 500 })
     }
 

@@ -138,7 +138,7 @@ export function ReviewsSection({ userId, role, context }: ReviewsSectionProps) {
                     </div>
                   )}
                   <span className="text-sm font-medium text-foreground">
-                    {review.author.display_name || "Utente"}
+                    {review.author.display_name || t("chat.deleted_user")}
                   </span>
                 </Link>
               ) : (
