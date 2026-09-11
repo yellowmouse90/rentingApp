@@ -63,10 +63,19 @@ export async function sendPushNotification(params: SendPushParams): Promise<void
   }
   if (!tokens || tokens.length === 0) return
 
+  // Chat messages get a deterministic Android tag derived from the conversation id, so a later
+  // message in the same conversation replaces the tray entry instead of stacking, and the app can
+  // cancel it (see PushNotificationsService.cancelForConversation) once the user opens that chat -
+  // both the background/terminated auto-display path and the foreground local-notification path
+  // (which mirrors this same tag) rely on it.
+  const conversationMatch = params.linkUrl?.match(/^\/messages\?conversation=([^&]+)/)
+  const androidTag = conversationMatch ? `chat_${conversationMatch[1]}` : undefined
+
   try {
     const response = await getMessaging(app).sendEachForMulticast({
       tokens: tokens.map((t) => t.token as string),
       notification: { title: params.title, body: params.body },
+      android: androidTag ? { notification: { tag: androidTag } } : undefined,
       data: { linkUrl: params.linkUrl ?? "" },
     })
 

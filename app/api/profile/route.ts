@@ -5,6 +5,7 @@ interface ProfileUpdatePayload {
   displayName: string
   bio: string | null
   phone: string | null
+  avatarUrl?: string | null
 }
 
 /**
@@ -26,6 +27,7 @@ interface ProfileUpdatePayload {
  *               displayName: { type: string }
  *               bio: { type: string, nullable: true }
  *               phone: { type: string, nullable: true }
+ *               avatarUrl: { type: string, nullable: true }
  *     responses:
  *       200:
  *         description: Profilo aggiornato
@@ -56,10 +58,14 @@ export async function PATCH(request: Request) {
       display_name: displayName,
       bio: payload?.bio?.trim() || null,
       phone: payload?.phone?.trim() || null,
+      // Only touched when the client actually sent it (the avatar upload flow PATCHes it on its
+      // own, right after the storage upload completes) - undefined here means "leave as is",
+      // never "clear the avatar", unlike bio/phone which are always full-form saves.
+      ...(payload && "avatarUrl" in payload ? { avatar_url: payload.avatarUrl?.trim() || null } : {}),
       updated_at: new Date().toISOString(),
     })
     .eq("id", user!.id)
-    .select("display_name, bio, phone")
+    .select("display_name, bio, phone, avatar_url")
     .single()
 
   if (error) {

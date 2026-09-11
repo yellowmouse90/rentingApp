@@ -136,6 +136,30 @@ export function BookingForm({
         console.error("Booking notify-request error:", notifyErr)
       })
 
+      // Best-effort, same posture as above: eagerly create the chat conversation for this order
+      // (instead of waiting for either party to click "message owner") and seed the renter's note
+      // as its first message, so the chat already has it the first time anyone opens it.
+      ;(async () => {
+        try {
+          const conversationRes = await fetch("/api/chat/start-conversation", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ rentalOrderId: order.id, participantTwoId: listing.owner_id }),
+          })
+          if (!conversationRes.ok) return
+          const { conversation } = await conversationRes.json()
+          if (notes.trim()) {
+            await fetch("/api/chat/messages", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ conversationId: conversation.id, content: notes.trim() }),
+            })
+          }
+        } catch (chatErr) {
+          console.error("Booking chat seed error:", chatErr)
+        }
+      })()
+
       // Phase 1: request created, payment starts only after owner acceptance.
       router.push(`/bookings/${order.id}`)
     } catch (err) {
