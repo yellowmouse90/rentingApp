@@ -1144,7 +1144,35 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
 
     // Load category translations from database
     loadCategoryTranslations()
+
+    // For a logged-in user, the profile's own preferred_language (set from this same
+    // setLanguage(), possibly on another device) is the source of truth - it's what the server
+    // uses to pick the language for notifications sent to this user, so keep this client in sync
+    // with it rather than trusting only what's in this browser's localStorage/cookie.
+    syncLanguageFromProfile()
   }, [])
+
+  const syncLanguageFromProfile = async () => {
+    const supabase = createClient()
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+    if (!user) return
+
+    const { data } = await supabase
+      .schema("users_domain")
+      .from("profiles")
+      .select("preferred_language")
+      .eq("id", user.id)
+      .maybeSingle()
+
+    const preferredLanguage = data?.preferred_language as Language | undefined
+    if (preferredLanguage === "it" || preferredLanguage === "en") {
+      setLanguageState(preferredLanguage)
+      localStorage.setItem("pietro_language", preferredLanguage)
+      document.cookie = `pietro_language=${preferredLanguage}; path=/; max-age=31536000; samesite=lax`
+    }
+  }
 
   const loadCategoryTranslations = async () => {
     const supabase = createClient()
@@ -1170,6 +1198,33 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     setLanguageState(lang)
     localStorage.setItem("pietro_language", lang)
     document.cookie = `pietro_language=${lang}; path=/; max-age=31536000; samesite=lax`
+
+    // Best-effort, fire-and-forget: persists to the profile so the server can pick this user's
+    // own language when it sends *them* a notification (see lib/notifications/create.ts), rather
+    // than the language of whoever triggers the notification. A failed write only means this
+    // switch doesn't survive to other devices/notifications - the local switch above already
+    // succeeded regardless.
+    persistLanguageToProfile(lang)
+  }
+
+  const persistLanguageToProfile = async (lang: Language) => {
+    const supabase = createClient()
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+    if (!user) return
+
+    const { error } = await supabase
+      .schema("users_domain")
+      .from("profiles")
+      .update({ preferred_language: lang })
+      .eq("id", user.id)
+      .select("id")
+      .maybeSingle()
+
+    if (error) {
+      console.error("Impossibile salvare la lingua preferita sul profilo", error)
+    }
   }
 
   const t = (key: string): string => {

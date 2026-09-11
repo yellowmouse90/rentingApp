@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { requireApiUser } from "@/lib/auth/api"
 import { createNotification } from "@/lib/notifications/create"
-import { getServerLanguage } from "@/lib/i18n/server"
 import {
   deriveReviewContext,
   isWithinReviewWindow,
@@ -205,12 +204,10 @@ export async function POST(request: NextRequest, { params }: PageParams) {
     }
 
     if (review.visible) {
-      const language = await getServerLanguage()
       await createNotification({
         recipientId: targetUserId,
         actorId: user.id,
         type: "review_received",
-        language,
         orderId: bookingId,
       })
     }

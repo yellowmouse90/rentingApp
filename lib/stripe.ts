@@ -4,7 +4,6 @@ import Stripe from "stripe"
 import type { SupabaseClient } from "@supabase/supabase-js"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { createNotification } from "@/lib/notifications/create"
-import { getServerLanguage } from "@/lib/i18n/server"
 
 let stripeInstance: Stripe | null = null
 
@@ -153,12 +152,10 @@ export async function upsertAuthorizedTransaction(
       .maybeSingle()
 
     if (item?.owner_id) {
-      const language = await getServerLanguage()
       await createNotification({
         recipientId: item.owner_id,
         actorId: null,
         type: "booking_paid",
-        language,
         orderId,
       })
     }
@@ -197,12 +194,10 @@ export async function syncStripeOnboardingStatus(
         .maybeSingle()
 
       if (updated && !currentOnboardingComplete && onboardingComplete) {
-        const language = await getServerLanguage()
         await createNotification({
           recipientId: userId,
           actorId: null,
           type: "stripe_onboarding_complete",
-          language,
         })
       }
     }

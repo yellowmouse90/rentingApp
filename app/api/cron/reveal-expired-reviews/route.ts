@@ -116,7 +116,6 @@ export async function GET(request: NextRequest) {
         recipientId: review.target_user_id,
         actorId: null,
         type: "review_received",
-        language: "it",
         orderId: review.booking_id,
       })
     }

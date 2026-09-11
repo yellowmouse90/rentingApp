@@ -14,7 +14,6 @@ interface CreateNotificationParams {
   recipientId: string
   actorId: string | null
   type: AlertType
-  language: "it" | "en"
   copyParams?: CopyParams
   orderId?: string
   conversationId?: string
@@ -30,9 +29,14 @@ interface CreateNotificationParams {
 // transition, a webhook) - notifications are always best-effort, so every
 // failure path here is caught and logged, never re-thrown.
 //
-// Resolves the recipient's email itself (via the admin client, only when the
-// email preference is actually on) rather than requiring every call site to
-// fetch it up front - callers only ever need to know the recipient's id.
+// Resolves the recipient's email and language itself (via the admin client)
+// rather than requiring every call site to fetch them up front - callers only
+// ever need to know the recipient's id. Language in particular must be looked
+// up here rather than passed in: the caller is usually acting on behalf of
+// the *other* party to the notification (e.g. the owner accepting a booking
+// notifies the renter), so the caller's own request-scoped language (their
+// cookie, via getServerLanguage()) is never the right language for this
+// message - only the recipient's own persisted preference is.
 export async function createNotification(params: CreateNotificationParams): Promise<void> {
   try {
     const supabase = createAdminClient()
@@ -40,7 +44,16 @@ export async function createNotification(params: CreateNotificationParams): Prom
 
     if (!preference.inApp && !preference.email) return
 
-    const { title, body } = getNotificationCopy(params.type, params.language, {
+    const { data: recipientProfile } = await supabase
+      .schema("users_domain")
+      .from("profiles")
+      .select("email, preferred_language")
+      .eq("id", params.recipientId)
+      .maybeSingle()
+
+    const language = recipientProfile?.preferred_language ?? "it"
+
+    const { title, body } = getNotificationCopy(params.type, language, {
       ...params.copyParams,
       orderId: params.orderId,
       conversationId: params.conversationId,
@@ -69,20 +82,13 @@ export async function createNotification(params: CreateNotificationParams): Prom
     }
 
     if (preference.email) {
-      const { data: recipientProfile } = await supabase
-        .schema("users_domain")
-        .from("profiles")
-        .select("email")
-        .eq("id", params.recipientId)
-        .maybeSingle()
-
       if (recipientProfile?.email) {
         const html = renderNotificationEmail({
           title,
           body,
-          language: params.language,
+          language,
           linkUrl,
-          ctaLabel: linkUrl ? getNotificationCtaLabel(params.type, params.language, params.orderId) : undefined,
+          ctaLabel: linkUrl ? getNotificationCtaLabel(params.type, language, params.orderId) : undefined,
         })
         // Non-blocking: schedule the outbound email after the response is
         // sent instead of holding up the caller's API response on it (first

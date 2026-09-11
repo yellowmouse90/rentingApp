@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { requireApiUser } from "@/lib/auth/api"
 import { createNotification } from "@/lib/notifications/create"
-import { getServerLanguage } from "@/lib/i18n/server"
 
 interface PageParams {
   params: Promise<{ id: string }>
@@ -92,13 +91,10 @@ export async function POST(_request: NextRequest, { params }: PageParams) {
       return NextResponse.json({ error: "Dettaglio noleggio non trovato" }, { status: 404 })
     }
 
-    const language = await getServerLanguage()
-
     await createNotification({
       recipientId: item.owner_id,
       actorId: user.id,
       type: "booking_requested",
-      language,
       orderId,
     })
 

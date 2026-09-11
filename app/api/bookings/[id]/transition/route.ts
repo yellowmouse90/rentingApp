@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server"
 import { requireApiUser } from "@/lib/auth/api"
 import { stripe } from "@/lib/stripe"
 import { createNotification } from "@/lib/notifications/create"
-import { getServerLanguage } from "@/lib/i18n/server"
 
 interface TransitionPayload {
   action:
@@ -135,7 +134,6 @@ export async function POST(request: NextRequest, { params }: PageParams) {
     const isOwner = item.owner_id === user.id
     const isRenter = order.renter_id === user.id
     const now = new Date().toISOString()
-    const language = await getServerLanguage()
     const permissionErrorResponse = () =>
       NextResponse.json(
         { error: "Impossibile aggiornare lo stato dell'ordine (permessi insufficienti sul database)" },
@@ -176,7 +174,6 @@ export async function POST(request: NextRequest, { params }: PageParams) {
         recipientId: order.renter_id,
         actorId: user.id,
         type: "booking_accepted",
-        language,
         orderId,
       })
 
@@ -217,7 +214,6 @@ export async function POST(request: NextRequest, { params }: PageParams) {
         recipientId: order.renter_id,
         actorId: user.id,
         type: "booking_rejected",
-        language,
         orderId,
       })
 
@@ -258,7 +254,6 @@ export async function POST(request: NextRequest, { params }: PageParams) {
         recipientId: item.owner_id,
         actorId: user.id,
         type: "booking_cancelled_by_renter",
-        language,
         orderId,
       })
 
@@ -299,7 +294,6 @@ export async function POST(request: NextRequest, { params }: PageParams) {
         recipientId: order.renter_id,
         actorId: user.id,
         type: "booking_handover_confirmed",
-        language,
         orderId,
       })
 
@@ -409,7 +403,6 @@ export async function POST(request: NextRequest, { params }: PageParams) {
         recipientId: order.renter_id,
         actorId: user.id,
         type: "booking_returned_ok",
-        language,
         orderId,
       })
 
@@ -456,7 +449,6 @@ export async function POST(request: NextRequest, { params }: PageParams) {
         recipientId: order.renter_id,
         actorId: user.id,
         type: "booking_damage_reported",
-        language,
         orderId,
       })
 

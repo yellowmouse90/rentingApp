@@ -8,6 +8,9 @@ export interface Profile {
   phone: string | null
   is_verified: boolean
   preferred_currency: string
+  // Drives notification (in-app, push, email) language server-side - see lib/notifications/create.ts.
+  // Set from the client's own language switcher (lib/i18n/language-context.tsx), not user-typed.
+  preferred_language: "it" | "en"
   stripe_customer_id: string | null
   stripe_account_id: string | null
   stripe_onboarding_complete: boolean

@@ -5,7 +5,6 @@ import {
   MESSAGE_RATE_LIMIT_WINDOW_MS,
 } from "@/lib/types/chat"
 import { createNotification } from "@/lib/notifications/create"
-import { getServerLanguage } from "@/lib/i18n/server"
 import { NextResponse } from "next/server"
 
 const DEFAULT_PAGE_SIZE = 50
@@ -242,17 +241,18 @@ export async function POST(request: Request) {
     const recipientId =
       conversation.participant_one === user!.id ? conversation.participant_two : conversation.participant_one
     if (recipientId) {
-      const [{ data: senderProfile }, language] = await Promise.all([
-        supabase.schema("users_domain").from("profiles").select("display_name, email").eq("id", user!.id).maybeSingle(),
-        getServerLanguage(),
-      ])
+      const { data: senderProfile } = await supabase
+        .schema("users_domain")
+        .from("profiles")
+        .select("display_name, email")
+        .eq("id", user!.id)
+        .maybeSingle()
       const actorName = senderProfile?.display_name?.trim() || senderProfile?.email?.split("@")[0]
 
       await createNotification({
         recipientId,
         actorId: user!.id,
         type: "new_message",
-        language,
         copyParams: { actorName },
         orderId: conversation.rental_order_id ?? undefined,
         conversationId,

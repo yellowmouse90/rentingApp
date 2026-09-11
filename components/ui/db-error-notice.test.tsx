@@ -6,11 +6,16 @@ import { ToastProvider } from "./toast-provider"
 import { LanguageProvider } from "@/lib/i18n/language-context"
 
 // LanguageProvider (required by ToastProvider, which DbErrorNotice's toast renders through)
-// fetches category translations via the Supabase browser client on mount - mock it the same way
-// the app's own admin/user-scoped clients get mocked in API route tests, so this stays a unit
-// test instead of needing a real Supabase project (see CLAUDE.md's two-clients section).
+// fetches category translations via the Supabase browser client on mount, and also checks for a
+// logged-in user (via auth.getUser()) to sync their persisted language preference - mock it the
+// same way the app's own admin/user-scoped clients get mocked in API route tests, so this stays
+// a unit test instead of needing a real Supabase project (see CLAUDE.md's two-clients section).
+// No user is signed in here, so the profile lookup itself is never reached.
 vi.mock("@/lib/supabase/client", () => ({
   createClient: () => ({
+    auth: {
+      getUser: () => Promise.resolve({ data: { user: null } }),
+    },
     schema: () => ({
       from: () => ({
         select: () => ({

@@ -7,12 +7,6 @@ import { createNotification } from "@/lib/notifications/create"
 export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
 
-// The webhook has no request-scoped session/cookie to read a language
-// preference from (it's a server-to-server call from Stripe, not a user
-// request) - fall back to the app's default language, same as
-// getServerLanguage() does when no cookie is present.
-const WEBHOOK_NOTIFICATION_LANGUAGE = "it" as const
-
 async function setTransactionStatusFromPaymentIntent(paymentIntent: Stripe.PaymentIntent) {
   const orderId = paymentIntent.metadata?.orderId
   if (!orderId) return
@@ -56,7 +50,6 @@ async function setTransactionStatusFromPaymentIntent(paymentIntent: Stripe.Payme
         recipientId: order.renter_id,
         actorId: null,
         type: "payment_succeeded",
-        language: WEBHOOK_NOTIFICATION_LANGUAGE,
         orderId,
       })
     }
@@ -98,7 +91,6 @@ async function setTransactionStatusFromPaymentIntent(paymentIntent: Stripe.Payme
         recipientId: order.renter_id,
         actorId: null,
         type: "payment_failed",
-        language: WEBHOOK_NOTIFICATION_LANGUAGE,
         orderId,
       })
     }
@@ -143,7 +135,6 @@ async function handleAccountUpdated(account: Stripe.Account) {
     recipientId: profile.id,
     actorId: null,
     type: "stripe_onboarding_complete",
-    language: WEBHOOK_NOTIFICATION_LANGUAGE,
   })
 }
 
