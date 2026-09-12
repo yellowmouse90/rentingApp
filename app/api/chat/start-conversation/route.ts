@@ -138,11 +138,14 @@ export async function POST(request: Request) {
       )
     }
 
-    // Check if conversation already exists for this rental order
+    // Check if conversation already exists for this rental order. Select every column here (not
+    // just "id") - the caller parses this into the same Conversation model used everywhere else
+    // (e.g. the Flutter app's Conversation.fromJson requires rental_order_id/created_at), and this
+    // is now the common case since booking-form.tsx eagerly creates the conversation up front.
     const { data: existing } = await supabase
       .schema("interactions_domain")
       .from("conversations")
-      .select("id")
+      .select()
       .eq("rental_order_id", rentalOrderId)
       .single()
 
