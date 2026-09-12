@@ -47,17 +47,18 @@ import { REVIEW_WINDOW_DAYS } from "@/lib/reviews/rules"
  *             schema: { $ref: '#/components/schemas/Error' }
  */
 export async function GET(request: NextRequest) {
+  // Fail closed: if CRON_SECRET is missing (misconfigured env, exactly the kind of gap CI's
+  // placeholder-env build doesn't catch - see CLAUDE.md), this must reject every request rather
+  // than run unauthenticated with the admin client.
   const cronSecret = process.env.CRON_SECRET
-  if (cronSecret) {
-    const authHeader = request.headers.get("authorization")
-    if (authHeader !== `Bearer ${cronSecret}`) {
-      return NextResponse.json({ error: "Non autorizzato" }, { status: 401 })
-    }
+  const authHeader = request.headers.get("authorization")
+  if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
+    return NextResponse.json({ error: "Non autorizzato" }, { status: 401 })
   }
 
   try {
     const supabase = createAdminClient()
-    const cutoff = new Date(Date.now() - REVIEW_WINDOW_DAYS * 24 * 60 * 60 * 1000).toISOString()
+    const cutoffMs = Date.now() - REVIEW_WINDOW_DAYS * 24 * 60 * 60 * 1000
 
     const { data: pending, error: pendingError } = await supabase
       .schema("reviews_domain")
@@ -90,7 +91,7 @@ export async function GET(request: NextRequest) {
 
     const expiredBookingIds = new Set(
       (orders || [])
-        .filter((o) => o.status === "completed" && o.updated_at <= cutoff)
+        .filter((o) => o.status === "completed" && new Date(o.updated_at).getTime() <= cutoffMs)
         .map((o) => o.id)
     )
 

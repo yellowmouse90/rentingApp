@@ -152,6 +152,7 @@ export async function POST(request: NextRequest, { params }: PageParams) {
           .from("rental_orders")
           .update({ status: "accepted", updated_at: now })
           .eq("id", orderId)
+          .eq("status", "pending")
           .select("id")
           .single(),
         "rental_orders.accept"
@@ -164,6 +165,7 @@ export async function POST(request: NextRequest, { params }: PageParams) {
           .from("rental_items")
           .update({ status: "accepted", updated_at: now })
           .eq("id", item.id)
+          .eq("status", "requested")
           .select("id")
           .single(),
         "rental_items.accept"
@@ -192,6 +194,7 @@ export async function POST(request: NextRequest, { params }: PageParams) {
           .from("rental_orders")
           .update({ status: "cancelled", updated_at: now })
           .eq("id", orderId)
+          .eq("status", "pending")
           .select("id")
           .single(),
         "rental_orders.reject"
@@ -204,6 +207,7 @@ export async function POST(request: NextRequest, { params }: PageParams) {
           .from("rental_items")
           .update({ status: "cancelled", updated_at: now })
           .eq("id", item.id)
+          .eq("status", "requested")
           .select("id")
           .single(),
         "rental_items.reject"
@@ -232,6 +236,7 @@ export async function POST(request: NextRequest, { params }: PageParams) {
           .from("rental_orders")
           .update({ status: "cancelled", updated_at: now })
           .eq("id", orderId)
+          .eq("status", "pending")
           .select("id")
           .single(),
         "rental_orders.cancel_request"
@@ -244,6 +249,7 @@ export async function POST(request: NextRequest, { params }: PageParams) {
           .from("rental_items")
           .update({ status: "cancelled", updated_at: now })
           .eq("id", item.id)
+          .eq("status", "requested")
           .select("id")
           .single(),
         "rental_items.cancel_request"
@@ -272,6 +278,7 @@ export async function POST(request: NextRequest, { params }: PageParams) {
           .from("rental_orders")
           .update({ status: "in_progress", updated_at: now })
           .eq("id", orderId)
+          .eq("status", "paid")
           .select("id")
           .single(),
         "rental_orders.confirm_handover"
@@ -284,6 +291,7 @@ export async function POST(request: NextRequest, { params }: PageParams) {
           .from("rental_items")
           .update({ status: "collected", handed_over_at: now, updated_at: now })
           .eq("id", item.id)
+          .eq("status", "paid")
           .select("id")
           .single(),
         "rental_items.confirm_handover"
@@ -331,13 +339,18 @@ export async function POST(request: NextRequest, { params }: PageParams) {
       // Run the writes we control before the irreversible Stripe capture, not after: if a
       // write is going to be blocked (rental_items/rental_orders are exactly the tables whose
       // owner-side RLS policies have silently 0-rowed before - migrations 005/007), the renter
-      // must not already have been charged when we find out.
+      // must not already have been charged when we find out. The re-asserted `.eq("status", ...)`
+      // filters double as optimistic concurrency: a second, near-simultaneous request for the
+      // same order finds 0 rows here (the first request already flipped them) and bails out via
+      // permissionErrorResponse() instead of reaching stripe.paymentIntents.capture() twice for
+      // the same PaymentIntent.
       const itemUpdated = await requireUpdate(
         supabase
           .schema("rentals_domain")
           .from("rental_items")
           .update({ status: "returned_ok", returned_at: now, updated_at: now })
           .eq("id", item.id)
+          .eq("status", "collected")
           .select("id")
           .single(),
         "rental_items.mark_returned_ok"
@@ -350,19 +363,48 @@ export async function POST(request: NextRequest, { params }: PageParams) {
           .from("rental_orders")
           .update({ status: "completed", updated_at: now })
           .eq("id", orderId)
+          .eq("status", "in_progress")
           .select("id")
           .single(),
         "rental_orders.mark_returned_ok"
       )
       if (!orderUpdated) return permissionErrorResponse()
 
-      const paymentIntent = await stripe.paymentIntents.capture(tx.stripe_payment_intent_id, {
-        amount_to_capture: amountToCapture,
-        // Re-assert the fee explicitly: it must never exceed the captured amount, and must
-        // stay in sync with the fee computed at checkout time regardless of what was stored
-        // on the PaymentIntent at authorization.
-        application_fee_amount: Number(order.service_fee_cents || 0),
-      })
+      let paymentIntent
+      try {
+        paymentIntent = await stripe.paymentIntents.capture(tx.stripe_payment_intent_id, {
+          amount_to_capture: amountToCapture,
+          // Re-assert the fee explicitly: it must never exceed the captured amount, and must
+          // stay in sync with the fee computed at checkout time regardless of what was stored
+          // on the PaymentIntent at authorization.
+          application_fee_amount: Number(order.service_fee_cents || 0),
+        })
+      } catch (captureError) {
+        // The item/order are already marked returned/completed (see comment above - that
+        // ordering is intentional), but the charge itself never went through: expired
+        // authorization (>7 days), a declined card, or a Stripe-side error. Record the
+        // transaction as failed so it's visible for manual reconciliation, and tell the caller
+        // plainly instead of returning { ok: true } as if the owner had been paid.
+        console.error(
+          "Booking transition: rientro registrato ma cattura Stripe fallita - richiede riconciliazione manuale",
+          orderId,
+          tx.id,
+          captureError
+        )
+        await supabase
+          .schema("rentals_domain")
+          .from("transactions")
+          .update({ status: "failed", updated_at: now })
+          .eq("id", tx.id)
+
+        return NextResponse.json(
+          {
+            error:
+              "Il rientro è stato registrato ma l'incasso del pagamento non è riuscito. Contatta l'assistenza per la riconciliazione manuale.",
+          },
+          { status: 502 }
+        )
+      }
 
       const latestChargeId = typeof paymentIntent.latest_charge === "string" ? paymentIntent.latest_charge : null
       let transferId: string | null = null
@@ -427,6 +469,7 @@ export async function POST(request: NextRequest, { params }: PageParams) {
             updated_at: now,
           })
           .eq("id", item.id)
+          .eq("status", "collected")
           .select("id")
           .single(),
         "rental_items.report_damage"
@@ -439,6 +482,7 @@ export async function POST(request: NextRequest, { params }: PageParams) {
           .from("rental_orders")
           .update({ status: "disputed", updated_at: now })
           .eq("id", orderId)
+          .eq("status", "in_progress")
           .select("id")
           .single(),
         "rental_orders.report_damage"

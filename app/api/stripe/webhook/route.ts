@@ -28,7 +28,7 @@ async function setTransactionStatusFromPaymentIntent(paymentIntent: Stripe.Payme
       transferId = typeof charge.transfer === "string" ? charge.transfer : null
     }
 
-    await supabase
+    const { error: captureUpdateError } = await supabase
       .schema("rentals_domain")
       .from("transactions")
       .update({
@@ -37,6 +37,9 @@ async function setTransactionStatusFromPaymentIntent(paymentIntent: Stripe.Payme
         updated_at: now,
       })
       .eq("order_id", orderId)
+    if (captureUpdateError) {
+      console.error("Stripe webhook: aggiornamento transactions 'captured' fallito", orderId, captureUpdateError)
+    }
 
     const { data: order } = await supabase
       .schema("rentals_domain")
@@ -58,7 +61,7 @@ async function setTransactionStatusFromPaymentIntent(paymentIntent: Stripe.Payme
   }
 
   if (paymentIntent.status === "canceled") {
-    await supabase
+    const { error } = await supabase
       .schema("rentals_domain")
       .from("transactions")
       .update({
@@ -66,11 +69,14 @@ async function setTransactionStatusFromPaymentIntent(paymentIntent: Stripe.Payme
         updated_at: now,
       })
       .eq("order_id", orderId)
+    if (error) {
+      console.error("Stripe webhook: aggiornamento transactions 'failed' fallito", orderId, error)
+    }
     return
   }
 
   if (paymentIntent.status === "requires_payment_method") {
-    await supabase
+    const { error } = await supabase
       .schema("rentals_domain")
       .from("transactions")
       .update({
@@ -78,6 +84,13 @@ async function setTransactionStatusFromPaymentIntent(paymentIntent: Stripe.Payme
         updated_at: now,
       })
       .eq("order_id", orderId)
+    if (error) {
+      console.error(
+        "Stripe webhook: aggiornamento transactions 'requires_payment_method' fallito",
+        orderId,
+        error
+      )
+    }
 
     const { data: order } = await supabase
       .schema("rentals_domain")

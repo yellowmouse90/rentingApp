@@ -165,7 +165,25 @@ export async function POST(request: Request) {
       .select()
       .single()
 
-    if (error) throw error
+    if (error) {
+      // Lost a race with a concurrent request for the same rental order (e.g. two tabs, or
+      // booking-form's eager auto-create overlapping a manual "message seller" click) - the
+      // unique constraint on rental_order_id caught it, so fetch and return the winner's row
+      // instead of failing the request even though the "right" conversation now exists.
+      if (error.code === "23505") {
+        const { data: raceWinner, error: refetchError } = await supabase
+          .schema("interactions_domain")
+          .from("conversations")
+          .select()
+          .eq("rental_order_id", rentalOrderId)
+          .single()
+
+        if (!refetchError && raceWinner) {
+          return NextResponse.json({ conversation: raceWinner })
+        }
+      }
+      throw error
+    }
 
     return NextResponse.json({ conversation }, { status: 201 })
   } catch (error) {

@@ -38,18 +38,24 @@ export async function middleware(request: NextRequest) {
       data: { user },
     } = await supabase.auth.getUser()
 
+    // Matches a path prefix on a segment boundary only, so "/auth/sign-up" doesn't also match
+    // "/auth/sign-up-success" and "/dashboard" doesn't also match a hypothetical "/dashboard-foo".
+    const matchesPath = (pathname: string, prefix: string) =>
+      pathname === prefix || pathname.startsWith(prefix + "/")
+
     // Protected routes - redirect to login if not authenticated
     const protectedPaths = [
       "/dashboard",
       "/listings/new",
-      "/listings/edit",
       "/bookings",
       "/messages",
       "/profile/edit",
     ]
-    const isProtectedPath = protectedPaths.some((path) =>
-      request.nextUrl.pathname.startsWith(path)
-    )
+    const pathname = request.nextUrl.pathname
+    // The real route is /listings/[id]/edit - a plain prefix ("/listings/edit") never matches it.
+    const isListingEditPath = /^\/listings\/[^/]+\/edit(\/|$)/.test(pathname)
+    const isProtectedPath =
+      isListingEditPath || protectedPaths.some((path) => matchesPath(pathname, path))
 
     if (isProtectedPath && !user) {
       const url = request.nextUrl.clone()
@@ -60,9 +66,7 @@ export async function middleware(request: NextRequest) {
 
     // Auth routes - redirect to home if already authenticated
     const authPaths = ["/auth/login", "/auth/sign-up"]
-    const isAuthPath = authPaths.some((path) =>
-      request.nextUrl.pathname.startsWith(path)
-    )
+    const isAuthPath = authPaths.some((path) => matchesPath(pathname, path))
 
     if (isAuthPath && user) {
       const url = request.nextUrl.clone()

@@ -52,19 +52,25 @@ export async function voidAuthorizationForCancelledOrder(
     .maybeSingle()
 
   if (existingTx?.id) {
-    await supabase
+    const { error } = await supabase
       .schema("rentals_domain")
       .from("transactions")
       .update({ stripe_payment_intent_id: paymentIntentId, status: "failed", updated_at: now })
       .eq("id", existingTx.id)
+    if (error) {
+      console.error("Stripe: aggiornamento transactions a 'failed' fallito", orderId, error)
+    }
   } else {
-    await supabase.schema("rentals_domain").from("transactions").insert({
+    const { error } = await supabase.schema("rentals_domain").from("transactions").insert({
       order_id: orderId,
       stripe_payment_intent_id: paymentIntentId,
       amount_cents: amountCents,
       currency_code: currencyCode,
       status: "failed",
     })
+    if (error) {
+      console.error("Stripe: inserimento transactions 'failed' fallito", orderId, error)
+    }
   }
 }
 
@@ -119,7 +125,7 @@ export async function upsertAuthorizedTransaction(
   const now = new Date().toISOString()
 
   if (existingTx?.id) {
-    await supabase
+    const { error } = await supabase
       .schema("rentals_domain")
       .from("transactions")
       .update({
@@ -130,34 +136,68 @@ export async function upsertAuthorizedTransaction(
         updated_at: now,
       })
       .eq("id", existingTx.id)
+    if (error) {
+      console.error("Stripe: aggiornamento transactions 'authorized' fallito", orderId, error)
+    }
   } else {
-    await supabase.schema("rentals_domain").from("transactions").insert({
+    const { error } = await supabase.schema("rentals_domain").from("transactions").insert({
       order_id: orderId,
       stripe_payment_intent_id: paymentIntentId,
       amount_cents: order.grand_total_cents,
       currency_code: order.currency_code,
       status: "authorized",
     })
+    if (error) {
+      console.error("Stripe: inserimento transactions 'authorized' fallito", orderId, error)
+    }
   }
 
   if (order.status === "accepted" || order.status === "pending") {
-    await supabase.schema("rentals_domain").from("rental_orders").update({ status: "paid", updated_at: now }).eq("id", orderId)
-    await supabase.schema("rentals_domain").from("rental_items").update({ status: "paid", updated_at: now }).eq("order_id", orderId)
-
-    const { data: item } = await supabase
+    // Guard the flip with the status value we actually read (same optimistic-concurrency
+    // pattern as syncStripeOnboardingStatus below): the webhook and /api/stripe/confirm-checkout
+    // both funnel through this function and can race on the same order (e.g. a webhook
+    // redelivery overlapping a client-triggered confirm-checkout call). Only the caller whose
+    // update actually affects a row proceeds to flip rental_items and send the
+    // owner-facing "booking_paid" notification, so a race produces one notification, not two.
+    const { data: orderFlipped, error: orderUpdateError } = await supabase
       .schema("rentals_domain")
-      .from("rental_items")
-      .select("owner_id")
-      .eq("order_id", orderId)
+      .from("rental_orders")
+      .update({ status: "paid", updated_at: now })
+      .eq("id", orderId)
+      .eq("status", order.status)
+      .select("id")
       .maybeSingle()
 
-    if (item?.owner_id) {
-      await createNotification({
-        recipientId: item.owner_id,
-        actorId: null,
-        type: "booking_paid",
-        orderId,
-      })
+    if (orderUpdateError) {
+      console.error("Stripe: aggiornamento rental_orders a 'paid' fallito", orderId, orderUpdateError)
+    }
+
+    if (orderFlipped) {
+      const { error: itemsUpdateError } = await supabase
+        .schema("rentals_domain")
+        .from("rental_items")
+        .update({ status: "paid", updated_at: now })
+        .eq("order_id", orderId)
+
+      if (itemsUpdateError) {
+        console.error("Stripe: aggiornamento rental_items a 'paid' fallito", orderId, itemsUpdateError)
+      }
+
+      const { data: item } = await supabase
+        .schema("rentals_domain")
+        .from("rental_items")
+        .select("owner_id")
+        .eq("order_id", orderId)
+        .maybeSingle()
+
+      if (item?.owner_id) {
+        await createNotification({
+          recipientId: item.owner_id,
+          actorId: null,
+          type: "booking_paid",
+          orderId,
+        })
+      }
     }
   }
 
