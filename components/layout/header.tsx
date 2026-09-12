@@ -1,7 +1,7 @@
 import Link from "next/link"
 import { createClient } from "@/lib/supabase/server"
 import { getServerI18n } from "@/lib/i18n/server"
-import { KeyRound } from "lucide-react"
+import { BrandMark } from "@/components/ui/brand-mark"
 import { MobileMenu } from "./mobile-menu"
 import { HeaderNav } from "./header-nav"
 import { HeaderActions } from "./header-actions"
@@ -34,7 +34,7 @@ export async function Header() {
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2">
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary">
-            <KeyRound className="h-5 w-5 text-primary-foreground" />
+            <BrandMark className="h-5 w-5 text-primary-foreground" />
           </div>
           <span className="text-xl font-bold text-foreground">Pietro</span>
         </Link>
