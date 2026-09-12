@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { KeyRound } from "lucide-react"
+import { BrandMark } from "@/components/ui/brand-mark"
 import { useLanguage } from "@/lib/i18n/language-context"
 
 export function Footer() {
@@ -15,7 +15,7 @@ export function Footer() {
           <div className="md:col-span-1">
             <Link href="/" className="flex items-center gap-2">
               <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-                <KeyRound className="h-4 w-4 text-primary-foreground" />
+                <BrandMark className="h-4 w-4 text-primary-foreground" />
               </div>
               <span className="text-lg font-bold text-foreground">Pietro</span>
             </Link>
