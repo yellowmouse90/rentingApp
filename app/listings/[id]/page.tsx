@@ -137,13 +137,14 @@ export default async function ListingDetailPage({ params }: ListingDetailPagePro
     }
   }
 
-  // Fetch existing bookings to show unavailable dates
+  // Fetch existing bookings to show unavailable dates. rental_items rows are only readable by
+  // their own owner/renter (rental_items_select_policy), so a plain table select here would come
+  // back empty for every other visitor - go through the get_listing_availability() function
+  // instead, which exposes just the three date/status columns the calendar needs across that
+  // RLS boundary (see db/migrations/019_public_listing_availability_function.sql).
   const { data: bookings, error: bookingsError } = await supabase
     .schema("rentals_domain")
-    .from("rental_items")
-    .select("start_date, end_date, status")
-    .eq("listing_id", id)
-    .not("status", "in", '("cancelled","unavailable")')
+    .rpc("get_listing_availability", { p_listing_id: id })
   if (bookingsError) dbErrors.push(`${t("listing_detail.availability_error")}: ${bookingsError.message}`)
 
   // Fetch availability exceptions
