@@ -5,6 +5,7 @@ import Link from "next/link"
 import { useAuth } from "@/lib/auth/context"
 import { useLanguage } from "@/lib/i18n/language-context"
 import { useRealtimeMessages } from "@/lib/chat/realtime"
+import { getChatLockReason } from "@/lib/chat/rules"
 import { Conversation, Profile, Message } from "@/lib/types"
 import { MessageList } from "./message-list"
 import { MessageInput } from "./message-input"
@@ -57,6 +58,24 @@ export function ChatThread({
     ...conversation.other_participant_details,
     display_name: conversation.other_participant_details?.display_name || t("chat.deleted_user"),
   } as unknown as Profile
+
+  const otherParticipantId =
+    conversation.participant_one === user?.id
+      ? conversation.participant_two
+      : conversation.participant_one
+
+  const lockReason = getChatLockReason({
+    otherParticipantId,
+    otherParticipantDeletedAt: conversation.other_participant_details?.deleted_at,
+    orderStatus: conversation.rental_order?.status,
+    orderUpdatedAt: conversation.rental_order?.updated_at,
+  })
+  const lockedMessage =
+    lockReason === "deleted_counterpart"
+      ? t("chat.locked_deleted_user")
+      : lockReason === "order_closed"
+        ? t("chat.locked_order_closed")
+        : null
 
   const orderItems = conversation.rental_order?.items || []
   const firstListing = orderItems[0]?.listing as
@@ -193,7 +212,7 @@ export function ChatThread({
   // Send message
   const handleSendMessage = useCallback(
     async (content: string) => {
-      if (!user?.id || !content.trim()) return
+      if (!user?.id || !content.trim() || lockReason) return
 
       try {
         setIsSending(true)
@@ -221,7 +240,7 @@ export function ChatThread({
         setIsSending(false)
       }
     },
-    [conversation.id, user?.id, t]
+    [conversation.id, user?.id, t, lockReason]
   )
 
   if (isLoading) {
@@ -304,6 +323,7 @@ export function ChatThread({
         onSendMessage={handleSendMessage}
         disabled={isSending}
         placeholder={t("chat.message_placeholder")}
+        lockedMessage={lockedMessage}
       />
     </div>
   )

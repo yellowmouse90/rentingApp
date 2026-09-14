@@ -9,12 +9,18 @@ interface MessageInputProps {
   onSendMessage: (content: string) => Promise<void>
   disabled?: boolean
   placeholder?: string
+  // When set, the input is replaced by this notice instead of being merely
+  // disabled - e.g. the counterpart was deleted, or the order has been
+  // closed for too long (see lib/chat/rules.ts). This is UX only: the real
+  // enforcement is server-side in POST /api/chat/messages.
+  lockedMessage?: string | null
 }
 
 export function MessageInput({
   onSendMessage,
   disabled = false,
   placeholder,
+  lockedMessage,
 }: MessageInputProps) {
   const { t } = useLanguage()
   const [message, setMessage] = useState("")
@@ -28,6 +34,14 @@ export function MessageInput({
       textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 120)}px`
     }
   }, [message])
+
+  if (lockedMessage) {
+    return (
+      <div className="border-t border-border bg-card p-4 text-center text-sm text-muted-foreground sm:p-6">
+        {lockedMessage}
+      </div>
+    )
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()

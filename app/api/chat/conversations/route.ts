@@ -86,7 +86,7 @@ export async function GET() {
           ? supabase
               .schema("users_domain")
               .from("profiles")
-              .select("id, display_name, avatar_url, email")
+              .select("id, display_name, avatar_url, email, deleted_at")
               .in("id", [...participantIds])
           : Promise.resolve({ data: [], error: null }),
         rentalOrderIds.size
