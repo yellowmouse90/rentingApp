@@ -24,3 +24,6 @@ dist/
 /test-results/
 /playwright-report/
 /.test-artifacts/
+
+# Scratch git worktrees created by agent tooling - never project content.
+/.claude/worktrees/
