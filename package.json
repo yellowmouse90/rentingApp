@@ -12,9 +12,7 @@
     "test:e2e": "playwright test",
     "test:db:up": "supabase start",
     "test:db:reset": "node scripts/setup-test-db.mjs",
-    "test:db:down": "supabase stop",
-    "db:seed": "node scripts/seed-test-data.mjs",
-    "db:seed:local": "node scripts/seed-test-data.mjs --local"
+    "test:db:down": "supabase stop"
   },
   "dependencies": {
     "@capacitor/android": "8.4.2",
