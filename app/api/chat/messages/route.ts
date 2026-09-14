@@ -4,6 +4,7 @@ import {
   MESSAGE_RATE_LIMIT_MAX,
   MESSAGE_RATE_LIMIT_WINDOW_MS,
 } from "@/lib/types/chat"
+import { getChatLockReason } from "@/lib/chat/rules"
 import { createNotification } from "@/lib/notifications/create"
 import { NextResponse } from "next/server"
 
@@ -153,6 +154,16 @@ export async function GET(request: Request) {
  *             schema: { $ref: '#/components/schemas/Error' }
  *       401:
  *         description: Non autenticato
+ *       403:
+ *         description: Controparte eliminata o ordine chiuso da più di 2 giorni
+ *         content:
+ *           application/json:
+ *             schema: { $ref: '#/components/schemas/Error' }
+ *       404:
+ *         description: Conversazione non trovata
+ *         content:
+ *           application/json:
+ *             schema: { $ref: '#/components/schemas/Error' }
  *       429:
  *         description: Rate limit superato
  *         content:
@@ -205,6 +216,73 @@ export async function POST(request: Request) {
       return NextResponse.json(
         { error: "Troppi messaggi inviati, riprova tra poco" },
         { status: 429 }
+      )
+    }
+
+    // Guard: block sending into a conversation whose counterpart has been
+    // deleted (hard-deleted pre-migration-015 -> null participant id, or
+    // soft-deleted via migration 015 -> profiles.deleted_at set), or whose
+    // related order has been closed for more than CHAT_LOCK_GRACE_DAYS days
+    // (see lib/chat/rules.ts). This is the real authorization boundary for
+    // both the web and Flutter clients, which only mirror it client-side to
+    // disable the input before the user tries.
+    const { data: conversationForGuard, error: conversationGuardError } = await supabase
+      .schema("interactions_domain")
+      .from("conversations")
+      .select("participant_one, participant_two, rental_order_id")
+      .eq("id", conversationId)
+      .maybeSingle()
+
+    if (conversationGuardError) throw conversationGuardError
+    if (!conversationForGuard) {
+      return NextResponse.json({ error: "Conversazione non trovata" }, { status: 404 })
+    }
+
+    const otherParticipantId =
+      conversationForGuard.participant_one === user!.id
+        ? conversationForGuard.participant_two
+        : conversationForGuard.participant_one
+
+    let otherParticipantDeletedAt: string | null = null
+    if (otherParticipantId) {
+      const { data: otherProfile } = await supabase
+        .schema("users_domain")
+        .from("profiles")
+        .select("deleted_at")
+        .eq("id", otherParticipantId)
+        .maybeSingle()
+      otherParticipantDeletedAt = otherProfile?.deleted_at ?? null
+    }
+
+    let orderStatus: string | null = null
+    let orderUpdatedAt: string | null = null
+    if (conversationForGuard.rental_order_id) {
+      const { data: order } = await supabase
+        .schema("rentals_domain")
+        .from("rental_orders")
+        .select("status, updated_at")
+        .eq("id", conversationForGuard.rental_order_id)
+        .maybeSingle()
+      orderStatus = order?.status ?? null
+      orderUpdatedAt = order?.updated_at ?? null
+    }
+
+    const lockReason = getChatLockReason({
+      otherParticipantId,
+      otherParticipantDeletedAt,
+      orderStatus,
+      orderUpdatedAt,
+    })
+
+    if (lockReason) {
+      return NextResponse.json(
+        {
+          error:
+            lockReason === "deleted_counterpart"
+              ? "Non puoi inviare messaggi in questa conversazione: l'altro utente ha eliminato il proprio account"
+              : "Non puoi inviare messaggi in questa conversazione: la prenotazione è conclusa da più di 2 giorni",
+        },
+        { status: 403 }
       )
     }
 

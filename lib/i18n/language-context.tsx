@@ -435,6 +435,8 @@ const translations: Record<Language, Record<string, string>> = {
     "chat.deleted_user": "Utente eliminato",
     "chat.with": "con",
     "chat.order_fallback": "Ordine",
+    "chat.locked_deleted_user": "Non puoi inviare messaggi: l'altro utente ha eliminato il proprio account",
+    "chat.locked_order_closed": "Non puoi inviare messaggi: la prenotazione è conclusa da più di 2 giorni",
 
     // Misc
     "auth.invalid_credentials": "Email o password non corretti",
@@ -989,6 +991,8 @@ const translations: Record<Language, Record<string, string>> = {
     "chat.deleted_user": "Deleted user",
     "chat.with": "with",
     "chat.order_fallback": "Order",
+    "chat.locked_deleted_user": "You can't send messages: the other user has deleted their account",
+    "chat.locked_order_closed": "You can't send messages: this booking has been closed for more than 2 days",
 
     // Misc
     "auth.invalid_credentials": "Incorrect email or password",

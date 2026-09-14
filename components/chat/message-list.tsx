@@ -1,12 +1,22 @@
 "use client"
 
 import { useCallback, useEffect, useLayoutEffect, useRef } from "react"
+import Linkify from "linkify-react"
 import { ChatMessage } from "@/lib/types/chat"
 import { Profile } from "@/lib/types"
 import { formatDistanceToNow } from "date-fns"
 import { it, enUS } from "date-fns/locale"
 import { useLanguage } from "@/lib/i18n/language-context"
 import { Loader2 } from "lucide-react"
+
+// Applied to detected URLs/emails inside message bubbles - underline only,
+// no extra color, so a link stays legible on both the primary (own message)
+// and muted (other user's message) bubble backgrounds.
+const LINKIFY_OPTIONS = {
+  target: "_blank",
+  rel: "noopener noreferrer",
+  className: "underline underline-offset-2 hover:opacity-80",
+}
 
 interface MessageListProps {
   messages: ChatMessage[]
@@ -185,7 +195,9 @@ export function MessageList({
                       : "bg-muted text-foreground"
                   }`}
                 >
-                  <p className="break-words text-sm">{message.content}</p>
+                  <p className="break-words text-sm">
+                    <Linkify options={LINKIFY_OPTIONS}>{message.content}</Linkify>
+                  </p>
                 </div>
                 <div
                   className={`flex items-center gap-2 text-xs ${
