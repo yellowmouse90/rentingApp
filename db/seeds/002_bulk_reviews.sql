@@ -57,6 +57,8 @@ DECLARE
   v_lender_is_business BOOLEAN;
   v_context TEXT;
   v_idx INT;
+  v_earliest_existing_start DATE;
+  v_days_ago_cursor INT;
   v_total_days INT;
   v_completed_days_ago INT;
   v_handed_over_days_ago INT;
@@ -104,6 +106,24 @@ BEGIN
       FROM users_domain.profiles WHERE id = v_listing.owner_id;
     v_context := CASE WHEN v_lender_is_business THEN 'ferramenta' ELSE 'p2p' END;
 
+    -- rental_items has a "no_double_booking" exclusion constraint on (listing_id, rental_period)
+    -- for any non-cancelled/unavailable row (migration 000), so new bookings for this listing must
+    -- not overlap each other OR whatever 001 (or a real booking) already put on it. Anchor the
+    -- first new booking safely before the earliest existing one (defaulting to a few days ago if
+    -- there isn't one / it's in the future), then walk each subsequent booking further into the
+    -- past with a gap, inside the loop below.
+    SELECT MIN(start_date) INTO v_earliest_existing_start
+      FROM rentals_domain.rental_items
+     WHERE listing_id = v_listing.listing_id
+       AND status NOT IN ('cancelled', 'unavailable');
+
+    v_days_ago_cursor := GREATEST(
+      3,
+      CASE WHEN v_earliest_existing_start IS NULL THEN 3
+           ELSE (CURRENT_DATE - v_earliest_existing_start) + 5
+      END
+    );
+
     FOR j IN 1..v_need LOOP
       v_renter_rn := ((v_owner_rn - 1 + v_existing_orders + j) % v_profile_count) + 1;
       SELECT id INTO v_renter_id FROM seed_bulk_profile_ranks WHERE rn = v_renter_rn;
@@ -122,12 +142,17 @@ BEGIN
       v_idx := v_listing.rn + v_existing_orders + j;
       v_total_days := 1 + (v_idx % 5); -- 1..5 days
 
-      -- Keep well inside reviews_domain.can_submit_review's 14-day window (order.updated_at is
-      -- the completion timestamp - see CLAUDE.md's "Reviews" section) even on a re-run months
-      -- from now, since this always inserts fresh "just completed" bookings.
-      v_completed_days_ago := 1 + ((v_idx * 3) % 12); -- 1..12 days ago
+      -- Walk backward from v_days_ago_cursor (already past every existing booking on this
+      -- listing) so each new booking's [start_date, end_date] stays disjoint from the previous
+      -- one too - see the no_double_booking note above. Only the most recent (j=1, smallest
+      -- v_completed_days_ago) is guaranteed inside reviews_domain.can_submit_review's 14-day
+      -- window; older ones on a listing with several extra bookings can land further back than
+      -- that, which is fine since this INSERT runs directly and isn't going through that RLS
+      -- policy/window check.
+      v_completed_days_ago := v_days_ago_cursor;
       v_handed_over_days_ago := v_completed_days_ago + v_total_days;
       v_created_days_ago := v_handed_over_days_ago + 2;
+      v_days_ago_cursor := v_handed_over_days_ago + 3; -- gap before the next (older) booking
 
       v_subtotal := v_listing.price_per_day_cents * v_total_days;
       v_service_fee := ROUND(v_subtotal * 0.10);
