@@ -67,15 +67,26 @@ export async function sendPushNotification(params: SendPushParams): Promise<void
   // message in the same conversation replaces the tray entry instead of stacking, and the app can
   // cancel it (see PushNotificationsService.cancelForConversation) once the user opens that chat -
   // both the background/terminated auto-display path and the foreground local-notification path
-  // (which mirrors this same tag) rely on it.
+  // (which mirrors this same tag) rely on it. Same check also picks the small icon: a chat bubble
+  // for messages vs. the manifest's default app-mark icon (AndroidManifest.xml's
+  // default_notification_icon) for everything else - mirrors PushNotificationsService's own
+  // foreground icon choice, which uses this identical linkUrl pattern.
   const conversationMatch = params.linkUrl?.match(/^\/messages\?conversation=([^&]+)/)
-  const androidTag = conversationMatch ? `chat_${conversationMatch[1]}` : undefined
 
   try {
     const response = await getMessaging(app).sendEachForMulticast({
       tokens: tokens.map((t) => t.token as string),
       notification: { title: params.title, body: params.body },
-      android: androidTag ? { notification: { tag: androidTag } } : undefined,
+      android: {
+        notification: {
+          tag: conversationMatch ? `chat_${conversationMatch[1]}` : undefined,
+          icon: conversationMatch ? "ic_notification_chat" : undefined,
+          // App brand blue (lib/core/theme/app_theme.dart's `_primaryLight` on the Flutter side) -
+          // explicit here rather than relying solely on AndroidManifest.xml's
+          // default_notification_color, which some OEM skins ignore for auto-displayed pushes.
+          color: "#2451D9",
+        },
+      },
       data: { linkUrl: params.linkUrl ?? "" },
     })
 
