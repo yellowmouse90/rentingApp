@@ -171,13 +171,16 @@ BEGIN
         'Attrezzo funzionante, comunicazione rapida.',
         'Esperienza nella media, qualche piccolo ritardo nelle risposte.'
       ])[(v_idx % 5) + 1];
-      v_tags_lender := (ARRAY[
-        ARRAY['oggetto come descritto', 'consigliato'],
-        ARRAY['puntuale', 'disponibile'],
-        ARRAY['ottima comunicazione'],
-        ARRAY['consigliato'],
-        ARRAY[]::TEXT[]
-      ])[(v_idx % 5) + 1];
+      -- Not a single ARRAY[...][...] index: sub-arrays here have different lengths (2/2/1/1/0
+      -- elements), and Postgres multidimensional array literals require matching dimensions, so
+      -- picking by CASE instead of array-of-arrays indexing.
+      v_tags_lender := CASE v_idx % 5
+        WHEN 0 THEN ARRAY['oggetto come descritto', 'consigliato']
+        WHEN 1 THEN ARRAY['puntuale', 'disponibile']
+        WHEN 2 THEN ARRAY['ottima comunicazione']
+        WHEN 3 THEN ARRAY['consigliato']
+        ELSE ARRAY[]::TEXT[]
+      END;
 
       INSERT INTO reviews_domain.reviews
         (booking_id, author_user_id, target_user_id, target_role, context, overall_rating, comment, tags)
@@ -194,13 +197,13 @@ BEGIN
         'Esperienza positiva, ripeterei volentieri.',
         'Va bene, piccola incomprensione sugli orari ma risolta.'
       ])[(v_idx % 5) + 1];
-      v_tags_renter := (ARRAY[
-        ARRAY['puntuale alla riconsegna'],
-        ARRAY['nessun danno', 'consigliato'],
-        ARRAY['buona comunicazione'],
-        ARRAY['consigliato'],
-        ARRAY[]::TEXT[]
-      ])[(v_idx % 5) + 1];
+      v_tags_renter := CASE v_idx % 5
+        WHEN 0 THEN ARRAY['puntuale alla riconsegna']
+        WHEN 1 THEN ARRAY['nessun danno', 'consigliato']
+        WHEN 2 THEN ARRAY['buona comunicazione']
+        WHEN 3 THEN ARRAY['consigliato']
+        ELSE ARRAY[]::TEXT[]
+      END;
 
       -- Inserted right after the lender-direction row above so, for 'p2p' context, the
       -- apply_visibility_rules trigger sees the mirror already present and flips BOTH rows to
